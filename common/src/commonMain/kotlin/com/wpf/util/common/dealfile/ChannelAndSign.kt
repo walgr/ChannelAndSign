@@ -33,7 +33,9 @@ object ChannelAndSign {
                 }?.forEach {
                     dealChannel(it)
                 }
+                Thread.sleep(1000)
                 zipalignPath(inputFilePath)
+                Thread.sleep(1000)
                 signPath(inputFilePath)
             }
             launch {
