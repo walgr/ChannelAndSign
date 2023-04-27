@@ -10,6 +10,7 @@ object FileSelector {
 
     fun showFileSelector(
         suffixList: Array<String>,
+        selectionMode: Int = JFileChooser.FILES_ONLY,
         onFileSelected: (String) -> Unit
     ) {
         JFileChooser().apply {
@@ -22,7 +23,7 @@ object FileSelector {
                 e.printStackTrace()
             }
 
-            fileSelectionMode = JFileChooser.FILES_ONLY
+            fileSelectionMode = selectionMode
             isMultiSelectionEnabled = false
             fileFilter = FileNameExtensionFilter("文件过滤", *suffixList)
 

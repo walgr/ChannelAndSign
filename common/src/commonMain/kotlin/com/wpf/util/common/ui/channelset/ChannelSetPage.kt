@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -32,6 +31,8 @@ import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.signset.SignFile
 import com.wpf.util.common.ui.signset.SignSetViewModel
+import com.wpf.util.common.ui.utils.FileSelector
+import javax.swing.JFileChooser
 
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
@@ -46,7 +47,7 @@ fun channelPage(window: ComposeWindow) {
     val channelNameList = remember { mutableStateListOf("") }
 
     //待打渠道包的apk
-    val pathList = remember { mutableStateListOf<Apk>() }
+    val pathList = remember { mutableStateListOf<Path>() }
 
     //分组添加Dialog
     val groupDialog = remember { mutableStateOf(false) }
@@ -191,11 +192,25 @@ fun channelPage(window: ComposeWindow) {
                                                     contentAlignment = Alignment.CenterEnd
                                                 ) {
                                                     IconButton(onClick = {
-
+                                                        FileSelector.showFileSelector(arrayOf("txt"), selectionMode = JFileChooser.FILES_AND_DIRECTORIES) { path ->
+                                                            channelList.find { it.isSelect }?.channelPath = path
+                                                            channelFileNameList.clear()
+                                                            channelNameList.clear()
+                                                            if (path.isNotEmpty()) {
+                                                                val result = ChannelSetViewModel.getChannelDataInFile(path)
+                                                                if (result.isNotEmpty()) {
+                                                                    channelFileNameList.addAll(result.map { array -> array[0] })
+                                                                    channelNameList.addAll(result.map { array -> array[1] })
+                                                                } else {
+                                                                    channelFileNameList.add("文件解析错误，路径:(${path})")
+                                                                    channelNameList.add("文件解析错误，路径:(${path}")
+                                                                }
+                                                            }
+                                                        }
                                                     }) {
                                                         Icon(
                                                             Icons.Default.AddCircle,
-                                                            "添加渠道",
+                                                            "导入渠道",
                                                             modifier = Modifier.size(18.dp)
                                                         )
                                                     }
@@ -275,11 +290,13 @@ fun channelPage(window: ComposeWindow) {
                                                     contentAlignment = Alignment.CenterEnd
                                                 ) {
                                                     IconButton(onClick = {
-
+                                                        FileSelector.showFileSelector(arrayOf("apk"), selectionMode = JFileChooser.FILES_AND_DIRECTORIES) {
+                                                            pathList.add(Path(name = it, path = it))
+                                                        }
                                                     }) {
                                                         Icon(
                                                             Icons.Default.AddCircle,
-                                                            "添加分组",
+                                                            "添加Apk",
                                                             modifier = Modifier.size(18.dp)
                                                         )
                                                     }
@@ -316,7 +333,7 @@ fun channelPage(window: ComposeWindow) {
                                             pathList.addAll(it.flatMap { file ->
                                                 //apk或文件夹
                                                 if (file.contains(".apk") || !file.contains(".")) {
-                                                    mutableListOf(Apk(name = file, path = file))
+                                                    mutableListOf(Path(name = file, path = file))
                                                 } else mutableListOf()
                                             }.toMutableList())
                                         }
