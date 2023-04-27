@@ -37,7 +37,7 @@ object ChannelSetViewModel {
         return result
     }
 
-    fun dealApk(filePathList: List<String>, channelPath: String?, sign: SignFile) {
+    fun dealApk(filePathList: List<String>, channelPath: String?, sign: SignFile, callback: (() -> Unit)) {
         channelsFilePath = channelPath ?: ""
         channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
         channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
@@ -46,8 +46,15 @@ object ChannelSetViewModel {
         signPassword = sign.StorePass
         signAlias = sign.KeyAlias
         signAliasPassword = sign.KeyPass
+        var returnTime = 0
         filePathList.forEach {
-            ChannelAndSign.scanFile(it)
+            ChannelAndSign.scanFile(it) {
+                returnTime++
+                if (returnTime == filePathList.size) {
+                    //运行结束
+                    callback.invoke()
+                }
+            }
         }
     }
 }

@@ -9,10 +9,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="1.0">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/dealfile/ChannelAndSign.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/dealfile/ChannelAndSign.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/dealfile/Config.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/dealfile/Config.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/dealfile/util/ZipalignUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/dealfile/util/ZipalignUtil.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -157,7 +160,7 @@
       <recent name="com.wpf.util.common.dealfile.util" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.ChannelAndSign:desktop [packageReleaseExe]">
+  <component name="RunManager" selected="Kotlin.桌面端">
     <configuration name="ChannelAndSign:common [desktopJar]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -351,8 +354,16 @@
       <workItem from="1682558799698" duration="1434000" />
       <workItem from="1682560374198" duration="2669000" />
       <workItem from="1682563089344" duration="2074000" />
-      <workItem from="1682566398746" duration="722000" />
+      <workItem from="1682566398746" duration="6185000" />
     </task>
+    <task id="LOCAL-00001" summary="1.0">
+      <created>1682567148217</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1682567148217</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -373,6 +384,8 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$" />
     </ignored-roots>
+    <MESSAGE value="1.0" />
+    <option name="LAST_COMMIT_MESSAGE" value="1.0" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

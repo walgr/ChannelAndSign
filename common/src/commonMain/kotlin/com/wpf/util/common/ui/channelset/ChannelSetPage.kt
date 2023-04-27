@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,6 +56,8 @@ fun channelPage(window: ComposeWindow) {
     val signList = remember { mutableStateListOf(*SignSetViewModel.getSignList().toTypedArray()) }
     //选择签名弹窗
     val showSignSelectDialog = remember { mutableStateOf(false) }
+
+    var isRunDealFile by remember { mutableStateOf(false) }
 
     channelList.find { channel -> channel.isSelect }?.channelPath?.let {
         if (it.isNotEmpty()) {
@@ -334,15 +337,18 @@ fun channelPage(window: ComposeWindow) {
 
                     } else {
                         if (signList.size == 1) {
+                            isRunDealFile = true
                             ChannelSetViewModel.dealApk(pathList.map {
                                 it.path
-                            }, channelList.find { it.isSelect }?.channelPath, signList[0])
+                            }, channelList.find { it.isSelect }?.channelPath, signList[0]) {
+                                isRunDealFile = false
+                            }
                         } else {
                             showSignSelectDialog.value = true
                         }
                     }
                 }) {
-                    Icon(Icons.Default.PlayArrow, "开始打包")
+                    Icon(if (isRunDealFile) Icons.Default.Close else Icons.Default.PlayArrow, "开始打包")
                 }
             }
         }
@@ -370,11 +376,14 @@ fun channelPage(window: ComposeWindow) {
         }
         if (showSignSelectDialog.value) {
             showSelectSignDialog(showSignSelectDialog) {
+                isRunDealFile = true
                 ChannelSetViewModel.dealApk(
                     pathList.map { path -> path.path },
                     channelList.find { channel -> channel.isSelect }?.channelPath,
                     it
-                )
+                ) {
+                    isRunDealFile = false
+                }
             }
         }
     }

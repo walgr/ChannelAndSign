@@ -36,12 +36,16 @@ object ZipalignUtilWin : Zipalign {
         val cmd = arrayOf(zipalignFile, "-c", "-v", "4", inputApkFile)
         val result = Runtime.getRuntime().exec(cmd)
         val resultStr = result.inputStream.readBytes().decodeToString()
-        return resultStr.contains("succesful");
+        return resultStr.contains("succesful")
     }
 
     override fun zipalign(inputApkFile: String, outApkFile: String) {
         val cmd = arrayOf(zipalignFile, "-p", "-f", "4", inputApkFile, outApkFile)
-        Runtime.getRuntime().exec(cmd)
+        val result = Runtime.getRuntime().exec(cmd)
+        val resultStr = result.inputStream.readBytes().decodeToString()
+        if (resultStr.contains("succesful")) {
+            result.destroy()
+        }
     }
 }
 

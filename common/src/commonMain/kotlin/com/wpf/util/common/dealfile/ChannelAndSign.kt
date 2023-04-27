@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.lang.Exception
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
@@ -19,27 +20,32 @@ object ChannelAndSign {
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(channelBaseInsertFilePath)
             .getElementsByTagName("meta-data").item(0).attributes.item(1).nodeValue
 
-    fun scanFile(inputFilePath: String) {
+    fun scanFile(inputFilePath: String, callback: (() -> Unit)) {
         CoroutineScope(Dispatchers.Default).launch {
-            val dealFile = File(inputFilePath)
-            if (dealFile.isFile) {
-                val curPath = dealFile.parent + File.separator
-                dealChannel(dealFile)
-                zipalignPath(curPath)
-                signPath(curPath)
-            } else if (dealFile.isDirectory) {
-                dealFile.listFiles()?.filter {
-                    it.isFile
-                }?.forEach {
-                    dealChannel(it)
+            try {
+                val dealFile = File(inputFilePath)
+                if (dealFile.isFile) {
+                    val curPath = dealFile.parent + File.separator
+                    dealChannel(dealFile)
+                    zipalignPath(curPath)
+                    signPath(curPath)
+                } else if (dealFile.isDirectory) {
+                    dealFile.listFiles()?.filter {
+                        it.isFile
+                    }?.forEach {
+                        dealChannel(it)
+                    }
+                    zipalignPath(inputFilePath)
+                    signPath(inputFilePath)
                 }
-                Thread.sleep(1000)
-                zipalignPath(inputFilePath)
-                Thread.sleep(1000)
-                signPath(inputFilePath)
-            }
-            launch {
                 defaultLog.info("已完成")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                defaultLog.info("运行错误:${e.message}")
+            } finally {
+                launch {
+                    callback.invoke()
+                }
             }
         }
 
@@ -139,14 +145,13 @@ object ChannelAndSign {
     private fun dealZipalign(inputApkPath: File) {
         val curPath = inputApkPath.parent + File.separator
         if (!ZipalignUtil.check(inputApkPath.path)) {
+            defaultLog.info("正在对齐apk:${inputApkPath.path}")
             val zipFilePath = curPath + inputApkPath.nameWithoutExtension + "_zip.apk"
             ZipalignUtil.zipalign(inputApkPath.path, zipFilePath)
             //对齐后改为原来的名字
-            Thread.sleep(deleteFileDelay)
             inputApkPath.delete()
             val zipFile = File(zipFilePath)
             zipFile.renameTo(inputApkPath)
-            Thread.sleep(deleteFileDelay)
             zipFile.delete()
         }
     }
