@@ -1,5 +1,6 @@
 package com.wpf.util.common.ui.utils
 
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.Box
@@ -23,21 +24,16 @@ import java.awt.event.MouseMotionAdapter
  */
 @Composable
 fun WindowScope.WindowDraggableArea(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit = {}
+    modifier: Modifier = Modifier, content: @Composable () -> Unit = {}
 ) {
     val handler = remember { DragHandler(window) }
 
-    Box(
-        modifier = modifier.pointerInput(Unit) {
-            forEachGesture {
-                awaitPointerEventScope {
-                    awaitFirstDown()
-                    handler.register()
-                }
-            }
+    Box(modifier = modifier.pointerInput(Unit) {
+        awaitEachGesture {
+            awaitFirstDown()
+            handler.register()
         }
-    ) {
+    }) {
         content()
     }
 }
