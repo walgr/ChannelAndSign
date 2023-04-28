@@ -52,7 +52,7 @@ fun DropBoxPanel(
             component.dropTarget = object : DropTarget() {
                 override fun drop(event: DropTargetDropEvent) {
 
-                    event.acceptDrop(DnDConstants.ACTION_REFERENCE)
+                    event.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE)
                     val dataFlavors = event.transferable.transferDataFlavors
                     dataFlavors.forEach {
                         if (it == DataFlavor.javaFileListFlavor) {
@@ -82,6 +82,7 @@ fun DropBoxPanel(
 
         DisposableEffect(true) {
             onDispose {
+                window.remove(component)
                 window.contentPane.remove(component)
             }
         }

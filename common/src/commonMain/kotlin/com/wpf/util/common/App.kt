@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,15 +18,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.ApplicationScope
+import androidx.compose.ui.window.WindowScope
 import com.wpf.util.common.ui.base.Menu
 import com.wpf.util.common.ui.channelset.channelPage
 import com.wpf.util.common.ui.configset.configPage
 import com.wpf.util.common.ui.mainBgColor
 import com.wpf.util.common.ui.signset.signPage
+import com.wpf.util.common.ui.utils.WindowDraggableArea
 
 @Preview
 @Composable
-fun MainView(window: ComposeWindow) {
+fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
 
     val menuList = remember {
         mutableStateListOf(
@@ -35,7 +41,9 @@ fun MainView(window: ComposeWindow) {
 
     MaterialTheme {
         Box(
-            modifier = Modifier.fillMaxSize().background(color = mainBgColor)
+            modifier = Modifier.fillMaxSize()
+                .clip(shape = RoundedCornerShape(8.dp))
+                .background(color = mainBgColor)
         ) {
             Row {
                 Box(
@@ -44,8 +52,10 @@ fun MainView(window: ComposeWindow) {
                         .background(color = Color(28, 30, 46))
                 ) {
                     Column {
-                        Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                            Text("WPF", fontSize = 36.sp, color = Color.White)
+                        window.WindowDraggableArea {
+                            Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                                Text("WPF", fontSize = 36.sp, color = Color.White)
+                            }
                         }
                         LazyColumn {
                             items(count = menuList.size) { pos ->
@@ -71,6 +81,16 @@ fun MainView(window: ComposeWindow) {
                                 }
                             }
                         }
+                        Box(
+                            modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(bottom = 16.dp),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            IconButton(onClick = {
+                                applicationScope.exitApplication()
+                            }) {
+                                Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White)
+                            }
+                        }
                     }
                 }
                 Box(
@@ -86,7 +106,7 @@ fun MainView(window: ComposeWindow) {
                                 0.dp
                             )
                         ) {
-                            channelPage(window)
+                            channelPage(window.window as ComposeWindow)
                         }
                         //签名配置
                         Box(
@@ -94,7 +114,7 @@ fun MainView(window: ComposeWindow) {
                                 0.dp
                             )
                         ) {
-                            signPage(window)
+                            signPage(window.window as ComposeWindow)
                         }
                         //软件配置
                         Box(
