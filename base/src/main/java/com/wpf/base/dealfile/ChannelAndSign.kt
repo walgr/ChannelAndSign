@@ -20,7 +20,7 @@ object ChannelAndSign {
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(channelBaseInsertFilePath)
             .getElementsByTagName("meta-data").item(0).attributes.item(1).nodeValue
 
-    fun scanFile(inputFilePath: String, callback: (() -> Unit)) {
+    fun scanFile(inputFilePath: String, dealSign: Boolean = true, callback: (() -> Unit)) {
         CoroutineScope(Dispatchers.Default).launch {
             try {
                 val dealFile = File(inputFilePath)
@@ -28,7 +28,9 @@ object ChannelAndSign {
                     val curPath = dealFile.parent + File.separator
                     dealChannel(dealFile)
                     zipalignPath(curPath)
-                    signPath(curPath)
+                    if (dealSign) {
+                        signPath(curPath)
+                    }
                 } else if (dealFile.isDirectory) {
                     dealFile.listFiles()?.filter {
                         it.isFile
@@ -36,7 +38,9 @@ object ChannelAndSign {
                         dealChannel(it)
                     }
                     zipalignPath(inputFilePath)
-                    signPath(inputFilePath)
+                    if (dealSign) {
+                        signPath(inputFilePath)
+                    }
                 }
                 defaultLog.info("已完成")
             } catch (e: Exception) {
