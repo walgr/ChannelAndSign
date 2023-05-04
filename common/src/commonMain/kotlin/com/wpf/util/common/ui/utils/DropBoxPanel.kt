@@ -82,7 +82,6 @@ fun DropBoxPanel(
 
         DisposableEffect(true) {
             onDispose {
-                window.remove(component)
                 window.contentPane.remove(component)
             }
         }
