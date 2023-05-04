@@ -1,7 +1,7 @@
 package com.wpf.util.common.ui.channelset
 
 import com.russhwolf.settings.set
-import com.wpf.util.common.dealfile.*
+import com.wpf.base.dealfile.*
 import com.wpf.util.common.json
 import com.wpf.util.common.settings
 import com.wpf.util.common.ui.configset.ConfigPageViewModel

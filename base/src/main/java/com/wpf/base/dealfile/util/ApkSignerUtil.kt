@@ -1,4 +1,4 @@
-package com.wpf.util.common.dealfile.util
+package com.wpf.base.dealfile.util
 
 import com.android.apksigner.ApkSignerTool
 

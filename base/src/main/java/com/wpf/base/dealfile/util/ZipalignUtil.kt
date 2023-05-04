@@ -1,6 +1,6 @@
-package com.wpf.util.common.dealfile.util
+package com.wpf.base.dealfile.util
 
-import com.wpf.util.common.dealfile.zipalignFile
+import com.wpf.base.dealfile.zipalignFile
 
 /**
  * apk对齐

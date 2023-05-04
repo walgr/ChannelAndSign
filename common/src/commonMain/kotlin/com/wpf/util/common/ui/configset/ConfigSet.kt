@@ -14,9 +14,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.wpf.util.common.dealfile.channelBaseInsertFilePath
-import com.wpf.util.common.dealfile.channelSavePath
-import com.wpf.util.common.dealfile.zipalignFile
+import com.wpf.base.dealfile.channelBaseInsertFilePath
+import com.wpf.base.dealfile.channelSavePath
+import com.wpf.base.dealfile.zipalignFile
 import com.wpf.util.common.settings
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor

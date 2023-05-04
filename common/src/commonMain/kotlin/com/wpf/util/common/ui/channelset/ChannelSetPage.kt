@@ -328,8 +328,6 @@ fun channelPage(window: ComposeWindow) {
                                             }
                                         }
                                         DropBoxPanel(modifier = Modifier.fillMaxSize(), window = window) {
-//                                            if (it.size != 1) return@DropBoxPanel
-//                                            pathList.clear()
                                             pathList.addAll(it.flatMap { file ->
                                                 //apk或文件夹
                                                 if (file.contains(".apk") || !file.contains(".")) {

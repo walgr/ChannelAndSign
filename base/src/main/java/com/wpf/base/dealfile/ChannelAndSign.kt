@@ -1,11 +1,11 @@
-package com.wpf.util.common.dealfile
+package com.wpf.base.dealfile
 
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
-import com.wpf.util.common.dealfile.util.AXMLEditor2Util
-import com.wpf.util.common.dealfile.util.ApkSignerUtil
-import com.wpf.util.common.dealfile.util.FileUtil
-import com.wpf.util.common.dealfile.util.ZipalignUtil
+import com.wpf.base.dealfile.util.AXMLEditor2Util
+import com.wpf.base.dealfile.util.ApkSignerUtil
+import com.wpf.base.dealfile.util.FileUtil
+import com.wpf.base.dealfile.util.ZipalignUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

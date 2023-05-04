@@ -15,4 +15,5 @@ pluginManagement {
 
 rootProject.name = "ChannelAndSign"
 
+include("base")
 include( ":desktop", ":common")

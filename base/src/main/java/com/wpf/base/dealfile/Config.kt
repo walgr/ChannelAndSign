@@ -1,4 +1,4 @@
-package com.wpf.util.common.dealfile
+package com.wpf.base.dealfile
 
 import java.util.logging.Logger
 
