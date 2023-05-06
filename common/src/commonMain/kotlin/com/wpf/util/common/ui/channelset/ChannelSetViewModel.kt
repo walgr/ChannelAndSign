@@ -48,7 +48,7 @@ object ChannelSetViewModel {
         signAliasPassword = sign.KeyPass
         var returnTime = 0
         filePathList.forEach {
-            ChannelAndSign.scanFile(it) {
+            ChannelAndSign.scanFile(false, it) {
                 returnTime++
                 if (returnTime == filePathList.size) {
                     //运行结束

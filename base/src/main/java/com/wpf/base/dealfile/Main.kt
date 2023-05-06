@@ -2,13 +2,15 @@ package com.wpf.base.dealfile
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
-        println("参数异常，请按照-baseChannel、-channelPath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword配置")
+        println("参数异常，请按照-baseChannel、-channelPath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword、-filePath、-dealSign配置")
         return
     }
+    var filePath = ""
+    var dealSign = true
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
-        if (arg.contains("-") && nextInput.contains("-")) {
-            println("参数异常，请按照-baseChannel、-channelPath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword配置")
+        if (arg.startsWith("-") && nextInput.startsWith("-")) {
+            println("参数异常，请按照-baseChannel、-channelPath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword、-filePath、-dealSign配置")
             return
         }
         if ("-baseChannel" == arg) {
@@ -35,5 +37,13 @@ fun main(args: Array<String>? = null) {
         if ("-signAliasPassword" == arg) {
             signAliasPassword = nextInput
         }
+        if ("-filePath" == arg) {
+            filePath = nextInput
+        }
+        if ("-dealSign" == arg) {
+            dealSign = "1" == nextInput
+        }
     }
+    println("开启处理...")
+    ChannelAndSign.scanFile(true, inputFilePath = filePath, dealSign = dealSign) {}
 }

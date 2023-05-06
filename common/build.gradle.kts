@@ -21,7 +21,6 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
                 implementation(project(":base"))
 
-//                implementation("co.touchlab:kermit:2.0.0-RC4")          //日志保存
                 implementation("com.russhwolf:multiplatform-settings-no-arg:1.0.0")        //本地存储
             }
         }

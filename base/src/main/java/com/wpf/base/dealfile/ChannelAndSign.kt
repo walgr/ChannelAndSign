@@ -20,39 +20,85 @@ object ChannelAndSign {
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(channelBaseInsertFilePath)
             .getElementsByTagName("meta-data").item(0).attributes.item(1).nodeValue
 
-    fun scanFile(inputFilePath: String, dealSign: Boolean = true, callback: (() -> Unit)) {
-        CoroutineScope(Dispatchers.Default).launch {
-            try {
-                val dealFile = File(inputFilePath)
-                if (dealFile.isFile) {
-                    val curPath = dealFile.parent + File.separator
-                    dealChannel(dealFile)
-                    zipalignPath(curPath)
-                    if (dealSign) {
-                        signPath(curPath)
-                    }
-                } else if (dealFile.isDirectory) {
-                    dealFile.listFiles()?.filter {
-                        it.isFile
-                    }?.forEach {
-                        dealChannel(it)
-                    }
-                    zipalignPath(inputFilePath)
-                    if (dealSign) {
-                        signPath(inputFilePath)
+    fun scanFile(
+        inMainThread: Boolean = false, inputFilePath: String, dealSign: Boolean = true, callback: (() -> Unit)
+    ) {
+        if (!inMainThread) {
+            CoroutineScope(Dispatchers.Default).launch {
+                try {
+                    scanFile(inputFilePath, dealSign, callback)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    println("运行错误:${e.message}")
+                } finally {
+                    launch {
+                        callback.invoke()
                     }
                 }
-                defaultLog.info("已完成")
+            }
+        } else {
+            try {
+                scanFile(inputFilePath, dealSign, callback)
             } catch (e: Exception) {
                 e.printStackTrace()
-                defaultLog.info("运行错误:${e.message}")
+                println("运行错误:${e.message}")
             } finally {
-                launch {
-                    callback.invoke()
+                callback.invoke()
+            }
+        }
+    }
+
+    private fun scanFile(inputFilePath: String, dealSign: Boolean = true, callback: (() -> Unit)) {
+        if (inputFilePath.isEmpty()) {
+            println("输入的文件路径不正确")
+            return
+        }
+        val dealFile = File(inputFilePath)
+        if (dealFile.isFile && "apk" == dealFile.extension) {
+            val curPath = dealFile.parent + File.separator
+            dealChannel(dealFile)
+            zipalignPath(curPath)
+            val channelPath = getChannelPath(curPath)
+            if (channelPath.isNotEmpty()) {
+                zipalignPath(channelPath)
+            }
+            if (dealSign) {
+                signPath(curPath)
+                if (channelPath.isNotEmpty()) {
+                    signPath(channelPath)
+                }
+            }
+        } else if (dealFile.isDirectory) {
+            val apkFileList = dealFile.listFiles()?.filter {
+                it.isFile && "apk" == it.extension
+            }
+            apkFileList?.forEach {
+                dealChannel(it)
+            }
+            if (apkFileList?.isNotEmpty() == true) {
+                val channelPath = getChannelPath(inputFilePath)
+                zipalignPath(inputFilePath)
+                if (channelPath.isNotEmpty()) {
+                    zipalignPath(channelPath)
+                }
+                if (dealSign) {
+                    signPath(inputFilePath)
+                    if (channelPath.isNotEmpty()) {
+                        signPath(channelPath)
+                    }
                 }
             }
         }
+        println("已完成")
+    }
 
+    private fun getChannelPath(curPath: String): String {
+        var channelPath = channelSavePath
+        if (channelPath.isNotEmpty()) {
+            if (!channelPath.endsWith(File.separator)) channelPath += File.separator
+            if (!(channelPath.startsWith(File.separator) || channelPath.contains(":"))) channelPath = curPath + channelPath
+        }
+        return channelPath
     }
 
     /**
@@ -64,7 +110,7 @@ object ChannelAndSign {
         val curPath = inputApkPath.parent + File.separator
         val inputZipFile = ZipFile(inputApkPath)
         //创建渠道包存储文件夹
-        val channelPath = channelSavePath
+        val channelPath = getChannelPath(curPath)
         val channelPathFile = File(channelPath)
         channelPathFile.mkdirs()
 
@@ -72,17 +118,15 @@ object ChannelAndSign {
         val baseManifestFile = File(curPath + "AndroidManifest.xml")
         baseManifestFile.createNewFile()
         FileUtil.save2File(inputZipFile.getInputStream(inputZipFile.getEntry("AndroidManifest.xml")), baseManifestFile)
-        defaultLog.info("解压 ${inputApkPath.name} 得到AndroidManifest.xml")
+        println("解压 ${inputApkPath.name} 得到AndroidManifest.xml")
 
         //先去除旧的渠道数据
         val outNoChannelFile = File(curPath + "AndroidManifestNoChannel.xml")
         outNoChannelFile.createNewFile()
         AXMLEditor2Util.doCommandTagDel(
-            "meta-data",
-            "UMENG_CHANNEL",
-            baseManifestFile.path, outNoChannelFile.path
+            "meta-data", "UMENG_CHANNEL", baseManifestFile.path, outNoChannelFile.path
         )
-        defaultLog.info("去除原渠道并重命名为AndroidManifestNoChannel.xml")
+        println("去除原渠道并重命名为AndroidManifestNoChannel.xml")
 
         val channelsFile = File(channelsFilePath)
         channelsFile.forEachLine {
@@ -99,14 +143,12 @@ object ChannelAndSign {
                 newChannelInsertFile.writeText(newChannelInsertFile.readText().replace(defaultChannelName, channelName))
                 //插入渠道信息
                 AXMLEditor2Util.doCommandTagInsert(
-                    newChannelInsertFile.path,
-                    outNoChannelFile.path,
-                    baseManifestFile.path
+                    newChannelInsertFile.path, outNoChannelFile.path, baseManifestFile.path
                 )
                 //用完删除新渠道文件
                 newChannelInsertFile.delete()
 
-                defaultLog.info("插入新渠道：${channelName}保存到AndroidManifest.xml")
+                println("插入新渠道：${channelName}保存到AndroidManifest.xml")
                 val newChannelApkFile =
                     File(channelPath.ifEmpty { curPath } + "${inputApkPath.nameWithoutExtension}_${channelApkFileName}" + ".apk")
                 if (newChannelApkFile.exists()) {
@@ -118,13 +160,11 @@ object ChannelAndSign {
                 newChannelApkZipFile.delete("AndroidManifest.xml")
                 newChannelApkZipFile.add(
                     BytesSource(
-                        baseManifestFile.toPath(),
-                        "AndroidManifest.xml",
-                        Deflater.NO_COMPRESSION
+                        baseManifestFile.toPath(), "AndroidManifest.xml", Deflater.NO_COMPRESSION
                     )
                 )
                 newChannelApkZipFile.close()
-                defaultLog.info("apk已更新渠道信息")
+                println("apk已更新渠道信息，并保存到${newChannelApkZipFile.path.toAbsolutePath()}")
             }
         }
         baseManifestFile.delete()
@@ -147,9 +187,10 @@ object ChannelAndSign {
      * 签名之前对齐zip
      */
     private fun dealZipalign(inputApkPath: File) {
+        if (!inputApkPath.isFile || "apk" != inputApkPath.extension) return
         val curPath = inputApkPath.parent + File.separator
         if (!ZipalignUtil.check(inputApkPath.path)) {
-            defaultLog.info("正在对齐apk:${inputApkPath.path}")
+            println("正在对齐apk:${inputApkPath.name}")
             val zipFilePath = curPath + inputApkPath.nameWithoutExtension + "_zip.apk"
             ZipalignUtil.zipalign(inputApkPath.path, zipFilePath)
             //对齐后改为原来的名字
@@ -174,11 +215,12 @@ object ChannelAndSign {
     }
 
     private fun signApk(inputFile: File) {
+        if (!inputFile.isFile || "apk" != inputFile.extension) return
         val curPath = inputFile.parent + File.separator
         val inputFileName = inputFile.nameWithoutExtension
         if (inputFileName.contains("_sign")) return
         val outApkFile = curPath + inputFileName + "_sign.apk"
-        defaultLog.info("准备签名：$inputFile")
+        println("准备签名：$inputFile")
         ApkSignerUtil.sign(
             signFile = signFile,
             signAlias = signAlias,
@@ -187,6 +229,9 @@ object ChannelAndSign {
             outSignPath = outApkFile,
             inputApkPath = inputFile.path
         )
-        defaultLog.info("签名已完成：$outApkFile")
+        if (delApkAfterSign) {
+            inputFile.delete()
+        }
+        println("签名已完成：$outApkFile")
     }
 }

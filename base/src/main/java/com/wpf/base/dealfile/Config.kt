@@ -1,7 +1,5 @@
 package com.wpf.base.dealfile
 
-import java.util.logging.Logger
-
 //渠道基础文件路径
 var channelBaseInsertFilePath = ""
 //存储渠道包位置
@@ -20,5 +18,5 @@ var signAlias = ""
 //签名文件别名密码
 var signAliasPassword = ""
 
-//默认Logger
-val defaultLog: Logger = Logger.getLogger("打渠道包")
+//是否签名后删除渠道包
+var delApkAfterSign = false
