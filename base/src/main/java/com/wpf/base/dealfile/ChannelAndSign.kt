@@ -63,9 +63,10 @@ object ChannelAndSign {
                 zipalignPath(channelPath)
             }
             if (dealSign) {
-                signPath(curPath)
                 if (channelPath.isNotEmpty()) {
                     signPath(channelPath)
+                } else {
+                    signPath(curPath)
                 }
             }
         } else if (dealFile.isDirectory) {
@@ -82,9 +83,10 @@ object ChannelAndSign {
                     zipalignPath(channelPath)
                 }
                 if (dealSign) {
-                    signPath(inputFilePath)
                     if (channelPath.isNotEmpty()) {
                         signPath(channelPath)
+                    } else {
+                        signPath(inputFilePath)
                     }
                 }
             }
