@@ -10,8 +10,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="修改命令行。">
+      <change afterPath="$PROJECT_DIR$/.idea/artifacts/FileReplace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/artifacts/common_desktop_1_0_SNAPSHOT.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/artifacts/desktop_jvm_1_0_SNAPSHOT.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fileReplace/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fileReplace/build.gradle.kts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fileReplace/src/main/META-INF/MANIFEST.MF" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fileReplace/src/main/java/com/wpf/utils/FileReplace.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fileReplace/src/main/java/com/wpf/utils/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -129,8 +140,8 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;corretto-17&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Android/ShareFile/channel&quot;,
+    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;11&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/JavaProject/ChannelAndSign/fileReplace/src/main/META-INF/MANIFEST.MF&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -145,11 +156,11 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\JavaProject\ChannelAndSign\fileReplace\src" />
+      <recent name="D:\JavaProject\ChannelAndSign\fileReplace\src\main" />
+      <recent name="D:\JavaProject\ChannelAndSign\fileReplace\src\main\java\com\wpf\utils" />
       <recent name="D:\JavaProject\ChannelAndSign\common\src" />
       <recent name="D:\JavaProject\ChannelAndSign\desktop\src" />
-      <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\ui\jarset" />
-      <recent name="D:\JavaProject\ChannelAndSign\desktop\src\jvmMain\kotlin" />
-      <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\dealfile\ui" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\java" />
@@ -163,11 +174,18 @@
       <recent name="com.wpf.util.common.dealfile.util" />
     </key>
   </component>
-  <component name="RunManager" selected="Kotlin.桌面端">
+  <component name="RunManager" selected="Kotlin.MainKt (1)">
     <configuration name="桌面端" type="JetRunConfigurationType">
       <option name="MAIN_CLASS_NAME" value="MainKt" />
       <module name="ChannelAndSign.desktop.jvmMain" />
       <shortenClasspath name="NONE" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainKt (1)" type="JetRunConfigurationType" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.wpf.utils.MainKt" />
+      <module name="ChannelAndSign.fileReplace.main" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -228,6 +246,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Kotlin.MainKt (1)" />
         <item itemvalue="Kotlin.MainKt" />
       </list>
     </recent_temporary>
@@ -270,6 +289,14 @@
       <workItem from="1683334801172" duration="803000" />
       <workItem from="1683338641589" duration="10025000" />
       <workItem from="1683356083444" duration="1591000" />
+      <workItem from="1686122523928" duration="1624000" />
+      <workItem from="1686126378699" duration="42000" />
+      <workItem from="1686127098458" duration="3093000" />
+      <workItem from="1686130240946" duration="15000" />
+      <workItem from="1686130545025" duration="4000" />
+      <workItem from="1686130705872" duration="2118000" />
+      <workItem from="1686188199727" duration="1163000" />
+      <workItem from="1686198144624" duration="3876000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>

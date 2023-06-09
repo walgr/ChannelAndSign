@@ -2,7 +2,7 @@ package com.wpf.base.dealfile
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
-        println("参数异常，请按照-baseChannel、-channelPath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword、-filePath、-dealSign配置")
+        println("参数异常，请按照-baseChannel、-channelSavePath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword、-filePath、-dealSign配置")
         return
     }
     var filePath = ""
@@ -10,13 +10,13 @@ fun main(args: Array<String>? = null) {
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
         if (arg.startsWith("-") && nextInput.startsWith("-")) {
-            println("参数异常，请按照-baseChannel、-channelPath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword、-filePath、-dealSign配置")
+            println("参数异常，请按照-baseChannel、-channelSavePath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword、-filePath、-dealSign配置")
             return
         }
         if ("-baseChannel" == arg) {
             channelBaseInsertFilePath = nextInput
         }
-        if ("-channelPath" == arg) {
+        if ("-channelSavePath" == arg) {
             channelSavePath = nextInput
         }
         if ("-channelsPath" == arg) {

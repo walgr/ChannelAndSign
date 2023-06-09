@@ -17,3 +17,4 @@ rootProject.name = "ChannelAndSign"
 
 include("base")
 include( ":desktop", ":common")
+include("fileReplace")

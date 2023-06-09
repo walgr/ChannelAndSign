@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/base" />
             <option value="$PROJECT_DIR$/common" />
             <option value="$PROJECT_DIR$/desktop" />
+            <option value="$PROJECT_DIR$/fileReplace" />
           </set>
         </option>
       </GradleProjectSettings>
