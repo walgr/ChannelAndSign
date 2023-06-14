@@ -57,7 +57,7 @@ object AXMLEditor2Util {
     }
 
     /**
-     * 操作属性
+     * 插入属性
      * @param insertXmlPath 待插入xml
      * @param inputXmlPath 输入xml
      * @param outputXmlPath 输出xml
@@ -67,11 +67,12 @@ object AXMLEditor2Util {
         inputXmlPath: String,
         outputXmlPath: String,
     ) {
+//        Runtime.getRuntime().exec("java -jar D:\\Android\\ShareFile\\tools\\AXMLEditor2.jar -tag -i $insertXmlPath $inputXmlPath $outputXmlPath")
         Main.main(arrayOf("-tag", "-i", insertXmlPath, inputXmlPath, outputXmlPath))
     }
 
     /**
-     * 操作属性
+     * 删除属性
      * @param labelName 标签名
      * @param labelIdentification 标签唯一标识
      * @param inputXmlPath 输入xml

@@ -16,9 +16,6 @@ fun main(args: Array<String>? = null) {
         if ("-baseChannel" == arg) {
             channelBaseInsertFilePath = nextInput
         }
-        if ("-channelSavePath" == arg) {
-            channelSavePath = nextInput
-        }
         if ("-channelsPath" == arg) {
             channelsFilePath = nextInput
         }
@@ -43,7 +40,12 @@ fun main(args: Array<String>? = null) {
         if ("-dealSign" == arg) {
             dealSign = "1" == nextInput
         }
+        if ("-channelSavePath" == arg) {
+            channelSavePath = nextInput
+        }
     }
-    println("开启处理...")
-    ChannelAndSign.scanFile(true, inputFilePath = filePath, dealSign = dealSign) {}
+    println("开始处理...")
+    ChannelAndSign.scanFile(false, inputFilePath = filePath, dealSign = dealSign) {
+        println("处理完毕...")
+    }
 }
