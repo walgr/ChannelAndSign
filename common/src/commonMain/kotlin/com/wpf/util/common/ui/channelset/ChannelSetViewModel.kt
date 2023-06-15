@@ -26,6 +26,7 @@ object ChannelSetViewModel {
     fun getChannelDataInFile(txtFilePath: String): List<Array<String>> {
         val channelsFile = File(txtFilePath)
         val result = mutableListOf<Array<String>>()
+        if (!channelsFile.exists()) return result
         channelsFile.forEachLine {
             if (it.isNotEmpty()) {
                 val fields = it.split(" ")

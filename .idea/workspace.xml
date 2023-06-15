@@ -10,27 +10,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="多线程支持。">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/Main2.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/ParserChunkUtils2.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/ParserChunkUtilsHelper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/XmlEditor2.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/XmlEditorHelper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/RunJar.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/chunk/AttributeData.java" beforeDir="false" afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/chunk/AttributeData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/AttributeType.java" beforeDir="false" afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/AttributeType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/ParserChunkUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/ParserChunkUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/XmlEditor.java" beforeDir="false" afterPath="$PROJECT_DIR$/AXMLEditor3/src/main/java/cn/wjdiankong/main/XmlEditor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/base/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Config.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Config.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Main.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/AXMLEditor2Util.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/AXMLEditor2Util.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ApkSignerUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ApkSignerUtil.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/libs/apksigner.jar" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/resources/apksigner.jar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -161,7 +141,7 @@
       <recent name="cn.wjdiankong" />
     </key>
   </component>
-  <component name="RunManager" selected="Kotlin.MainKt">
+  <component name="RunManager" selected="Kotlin.桌面端">
     <configuration name="ChannelAndSign:AXMLEditor3 [assemble]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -379,7 +359,7 @@
       <workItem from="1686627109319" duration="19000" />
       <workItem from="1686708198726" duration="24149000" />
       <workItem from="1686789396770" duration="6979000" />
-      <workItem from="1686796457247" duration="6324000" />
+      <workItem from="1686796457247" duration="6716000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>
@@ -465,7 +445,14 @@
       <option name="project" value="LOCAL" />
       <updated>1686734189623</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="多线程支持。">
+      <created>1686803638287</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1686803638287</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
