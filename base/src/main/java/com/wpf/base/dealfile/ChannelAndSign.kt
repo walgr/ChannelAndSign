@@ -29,13 +29,17 @@ object ChannelAndSign {
             return
         }
         this.inputFilePath = inputFilePath
-        try {
-            dealScanFile(inputFilePath, dealSign, finish)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            println("运行错误:${e.message}")
-            finish.invoke()
-        }
+        ThreadPoolHelper.run(runnable = listOf(
+            Callable {
+                try {
+                    dealScanFile(inputFilePath, dealSign, finish)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    println("运行错误:${e.message}")
+                    finish.invoke()
+                }
+            }
+        ))
     }
 
     private fun dealScanFile(inputFilePath: String, dealSign: Boolean = true, finish: (() -> Unit)) {
@@ -48,14 +52,10 @@ object ChannelAndSign {
                     val channelPath = getChannelPath(curPath)
                     if (channelPath.isNotEmpty()) {
                         zipalignPath(channelPath) {
-                            signPath(dealSign, channelPath.ifEmpty { curPath }) {
-                                finish.invoke()
-                            }
+                            signPath(dealSign, channelPath.ifEmpty { curPath }, finish)
                         }
                     } else {
-                        signPath(dealSign, channelPath.ifEmpty { curPath }) {
-                            finish.invoke()
-                        }
+                        signPath(dealSign, channelPath.ifEmpty { curPath }, finish)
                     }
                 }
             }

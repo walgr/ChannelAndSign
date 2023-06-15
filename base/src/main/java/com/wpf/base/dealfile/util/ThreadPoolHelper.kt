@@ -9,13 +9,14 @@ object ThreadPoolHelper {
     fun <T> run(
         nThreads: Int = Runtime.getRuntime().availableProcessors(),
         runnable: List<Callable<T>>?,
-        finish: (List<Future<T>>?) -> Unit
+        finish: ((List<Future<T>>?) -> Unit)? = null
     ) {
         if (runnable == null) {
-            finish.invoke(null)
+            finish?.invoke(null)
             return
         }
         val executorsPool = Executors.newFixedThreadPool(nThreads)
-        finish.invoke(executorsPool.invokeAll(runnable))
+        val result = executorsPool.invokeAll(runnable)
+        finish?.invoke(result)
     }
 }
