@@ -20,3 +20,6 @@ var signAliasPassword = ""
 
 //是否签名后删除渠道包
 var delApkAfterSign = false
+
+//签名程序路径
+var apksignerPath = ""

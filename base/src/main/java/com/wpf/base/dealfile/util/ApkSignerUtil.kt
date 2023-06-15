@@ -1,11 +1,21 @@
 package com.wpf.base.dealfile.util
 
-import com.android.apksigner.ApkSignerTool
+import com.wpf.base.dealfile.apksignerPath
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
+
 
 /**
  * Android apk签名
  */
 object ApkSignerUtil {
+    init {
+        apksignerPath = File("").canonicalPath + File.separator + "apksigner.jar"
+        if (!File(apksignerPath).exists()) {
+            javaClass.getResource("/apksigner.jar")?.openStream()?.copyTo(FileOutputStream(apksignerPath))
+        }
+    }
 
     /**
      * apk签名
@@ -24,21 +34,41 @@ object ApkSignerUtil {
         outSignPath: String,
         inputApkPath: String
     ) {
-        ApkSignerTool.main(
-            arrayOf(
-                "sign",
-                "--ks",
-                signFile,
-                "--ks-key-alias",
-                signAlias,
-                "--ks-pass",
-                "pass:$keyStorePassword",
-                "--key-pass",
-                "pass:$keyPassword",
-                "--out",
-                outSignPath,
-                inputApkPath
-            )
+        val cmd = arrayOf(
+            "java",
+            "-jar",
+            apksignerPath,
+            "sign",
+            "--ks",
+            signFile,
+            "--ks-key-alias",
+            signAlias,
+            "--ks-pass",
+            "pass:$keyStorePassword",
+            "--key-pass",
+            "pass:$keyPassword",
+            "--out",
+            outSignPath,
+            inputApkPath
         )
+        val result = Runtime.getRuntime().exec(cmd)
+        val resultStr = result.errorStream.readBytes().decodeToString()
+        println("$inputApkPath 签名结果:" + if (resultStr.isEmpty()) "成功" else "失败")
+//        ApkSignerTool.main(
+//            arrayOf(
+//                "sign",
+//                "--ks",
+//                signFile,
+//                "--ks-key-alias",
+//                signAlias,
+//                "--ks-pass",
+//                "pass:$keyStorePassword",
+//                "--key-pass",
+//                "pass:$keyPassword",
+//                "--out",
+//                outSignPath,
+//                inputApkPath
+//            )
+//        )
     }
 }

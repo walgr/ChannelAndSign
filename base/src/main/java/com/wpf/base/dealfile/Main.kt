@@ -43,9 +43,14 @@ fun main(args: Array<String>? = null) {
         if ("-channelSavePath" == arg) {
             channelSavePath = nextInput
         }
+        if ("-delApkAfterSign" == arg) {
+            delApkAfterSign = "1" == nextInput
+        }
     }
+//    delApkAfterSign = true
     println("开始处理...")
-    ChannelAndSign.scanFile(false, inputFilePath = filePath, dealSign = dealSign) {
-        println("处理完毕...")
+    val startTime = System.currentTimeMillis()
+    ChannelAndSign.scanFile(inputFilePath = filePath, dealSign = dealSign) {
+        println("处理完毕...用时：${System.currentTimeMillis() - startTime}")
     }
 }

@@ -1,6 +1,5 @@
 package cn.wjdiankong.chunk;
 
-import cn.wjdiankong.main.ParserChunkUtils;
 import cn.wjdiankong.main.Utils;
 
 public class AttributeData {
@@ -52,26 +51,4 @@ public class AttributeData {
 		data.dataB = Utils.int2Byte(data1);
 		return data;
 	}
-	
-	public String getNameSpaceUri(){
-		if(nameSpaceUri < 0){
-			return "";
-		}
-		return ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(nameSpaceUri);
-	}
-	
-	public String getName(){
-		if(name < 0){
-			return "";
-		}
-		return ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(name);
-	}
-	
-	public String getData(){
-		if(data < 0){
-			return "";
-		}
-		return ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(data);
-	}
-
 }

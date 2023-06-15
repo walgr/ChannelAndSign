@@ -14,10 +14,15 @@ import cn.wjdiankong.chunk.StringChunk;
 import cn.wjdiankong.chunk.TagChunk;
 
 public class XmlEditor {
-	
-	public static int tagStartChunkOffset = 0, tagEndChunkOffset;
-	public static int subAppTagChunkOffset = 0;
-	public static int subTagChunkOffsets = 0;
+
+	private String fileName;
+	public XmlEditor(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public int tagStartChunkOffset = 0, tagEndChunkOffset;
+	public int subAppTagChunkOffset = 0;
+	public int subTagChunkOffsets = 0;
 	
 	public static String[] isNotAppTag = new String[]{
 			"uses-permission", "uses-sdk", "compatible-screens", "instrumentation", "library",
@@ -32,23 +37,23 @@ public class XmlEditor {
 	 * @param tagName
 	 * @param name
 	 */
-	public static void removeTag(String tagName, String name){
+	public void removeTag(String tagName, String name){
 		try{
-			ParserChunkUtils.parserXml();
-			for(TagChunk tag : ParserChunkUtils.xmlStruct.tagChunkList){
+			ParserChunkUtilsHelper.get(fileName).parserXml();
+			for(TagChunk tag : ParserChunkUtilsHelper.get(fileName).xmlStruct.tagChunkList){
 				int tagNameIndex = Utils.byte2int(tag.startTagChunk.name);
-				String tagNameTmp = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(tagNameIndex);
+				String tagNameTmp = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(tagNameIndex);
 				if(tagName.equals(tagNameTmp)){
 					for(AttributeData attrData : tag.startTagChunk.attrList){
-						String attrName = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(attrData.name);
+						String attrName = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(attrData.name);
 						if("name".equals(attrName)){
-							String value = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(attrData.valueString);
+							String value = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(attrData.valueString);
 							if(name.equals(value)){
 								//�ҵ�ָ����tag��ʼɾ��
 								int size = Utils.byte2int(tag.endTagChunk.size);
 								int delStart = tag.startTagChunk.offset;
 								int delSize = (tag.endTagChunk.offset - tag.startTagChunk.offset) + size;
-								ParserChunkUtils.xmlStruct.byteSrc = Utils.removeByte(ParserChunkUtils.xmlStruct.byteSrc, delStart, delSize);
+								ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.removeByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, delStart, delSize);
 
 								modifyFileSize();
 								return;
@@ -65,12 +70,14 @@ public class XmlEditor {
 	/**
 	 * ��ӱ�ǩ���� 
 	 */
-	public static void addTag(String insertXml){
+	public void addTag(String insertXml){
+		FileInputStream insertXmlFile = null;
 		try {
-			ParserChunkUtils.parserXml();
+			ParserChunkUtilsHelper.get(fileName).parserXml();
 	        XmlPullParserFactory pullParserFactory = XmlPullParserFactory.newInstance();
-	        XmlPullParser pullParser = pullParserFactory.newPullParser();  
-	        pullParser.setInput(new FileInputStream(insertXml), "UTF-8");  
+	        XmlPullParser pullParser = pullParserFactory.newPullParser();
+			insertXmlFile = new FileInputStream(insertXml);
+	        pullParser.setInput(insertXmlFile, "UTF-8");
 	        int event = pullParser.getEventType();  
 	        // ��Ϊ������ĩβ  
 	        while (event != XmlPullParser.END_DOCUMENT){ // �ĵ����� 
@@ -102,10 +109,10 @@ public class XmlEditor {
 	                	StartTagChunk startChunk = StartTagChunk.createChunk(name, attCount, -1, attribute);
 	                	//����һ���µ�chunk֮�󣬿�ʼд��
 	                	if(isNotAppTag(tagName)){
-	            			ParserChunkUtils.xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtils.xmlStruct.byteSrc, subTagChunkOffsets, startChunk.getChunkByte());
+	            			ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, subTagChunkOffsets, startChunk.getChunkByte());
 	            			subTagChunkOffsets += startChunk.getChunkByte().length;
 	                	}else{
-	                		ParserChunkUtils.xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtils.xmlStruct.byteSrc, subAppTagChunkOffset, startChunk.getChunkByte());
+	                		ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, subAppTagChunkOffset, startChunk.getChunkByte());
 	            			subAppTagChunkOffset += startChunk.getChunkByte().length;
 	                	}
 	                    break;  
@@ -115,10 +122,10 @@ public class XmlEditor {
 	                	name = getStrIndex(tagName);
 	                	EndTagChunk endChunk = EndTagChunk.createChunk(name);
 	                	if(isNotAppTag(tagName)){
-	            			ParserChunkUtils.xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtils.xmlStruct.byteSrc, subTagChunkOffsets, endChunk.getChunkByte());
+	            			ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, subTagChunkOffsets, endChunk.getChunkByte());
 	            			subTagChunkOffsets += endChunk.getChunkByte().length;
 	                	}else{
-	                		ParserChunkUtils.xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtils.xmlStruct.byteSrc, subAppTagChunkOffset, endChunk.getChunkByte());
+	                		ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, subAppTagChunkOffset, endChunk.getChunkByte());
 	            			subAppTagChunkOffset += endChunk.getChunkByte().length;
 	                	}
 	                    break;  
@@ -130,12 +137,20 @@ public class XmlEditor {
 			System.out.println("parse xml err:"+e.toString());
 		} catch (IOException e){
 			System.out.println("parse xml err:"+e.toString());
+		} finally {
+			if (insertXmlFile != null) {
+				try {
+					insertXmlFile.close();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
 		}
 		
 		modifStringChunk();
 		
 		modifyFileSize();
-		
+
 	}
 	
 	/**
@@ -144,19 +159,19 @@ public class XmlEditor {
 	 * @param tagName
 	 * @param attrName
 	 */
-	public static void removeAttr(String tag, String tagName, String attrName){
+	public void removeAttr(String tag, String tagName, String attrName){
 		try{
-			ParserChunkUtils.parserXml();
-			for(StartTagChunk chunk : ParserChunkUtils.xmlStruct.startTagChunkList){
+			ParserChunkUtilsHelper.get(fileName).parserXml();
+			for(StartTagChunk chunk : ParserChunkUtilsHelper.get(fileName).xmlStruct.startTagChunkList){
 				int tagNameIndex = Utils.byte2int(chunk.name);
-				String tagNameTmp = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(tagNameIndex);
+				String tagNameTmp = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(tagNameIndex);
 
 				if(tag.equals(tagNameTmp)){
 
 					//�����application��manifest��ǩֱ�Ӵ���ͺ�
 					if(tag.equals("application") || tag.equals("manifest")){
 						for(AttributeData data : chunk.attrList){
-							String attrNameTemp1 = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(data.name);
+							String attrNameTemp1 = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(data.name);
 							if(attrName.equals(attrNameTemp1)){
 								//����ҵ���Ӧ�ı�ǩ������ֻ��һ������ֵ������ɾ���ɹ���ͬʱ���ð������ǩ��ɾ����
 								if(chunk.attrList.size() == 1){
@@ -166,18 +181,18 @@ public class XmlEditor {
 								//�����޸Ķ�Ӧ��tag chunk�����Ը������ʹ�С
 								int countStart = chunk.offset + 28;
 								byte[] modifyByte = Utils.int2Byte(chunk.attrList.size()-1);
-								ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, modifyByte, countStart);
+								ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, modifyByte, countStart);
 
 								//�޸�chunk�Ĵ�С
 								int chunkSizeStart = chunk.offset + 4;
 								int chunkSize = Utils.byte2int(chunk.size);
 								byte[] modifyByteSize = Utils.int2Byte(chunkSize-20);//һ�����Կ���20���ֽ�
-								ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, modifyByteSize, chunkSizeStart);
+								ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, modifyByteSize, chunkSizeStart);
 
 								//ɾ����������
 								int delStart = data.offset;
 								int delSize = data.getLen();
-								ParserChunkUtils.xmlStruct.byteSrc = Utils.removeByte(ParserChunkUtils.xmlStruct.byteSrc, delStart, delSize);
+								ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.removeByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, delStart, delSize);
 
 								modifyFileSize();
 								return;
@@ -187,12 +202,12 @@ public class XmlEditor {
 
 					//������Ҫͨ��name�ҵ�ָ����tag
 					for(AttributeData attrData : chunk.attrList){
-						String attrNameTemp = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(attrData.name);
+						String attrNameTemp = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(attrData.name);
 						if("name".equals(attrNameTemp)){//�����ҵ�tag��Ӧ��Ψһ����
-							String value = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(attrData.valueString);
+							String value = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(attrData.valueString);
 							if(tagName.equals(value)){
 								for(AttributeData data : chunk.attrList){
-									String attrNameTemp1 = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(data.name);
+									String attrNameTemp1 = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(data.name);
 									if(attrName.equals(attrNameTemp1)){
 
 										//����ҵ���Ӧ�ı�ǩ������ֻ��һ������ֵ������ɾ���ɹ���ͬʱ���ð������ǩ��ɾ����
@@ -204,18 +219,18 @@ public class XmlEditor {
 										//�����޸Ķ�Ӧ��tag chunk�����Ը������ʹ�С
 										int countStart = chunk.offset + 28;
 										byte[] modifyByte = Utils.int2Byte(chunk.attrList.size()-1);
-										ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, modifyByte, countStart);
+										ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, modifyByte, countStart);
 
 										//�޸�chunk�Ĵ�С
 										int chunkSizeStart = chunk.offset + 4;
 										int chunkSize = Utils.byte2int(chunk.size);
 										byte[] modifyByteSize = Utils.int2Byte(chunkSize-20);
-										ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, modifyByteSize, chunkSizeStart);
+										ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, modifyByteSize, chunkSizeStart);
 
 										//ɾ����������
 										int delStart = data.offset;
 										int delSize = data.getLen();
-										ParserChunkUtils.xmlStruct.byteSrc = Utils.removeByte(ParserChunkUtils.xmlStruct.byteSrc, delStart, delSize);
+										ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.removeByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, delStart, delSize);
 
 										modifyFileSize();
 										return ;
@@ -239,12 +254,12 @@ public class XmlEditor {
 	 * @param attrName
 	 * @param attrValue
 	 */
-	public static void modifyAttr(String tag, String tagName, String attrName, String attrValue){
+	public void modifyAttr(String tag, String tagName, String attrName, String attrValue){
 		try{
-			ParserChunkUtils.parserXml();
-			XmlEditor.removeAttr(tag, tagName, attrName);
-			ParserChunkUtils.parserXml();
-			XmlEditor.addAttr(tag, tagName, attrName, attrValue);
+			ParserChunkUtilsHelper.get(fileName).parserXml();
+			XmlEditorHelper.get(fileName).removeAttr(tag, tagName, attrName);
+			ParserChunkUtilsHelper.get(fileName).parserXml();
+			XmlEditorHelper.get(fileName).addAttr(tag, tagName, attrName, attrValue);
 
 		}catch (IOException e){
 			System.out.println("parse xml err:"+e.toString());
@@ -258,9 +273,9 @@ public class XmlEditor {
 	 * @param attrName
 	 * @param attrValue
 	 */
-	public static void addAttr(String tag, String tagName, String attrName, String attrValue){
+	public void addAttr(String tag, String tagName, String attrName, String attrValue){
 		try{
-			ParserChunkUtils.parserXml();
+			ParserChunkUtilsHelper.get(fileName).parserXml();
 			//����һ�����Գ���
 			int[] type = getAttrType(attrValue);
 			int attrname = getStrIndex(attrName);
@@ -271,10 +286,10 @@ public class XmlEditor {
 
 			AttributeData data = AttributeData.createAttribute(attruri, attrname, attrvalue, attrtype, attrdata);
 
-			for(StartTagChunk chunk : ParserChunkUtils.xmlStruct.startTagChunkList){
+			for(StartTagChunk chunk : ParserChunkUtilsHelper.get(fileName).xmlStruct.startTagChunkList){
 
 				int tagNameIndex = Utils.byte2int(chunk.name);
-				String tagNameTmp = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(tagNameIndex);
+				String tagNameTmp = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(tagNameIndex);
 				if(tag.equals(tagNameTmp)){
 
 					//�����application��manifest��ǩֱ�Ӵ���ͺ�
@@ -282,16 +297,16 @@ public class XmlEditor {
 						//�����޸Ķ�Ӧ��tag chunk�����Ը������ʹ�С
 						int countStart = chunk.offset + 28;
 						byte[] modifyByte = Utils.int2Byte(chunk.attrList.size()+1);
-						ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, modifyByte, countStart);
+						ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, modifyByte, countStart);
 
 						//�޸�chunk�Ĵ�С
 						int chunkSizeStart = chunk.offset + 4;
 						int chunkSize = Utils.byte2int(chunk.size);
 						byte[] modifyByteSize = Utils.int2Byte(chunkSize+20);
-						ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, modifyByteSize, chunkSizeStart);
+						ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, modifyByteSize, chunkSizeStart);
 
 						//����������ݵ�ԭ����chunk��
-						ParserChunkUtils.xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtils.xmlStruct.byteSrc, chunk.offset + chunkSize, data.getByte());
+						ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, chunk.offset + chunkSize, data.getByte());
 
 						modifStringChunk();
 
@@ -301,22 +316,22 @@ public class XmlEditor {
 					}
 
 					for(AttributeData attrData : chunk.attrList){
-						String attrNameTemp = ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(attrData.name);
+						String attrNameTemp = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(attrData.name);
 						if("name".equals(attrNameTemp)){//�����ҵ�tag��Ӧ��Ψһ����
 
 							//�����޸Ķ�Ӧ��tag chunk�����Ը������ʹ�С
 							int countStart = chunk.offset + 28;
 							byte[] modifyByte = Utils.int2Byte(chunk.attrList.size()+1);
-							ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, modifyByte, countStart);
+							ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, modifyByte, countStart);
 
 							//�޸�chunk�Ĵ�С
 							int chunkSizeStart = chunk.offset + 4;
 							int chunkSize = Utils.byte2int(chunk.size);
 							byte[] modifyByteSize = Utils.int2Byte(chunkSize+20);
-							ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, modifyByteSize, chunkSizeStart);
+							ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, modifyByteSize, chunkSizeStart);
 
 							//����������ݵ�ԭ����chunk��
-							ParserChunkUtils.xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtils.xmlStruct.byteSrc, chunk.offset + chunkSize, data.getByte());
+							ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, chunk.offset + chunkSize, data.getByte());
 
 							modifStringChunk();
 
@@ -335,15 +350,15 @@ public class XmlEditor {
 	/**
 	 * ���²���String Chunk���ݿ�
 	 */
-	private static void modifStringChunk(){
+	private void modifStringChunk(){
 		try{
 			//д��StartTagChunk chunk֮ǰ����Ϊ���ַ�����Ϣ���ӣ����Ե��޸��ַ�������
-			StringChunk strChunk = ParserChunkUtils.xmlStruct.stringChunk;
-			byte[] newStrChunkB = strChunk.getByte(ParserChunkUtils.xmlStruct.stringChunk.stringContentList);
+			StringChunk strChunk = ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk;
+			byte[] newStrChunkB = strChunk.getByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList);
 			//ɾ��ԭʼString Chunk
-			ParserChunkUtils.xmlStruct.byteSrc = Utils.removeByte(ParserChunkUtils.xmlStruct.byteSrc, ParserChunkUtils.stringChunkOffset, Utils.byte2int(strChunk.size));
+			ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.removeByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, ParserChunkUtilsHelper.get(fileName).stringChunkOffset, Utils.byte2int(strChunk.size));
 			//�����µ�String Chunk
-			ParserChunkUtils.xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtils.xmlStruct.byteSrc, ParserChunkUtils.stringChunkOffset, newStrChunkB);
+			ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.insertByte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, ParserChunkUtilsHelper.get(fileName).stringChunkOffset, newStrChunkB);
 		}catch (IOException e){
 			System.out.println("parse xml err:"+e.toString());
 		}
@@ -352,9 +367,9 @@ public class XmlEditor {
 	/**
 	 * �޸��ļ����յĴ�С
 	 */
-	public static void modifyFileSize(){
-		byte[] newFileSize = Utils.int2Byte(ParserChunkUtils.xmlStruct.byteSrc.length);
-		ParserChunkUtils.xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtils.xmlStruct.byteSrc, newFileSize, 4);
+	public void modifyFileSize(){
+		byte[] newFileSize = Utils.int2Byte(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc.length);
+		ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc = Utils.replaceBytes(ParserChunkUtilsHelper.get(fileName).xmlStruct.byteSrc, newFileSize, 4);
 	}
 	
 	/**
@@ -362,17 +377,17 @@ public class XmlEditor {
 	 * @param str
 	 * @return
 	 */
-	public static int getStrIndex(String str){
+	public int getStrIndex(String str){
 		if(str == null || str.length() == 0){
 			return -1;
 		}
-		for(int i=0; i<ParserChunkUtils.xmlStruct.stringChunk.stringContentList.size(); i++){
-			if(ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(i).equals(str)){
+		for(int i=0; i<ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.size(); i++){
+			if(ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.get(i).equals(str)){
 				return i;
 			}
 		}
-		ParserChunkUtils.xmlStruct.stringChunk.stringContentList.add(str);
-		return ParserChunkUtils.xmlStruct.stringChunk.stringContentList.size()-1;
+		ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.add(str);
+		return ParserChunkUtilsHelper.get(fileName).xmlStruct.stringChunk.stringContentList.size()-1;
 	}
 	
 	/**
@@ -380,7 +395,7 @@ public class XmlEditor {
 	 * @param tagName
 	 * @return
 	 */
-	public static boolean isNotAppTag(String tagName){
+	public boolean isNotAppTag(String tagName){
 		for(String str : isNotAppTag){
 			if(str.equals(tagName)){
 				return true;
@@ -394,7 +409,7 @@ public class XmlEditor {
 	 * @param tagValue
 	 * @return
 	 */
-	public static int[] getAttrType(String tagValue){
+	public int[] getAttrType(String tagValue){
 		
 		int[] result = new int[2];
 		

@@ -2,8 +2,6 @@ package cn.wjdiankong.main;
 
 import java.util.HashMap;
 
-import cn.wjdiankong.chunk.AttributeData;
-
 /**
 attributes' types
 enum{
@@ -71,42 +69,6 @@ public class AttributeType {
 	    COMPLEX_RADIX_MASK		=3,
 	    COMPLEX_MANTISSA_SHIFT	=8,
 	    COMPLEX_MANTISSA_MASK	=0xFFFFFF;
-	
-	public static String getAttributeData(AttributeData data){
-		if (data.type == ATTR_STRING) {
-			return ParserChunkUtils.xmlStruct.stringChunk.stringContentList.get(data.data);
-		}
-		if (data.type == ATTR_ATTRIBUTE) {
-			return String.format("?%s%08X",getPackage(data.data),data.data);
-		}
-		if (data.type == ATTR_REFERENCE) {
-			return String.format("@%s%08X",getPackage(data.data),data.data);
-		}
-		if (data.type == ATTR_FLOAT) {
-			return String.valueOf(Float.intBitsToFloat(data.data));
-		}
-		if (data.type == ATTR_HEX) {
-			return String.format("0x%08X",data.data);
-		}
-		if (data.type == ATTR_BOOLEAN) {
-			return data.data!=0?"true":"false";
-		}
-		if (data.type == ATTR_DIMENSION) {
-			return Float.toString(complexToFloat(data.data))+
-				DIMENSION_UNITS[data.data & COMPLEX_UNIT_MASK];
-		}
-		if (data.type == ATTR_FRACTION) {
-			return Float.toString(complexToFloat(data.data))+
-				FRACTION_UNITS[data.data & COMPLEX_UNIT_MASK];
-		}
-		if (data.type >= ATTR_FIRSTCOLOR && data.type <= ATTR_LASTCOLOR) {
-			return String.format("#%08X",data.data);
-		}
-		if (data.type >= ATTR_FIRSTINT && data.type <= ATTR_LASTINT) {
-			return String.valueOf(data.data);
-		}
-		return String.format("<0x%X, type 0x%02X>",data.data, data.type);
-	}
 	
 	private static String getPackage(int id) {
 		if (id>>>24==1) {

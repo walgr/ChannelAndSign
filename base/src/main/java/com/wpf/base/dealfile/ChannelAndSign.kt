@@ -2,10 +2,7 @@ package com.wpf.base.dealfile
 
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
-import com.wpf.base.dealfile.util.AXMLEditor2Util
-import com.wpf.base.dealfile.util.ApkSignerUtil
-import com.wpf.base.dealfile.util.FileUtil
-import com.wpf.base.dealfile.util.ZipalignUtil
+import com.wpf.base.dealfile.util.*
 import kotlinx.coroutines.*
 import java.io.File
 import java.lang.Exception
@@ -20,33 +17,29 @@ object ChannelAndSign {
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(channelBaseInsertFilePath)
             .getElementsByTagName("meta-data").item(0).attributes.item(1).nodeValue
 
+    //原始文件路径
+    private var inputFilePath: String = ""
+
     fun scanFile(
-        inMainThread: Boolean = false, inputFilePath: String, dealSign: Boolean = true, callback: (() -> Unit)
+        inputFilePath: String, dealSign: Boolean = true, finish: (() -> Unit)
     ) {
-        if (!inMainThread) {
-            try {
-                scanFile(inputFilePath, dealSign, callback)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                println("运行错误:${e.message}")
-                callback.invoke()
-            }
-        } else {
-            try {
-                scanFile(inputFilePath, dealSign, callback)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                println("运行错误:${e.message}")
-                callback.invoke()
-            }
+        if (inputFilePath.isEmpty()) {
+            println("输入的文件路径不正确")
+            finish.invoke()
+            return
+        }
+        this.inputFilePath = inputFilePath
+        try {
+            dealScanFile(inputFilePath, dealSign, finish)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("运行错误:${e.message}")
+            finish.invoke()
         }
     }
 
-    private fun scanFile(inputFilePath: String, dealSign: Boolean = true, finish: (() -> Unit)) {
-        if (inputFilePath.isEmpty()) {
-            println("输入的文件路径不正确")
-            return
-        }
+    private fun dealScanFile(inputFilePath: String, dealSign: Boolean = true, finish: (() -> Unit)) {
+        AXMLEditor2Util.clearCache()
         val dealFile = File(inputFilePath)
         if (dealFile.isFile && "apk" == dealFile.extension) {
             val curPath = dealFile.parent + File.separator
@@ -55,17 +48,13 @@ object ChannelAndSign {
                     val channelPath = getChannelPath(curPath)
                     if (channelPath.isNotEmpty()) {
                         zipalignPath(channelPath) {
-                            if (dealSign) {
-                                signPath(channelPath.ifEmpty { curPath }) {
-                                    finish.invoke()
-                                }
+                            signPath(dealSign, channelPath.ifEmpty { curPath }) {
+                                finish.invoke()
                             }
                         }
                     } else {
-                        if (dealSign) {
-                            signPath(channelPath.ifEmpty { curPath }) {
-                                finish.invoke()
-                            }
+                        signPath(dealSign, channelPath.ifEmpty { curPath }) {
+                            finish.invoke()
                         }
                     }
                 }
@@ -74,23 +63,25 @@ object ChannelAndSign {
             val apkFileList = dealFile.listFiles()?.filter {
                 it.isFile && "apk" == it.extension
             }
-            apkFileList?.forEach {
-                dealChannel(it)
-            }
-            if (apkFileList?.isNotEmpty() == true) {
-                val channelPath = getChannelPath(inputFilePath)
-                zipalignPath(inputFilePath)
-                if (channelPath.isNotEmpty()) {
-                    zipalignPath(channelPath)
+            ThreadPoolHelper.run(runnable = apkFileList?.map {
+                Callable {
+                    dealChannel(it)
                 }
-                if (dealSign) {
-                    if (channelPath.isNotEmpty()) {
-                        signPath(channelPath) {
-                            finish.invoke()
-                        }
-                    } else {
-                        signPath(inputFilePath) {
-                            finish.invoke()
+            }) { results ->
+                results?.forEach {
+                    it.get()?.forEach { log ->
+                        println(log)
+                    }
+                }
+                if (apkFileList?.isNotEmpty() == true) {
+                    val channelPath = getChannelPath(inputFilePath)
+                    zipalignPath(inputFilePath) {
+                        if (channelPath.isNotEmpty()) {
+                            zipalignPath(channelPath) {
+                                signPath(dealSign, channelPath, finish)
+                            }
+                        } else {
+                            signPath(dealSign, inputFilePath, finish)
                         }
                     }
                 }
@@ -111,9 +102,10 @@ object ChannelAndSign {
     /**
      * 处理加固包打渠道包
      */
-    private fun dealChannel(inputApkPath: File, finish: (() -> Unit)? = null) {
+    private fun dealChannel(inputApkPath: File, finish: (() -> Unit)? = null): List<String> {
         //如果是渠道包
-        if (inputApkPath.nameWithoutExtension.contains("Market_")) return
+        if (inputApkPath.nameWithoutExtension.contains("Market_")) return arrayListOf("不需处理")
+        val logList = arrayListOf<String>()
         val curPath = inputApkPath.parent + File.separator
         val inputZipFile = ZipFile(inputApkPath)
         //创建渠道包存储文件夹
@@ -125,7 +117,7 @@ object ChannelAndSign {
         val baseManifestFile = File(curPath + "AndroidManifest.xml")
         baseManifestFile.createNewFile()
         FileUtil.save2File(inputZipFile.getInputStream(inputZipFile.getEntry("AndroidManifest.xml")), baseManifestFile)
-        println("解压 ${inputApkPath.name} 得到AndroidManifest.xml")
+        logList.add("解压 ${inputApkPath.name} 得到AndroidManifest.xml")
 
         //先去除旧的渠道数据
         val outNoChannelFile = File(curPath + "AndroidManifestNoChannel.xml")
@@ -133,34 +125,32 @@ object ChannelAndSign {
         AXMLEditor2Util.doCommandTagDel(
             "meta-data", "UMENG_CHANNEL", baseManifestFile.path, outNoChannelFile.path
         )
-        println("去除原渠道并重命名为AndroidManifestNoChannel.xml")
+        logList.add("去除原渠道并重命名为AndroidManifestNoChannel.xml")
 
         val channelsFile = File(channelsFilePath)
-        val channelLines = channelsFile.readLines()
-        val callables = channelLines.map {
+        ThreadPoolHelper.run(runnable = channelsFile.readLines().map {
             Callable {
-                dealChannelApk(it, curPath, outNoChannelFile, baseManifestFile, channelPath, inputApkPath)
+                dealChannelApk(it, curPath, outNoChannelFile, channelPath, inputApkPath)
             }
-        }
-        val results = Executors.newWorkStealingPool().invokeAll(callables)
-        results.filterIndexed { index, it ->
-            it?.get()?.forEach { log ->
-                println(log)
+        }) { results ->
+            results?.forEach {
+                it.get()?.forEach { log ->
+                    println(log)
+                }
             }
-            true
+            File(curPath + File.separator + "cache").delete()
+            baseManifestFile.delete()
+            outNoChannelFile.delete()
+            inputZipFile.close()
+            finish?.invoke()
         }
-        File(curPath + File.separator + "cache").delete()
-        baseManifestFile.delete()
-        outNoChannelFile.delete()
-        inputZipFile.close()
-//                    finish?.invoke()
+        return logList
     }
 
     private fun dealChannelApk(
         it: String,
         curPath: String,
         outNoChannelFile: File,
-        baseManifestFile: File,
         channelPath: String,
         inputApkPath: File
     ): List<String> {
@@ -218,17 +208,17 @@ object ChannelAndSign {
             val dealFiles = dealFile.listFiles()?.filter {
                 it.isFile
             }
-            CoroutineScope(Dispatchers.Unconfined).launch {
-                dealFiles?.forEachIndexed { index, it ->
-                    withContext(Dispatchers.Unconfined) {
-                        dealZipalign(it)
-                    }.forEach {
-                        println(it)
-                    }
-                    if (index == dealFiles.size - 1) {
-                        finish?.invoke()
+            ThreadPoolHelper.run(runnable = dealFiles?. map {
+                Callable {
+                    dealZipalign(it)
+                }
+            }) { results ->
+                results?.forEach {
+                    it.get()?.forEach { log ->
+                        println(log)
                     }
                 }
+                finish?.invoke()
             }
         } else {
             dealZipalign(dealFile).forEach {
@@ -242,7 +232,7 @@ object ChannelAndSign {
      * 签名之前对齐zip
      */
     private fun dealZipalign(inputApkPath: File): List<String> {
-        if (!inputApkPath.isFile || "apk" != inputApkPath.extension) return arrayListOf()
+        if (!inputApkPath.isFile || "apk" != inputApkPath.extension) return arrayListOf("不需处理")
         val logList = arrayListOf<String>()
         val curPath = inputApkPath.parent + File.separator
         if (!ZipalignUtil.check(inputApkPath.path)) {
@@ -259,25 +249,27 @@ object ChannelAndSign {
         return logList
     }
 
-    private fun signPath(inputApkPath: String, finish: (() -> Unit)? = null) {
+    private fun signPath(dealSign: Boolean = true, inputApkPath: String, finish: (() -> Unit)? = null) {
+        if (!dealSign) {
+            finish?.invoke()
+            return
+        }
         val dealFile = File(inputApkPath)
         if (dealFile.isDirectory) {
             val dealFiles = dealFile.listFiles()?.filter {
                 it.isFile
             }
-            CoroutineScope(Dispatchers.Unconfined).launch {
-                dealFiles?.forEachIndexed { index, it ->
-                    if (ZipalignUtil.check(it.path)) {
-                        withContext(Dispatchers.Unconfined) {
-                            signApk(it)
-                        }.forEach {
-                            println(it)
-                        }
-                    }
-                    if (index == dealFiles.size - 1) {
-                        finish?.invoke()
+            ThreadPoolHelper.run(runnable = dealFiles?. map {
+                Callable {
+                    signApk(it)
+                }
+            }) { results ->
+                results?.forEach {
+                    it.get()?.forEach { log ->
+                        println(log)
                     }
                 }
+                finish?.invoke()
             }
         } else {
             signApk(dealFile).forEach {
@@ -288,13 +280,13 @@ object ChannelAndSign {
     }
 
     private fun signApk(inputFile: File): List<String> {
-        if (!inputFile.isFile || "apk" != inputFile.extension) return arrayListOf()
+        if (!inputFile.isFile || "apk" != inputFile.extension) return arrayListOf("不需处理")
+        if (!ZipalignUtil.check(inputFile.path)) return arrayListOf()
         val logList = arrayListOf<String>()
         val curPath = inputFile.parent + File.separator
         val inputFileName = inputFile.nameWithoutExtension
         if (inputFileName.contains("_sign")) return logList
         val outApkFile = curPath + inputFileName + "_sign.apk"
-        logList.add("准备签名：$inputFile")
         ApkSignerUtil.sign(
             signFile = signFile,
             signAlias = signAlias,
@@ -304,7 +296,9 @@ object ChannelAndSign {
             inputApkPath = inputFile.path
         )
         if (delApkAfterSign) {
-            inputFile.delete()
+            if (inputFilePath != inputFile.path) {
+                inputFile.delete()
+            }
         }
         logList.add("签名已完成：$outApkFile")
         return logList

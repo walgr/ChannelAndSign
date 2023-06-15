@@ -1,6 +1,8 @@
 package com.wpf.base.dealfile.util
 
 import cn.wjdiankong.main.Main
+import cn.wjdiankong.main.ParserChunkUtilsHelper
+import cn.wjdiankong.main.XmlEditorHelper
 
 /**
  * 映射到命令
@@ -26,18 +28,19 @@ object AXMLEditor2Util {
         inputXmlPath: String,
         outputXmlPath: String,
     ) {
-        Main.main(
-            arrayOf(
-                "-attr",
-                editType,
-                labelName,
-                labelIdentification,
-                attrName,
-                attrValue,
-                inputXmlPath,
-                outputXmlPath
-            )
+        val cmd = arrayOf(
+            "-attr",
+            editType,
+            labelName,
+            labelIdentification,
+            attrName,
+            attrValue,
+            inputXmlPath,
+            outputXmlPath
         )
+        Main.main(cmd)
+//        val result = Runtime.getRuntime().exec(RunJar.javaJar("D:\\Android\\ShareFile\\tools\\AXMLEditor2Github.jar", cmd))
+//        val resultStr = result.errorStream.readBytes().decodeToString()
     }
 
     /**
@@ -53,7 +56,10 @@ object AXMLEditor2Util {
         inputXmlPath: String,
         outputXmlPath: String,
     ) {
-        Main.main(arrayOf("-tag", editType, insertXmlPath, inputXmlPath, outputXmlPath))
+        val cmd = arrayOf("-tag", editType, insertXmlPath, inputXmlPath, outputXmlPath)
+        Main.main(cmd)
+//        val result = Runtime.getRuntime().exec(RunJar.javaJar("D:\\Android\\ShareFile\\tools\\AXMLEditor2Github.jar", cmd))
+//        val resultStr = result.errorStream.readBytes().decodeToString()
     }
 
     /**
@@ -67,8 +73,10 @@ object AXMLEditor2Util {
         inputXmlPath: String,
         outputXmlPath: String,
     ) {
-//        Runtime.getRuntime().exec("java -jar D:\\Android\\ShareFile\\tools\\AXMLEditor2.jar -tag -i $insertXmlPath $inputXmlPath $outputXmlPath")
-        Main.main(arrayOf("-tag", "-i", insertXmlPath, inputXmlPath, outputXmlPath))
+        val cmd = arrayOf("-tag", "-i", insertXmlPath, inputXmlPath, outputXmlPath)
+        Main.main(cmd)
+//        val result = Runtime.getRuntime().exec(RunJar.javaJar("D:\\Android\\ShareFile\\tools\\AXMLEditor2Github.jar", cmd))
+//        val resultStr = result.errorStream.readBytes().decodeToString()
     }
 
     /**
@@ -84,6 +92,14 @@ object AXMLEditor2Util {
         inputXmlPath: String,
         outputXmlPath: String,
     ) {
-        Main.main(arrayOf("-tag", "-r", labelName, labelIdentification, inputXmlPath, outputXmlPath))
+        val cmd = arrayOf("-tag", "-r", labelName, labelIdentification, inputXmlPath, outputXmlPath)
+        Main.main(cmd)
+//        val result = Runtime.getRuntime().exec(RunJar.javaJar("D:\\Android\\ShareFile\\tools\\AXMLEditor2Github.jar", cmd))
+//        val resultStr = result.errorStream.readBytes().decodeToString()
+    }
+
+    fun clearCache() {
+        ParserChunkUtilsHelper.clearAll()
+        XmlEditorHelper.clearAll()
     }
 }
