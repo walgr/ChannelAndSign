@@ -10,10 +10,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="多线程支持。">
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/base/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/desktop/src/jvmMain/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/desktop/src/jvmMain/kotlin/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Main.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,29 +97,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;11&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/JavaProject/ChannelAndSign/base/src/main/resources&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;模块&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.097751714&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.3579496&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.ide.settings.new.ui&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "master",
+    "jdk.selected.JAVA_MODULE": "11",
+    "last_opened_file_path": "D:/JavaProject/ChannelAndSign/AXMLEditor3/src/main/libs/xmlpull_1_1_3_4c.jar",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "工件",
+    "project.structure.proportion": "0.097751714",
+    "project.structure.side.proportion": "0.3579496",
+    "settings.editor.selected.configurable": "settings.qodana",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources" />
@@ -266,7 +267,12 @@
       <workItem from="1686708198726" duration="24149000" />
       <workItem from="1686789396770" duration="6979000" />
       <workItem from="1686796457247" duration="7515000" />
-      <workItem from="1686804713801" duration="1102000" />
+      <workItem from="1686804713801" duration="1843000" />
+      <workItem from="1686883770077" duration="1216000" />
+      <workItem from="1686898097563" duration="1757000" />
+      <workItem from="1687225798418" duration="324000" />
+      <workItem from="1687251880526" duration="1309000" />
+      <workItem from="1687253454175" duration="763000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>
@@ -366,11 +372,29 @@
       <option name="project" value="LOCAL" />
       <updated>1686804110209</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="多线程支持。">
+      <created>1686809740966</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1686809740966</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -412,5 +436,9 @@
         <watch expression="&quot;$curPath/cache&quot;" language="kotlin" />
       </configuration>
     </watches-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

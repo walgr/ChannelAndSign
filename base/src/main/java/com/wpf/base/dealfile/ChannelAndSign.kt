@@ -3,11 +3,9 @@ package com.wpf.base.dealfile
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.wpf.base.dealfile.util.*
-import kotlinx.coroutines.*
 import java.io.File
 import java.lang.Exception
 import java.util.concurrent.Callable
-import java.util.concurrent.Executors
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
@@ -29,23 +27,19 @@ object ChannelAndSign {
             return
         }
         this.inputFilePath = inputFilePath
-        ThreadPoolHelper.run(runnable = listOf(
-            Callable {
-                try {
-                    dealScanFile(inputFilePath, dealSign, finish)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    println("运行错误:${e.message}")
-                    finish.invoke()
-                }
-            }
-        ))
+        try {
+            dealScanFile(inputFilePath, dealSign, finish)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("运行错误:${e.message}")
+            finish.invoke()
+        }
     }
 
     private fun dealScanFile(inputFilePath: String, dealSign: Boolean = true, finish: (() -> Unit)) {
         AXMLEditor2Util.clearCache()
         val dealFile = File(inputFilePath)
-        if (dealFile.isFile && "apk" == dealFile.extension) {
+        if (dealFile.exists() && dealFile.isFile && "apk" == dealFile.extension) {
             val curPath = dealFile.parent + File.separator
             dealChannel(dealFile) {
                 zipalignPath(curPath) {
@@ -84,8 +78,14 @@ object ChannelAndSign {
                             signPath(dealSign, inputFilePath, finish)
                         }
                     }
+                } else {
+                    println("目录为空")
+                    finish.invoke()
                 }
             }
+        } else {
+            println("未找到要处理的文件")
+            finish.invoke()
         }
     }
 
@@ -208,7 +208,7 @@ object ChannelAndSign {
             val dealFiles = dealFile.listFiles()?.filter {
                 it.isFile
             }
-            ThreadPoolHelper.run(runnable = dealFiles?. map {
+            ThreadPoolHelper.run(runnable = dealFiles?.map {
                 Callable {
                     dealZipalign(it)
                 }
@@ -259,7 +259,7 @@ object ChannelAndSign {
             val dealFiles = dealFile.listFiles()?.filter {
                 it.isFile
             }
-            ThreadPoolHelper.run(runnable = dealFiles?. map {
+            ThreadPoolHelper.run(runnable = dealFiles?.map {
                 Callable {
                     signApk(it)
                 }

@@ -47,10 +47,9 @@ fun main(args: Array<String>? = null) {
             delApkAfterSign = "1" == nextInput
         }
     }
-//    delApkAfterSign = true
     println("开始处理...")
     val startTime = System.currentTimeMillis()
     ChannelAndSign.scanFile(inputFilePath = filePath, dealSign = dealSign) {
-        println("处理完毕...用时：${System.currentTimeMillis() - startTime}")
+        println("处理完毕... 用时：${System.currentTimeMillis() - startTime}毫秒")
     }
 }
