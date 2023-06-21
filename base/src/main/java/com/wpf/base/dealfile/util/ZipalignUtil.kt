@@ -8,7 +8,7 @@ import com.wpf.base.dealfile.zipalignFile
 
 interface Zipalign {
     fun check(inputApkFile: String): Boolean
-    fun zipalign(inputApkFile: String, outApkFile: String)
+    fun zipalign(inputApkFile: String, outApkFile: String): Boolean
 }
 
 object ZipalignUtil : Zipalign {
@@ -21,8 +21,8 @@ object ZipalignUtil : Zipalign {
         }
     }
 
-    override fun zipalign(inputApkFile: String, outApkFile: String) {
-        if (zipalignFile.endsWith(".exe")) {
+    override fun zipalign(inputApkFile: String, outApkFile: String): Boolean {
+        return if (zipalignFile.endsWith(".exe")) {
             ZipalignUtilWin.zipalign(inputApkFile, outApkFile)
         } else {
             ZipalignUtilLinux.zipalign(inputApkFile, outApkFile)
@@ -39,13 +39,18 @@ object ZipalignUtilWin : Zipalign {
         return resultStr.contains("succesful")
     }
 
-    override fun zipalign(inputApkFile: String, outApkFile: String) {
+    override fun zipalign(inputApkFile: String, outApkFile: String): Boolean {
         val cmd = arrayOf(zipalignFile, "-p", "-f", "4", inputApkFile, outApkFile)
         val result = Runtime.getRuntime().exec(cmd)
         val resultStr = result.inputStream.readBytes().decodeToString()
+        val error = result.errorStream.readBytes().decodeToString()
+        if (error.isNotEmpty()) {
+            println(error)
+        }
         if (resultStr.contains("succesful")) {
             result.destroy()
         }
+        return error.isEmpty()
     }
 }
 
@@ -58,13 +63,18 @@ object ZipalignUtilLinux : Zipalign {
         return resultStr.contains("succesful")
     }
 
-    override fun zipalign(inputApkFile: String, outApkFile: String) {
+    override fun zipalign(inputApkFile: String, outApkFile: String): Boolean {
         val shell = arrayOf(zipalignFile, "-p", "-f", "4", inputApkFile, outApkFile)
         val result = Runtime.getRuntime().exec(shell)
         val resultStr = result.inputStream.readBytes().decodeToString()
+        val error = result.errorStream.readBytes().decodeToString()
+        if (error.isNotEmpty()) {
+            println(error)
+        }
         if (resultStr.contains("succesful")) {
             result.destroy()
         }
+        return error.isEmpty()
     }
 
 }

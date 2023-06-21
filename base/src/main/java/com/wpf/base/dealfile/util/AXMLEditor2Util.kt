@@ -3,11 +3,20 @@ package com.wpf.base.dealfile.util
 import cn.wjdiankong.main.Main
 import cn.wjdiankong.main.ParserChunkUtilsHelper
 import cn.wjdiankong.main.XmlEditorHelper
+import com.wpf.base.dealfile.axmlEditorPath
+import java.io.File
+import java.io.FileOutputStream
 
 /**
  * 映射到命令
  */
 object AXMLEditor2Util {
+    init {
+        axmlEditorPath = File("").canonicalPath + File.separator + "AXMLEditor2.jar"
+        if (!File(axmlEditorPath).exists()) {
+            javaClass.getResource("/AXMLEditor2Github.jar")?.openStream()?.copyTo(FileOutputStream(axmlEditorPath))
+        }
+    }
 
     /**
      * 操作属性
@@ -38,9 +47,12 @@ object AXMLEditor2Util {
             inputXmlPath,
             outputXmlPath
         )
-        Main.main(cmd)
-//        val result = Runtime.getRuntime().exec(RunJar.javaJar("D:\\Android\\ShareFile\\tools\\AXMLEditor2Github.jar", cmd))
-//        val resultStr = result.errorStream.readBytes().decodeToString()
+//        Main.main(cmd)
+        val result = Runtime.getRuntime().exec(axmlEditorPath, cmd)
+        val resultStr = result.errorStream.readBytes().decodeToString()
+        if (resultStr.isNotEmpty()) {
+            println(resultStr)
+        }
     }
 
     /**
@@ -57,9 +69,12 @@ object AXMLEditor2Util {
         outputXmlPath: String,
     ) {
         val cmd = arrayOf("-tag", editType, insertXmlPath, inputXmlPath, outputXmlPath)
-        Main.main(cmd)
-//        val result = Runtime.getRuntime().exec(RunJar.javaJar("D:\\Android\\ShareFile\\tools\\AXMLEditor2Github.jar", cmd))
-//        val resultStr = result.errorStream.readBytes().decodeToString()
+//        Main.main(cmd)
+        val result = Runtime.getRuntime().exec(RunJar.javaJar(axmlEditorPath, cmd))
+        val resultStr = result.errorStream.readBytes().decodeToString()
+        if (resultStr.isNotEmpty()) {
+            println(resultStr)
+        }
     }
 
     /**
@@ -74,9 +89,12 @@ object AXMLEditor2Util {
         outputXmlPath: String,
     ) {
         val cmd = arrayOf("-tag", "-i", insertXmlPath, inputXmlPath, outputXmlPath)
-        Main.main(cmd)
-//        val result = Runtime.getRuntime().exec(RunJar.javaJar("D:\\Android\\ShareFile\\tools\\AXMLEditor2Github.jar", cmd))
-//        val resultStr = result.errorStream.readBytes().decodeToString()
+//        Main.main(cmd)
+        val result = Runtime.getRuntime().exec(RunJar.javaJar(axmlEditorPath, cmd))
+        val resultStr = result.errorStream.readBytes().decodeToString()
+        if (resultStr.isNotEmpty()) {
+            println(resultStr)
+        }
     }
 
     /**
@@ -93,9 +111,12 @@ object AXMLEditor2Util {
         outputXmlPath: String,
     ) {
         val cmd = arrayOf("-tag", "-r", labelName, labelIdentification, inputXmlPath, outputXmlPath)
-        Main.main(cmd)
-//        val result = Runtime.getRuntime().exec(RunJar.javaJar("D:\\Android\\ShareFile\\tools\\AXMLEditor2Github.jar", cmd))
-//        val resultStr = result.errorStream.readBytes().decodeToString()
+//        Main.main(cmd)
+        val result = Runtime.getRuntime().exec(RunJar.javaJar(axmlEditorPath, cmd))
+        val resultStr = result.errorStream.readBytes().decodeToString()
+        if (resultStr.isNotEmpty()) {
+            println(resultStr)
+        }
     }
 
     fun clearCache() {

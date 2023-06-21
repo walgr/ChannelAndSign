@@ -23,3 +23,6 @@ var delApkAfterSign = false
 
 //签名程序路径
 var apksignerPath = ""
+
+//去除xml标签程序路径
+var axmlEditorPath = ""

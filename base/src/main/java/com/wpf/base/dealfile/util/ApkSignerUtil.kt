@@ -3,7 +3,6 @@ package com.wpf.base.dealfile.util
 import com.wpf.base.dealfile.apksignerPath
 import java.io.File
 import java.io.FileOutputStream
-import java.io.OutputStream
 
 
 /**
@@ -33,11 +32,8 @@ object ApkSignerUtil {
         keyPassword: String,
         outSignPath: String,
         inputApkPath: String
-    ) {
+    ): Boolean {
         val cmd = arrayOf(
-            "java",
-            "-jar",
-            apksignerPath,
             "sign",
             "--ks",
             signFile,
@@ -51,9 +47,13 @@ object ApkSignerUtil {
             outSignPath,
             inputApkPath
         )
-        val result = Runtime.getRuntime().exec(cmd)
+        val result = Runtime.getRuntime().exec(RunJar.javaJar(apksignerPath, cmd))
         val resultStr = result.errorStream.readBytes().decodeToString()
+        if (resultStr.isNotEmpty()) {
+            println(resultStr)
+        }
         println("$inputApkPath 签名结果:" + if (resultStr.isEmpty()) "成功" else "失败")
+        return resultStr.isEmpty()
 //        ApkSignerTool.main(
 //            arrayOf(
 //                "sign",

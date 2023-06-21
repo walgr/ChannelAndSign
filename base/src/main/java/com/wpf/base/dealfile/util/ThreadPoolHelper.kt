@@ -9,9 +9,9 @@ object ThreadPoolHelper {
     fun <T> run(
         nThreads: Int = Runtime.getRuntime().availableProcessors(),
         runnable: List<Callable<T>>?,
-        finish: ((List<Future<T>>?) -> Unit)? = null
+        finish: ((List<Future<T>?>?) -> Unit)? = null
     ) {
-        if (runnable == null) {
+        if (runnable.isNullOrEmpty()) {
             finish?.invoke(null)
             return
         }

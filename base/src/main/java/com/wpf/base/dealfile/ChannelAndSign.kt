@@ -9,6 +9,7 @@ import java.util.concurrent.Callable
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
+import kotlin.system.exitProcess
 
 object ChannelAndSign {
     private val defaultChannelName: String =
@@ -28,11 +29,15 @@ object ChannelAndSign {
         }
         this.inputFilePath = inputFilePath
         try {
-            dealScanFile(inputFilePath, dealSign, finish)
+            dealScanFile(inputFilePath, dealSign) {
+                finish.invoke()
+                exitProcess(0)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             println("运行错误:${e.message}")
             finish.invoke()
+            exitProcess(-6457)
         }
     }
 
@@ -42,15 +47,9 @@ object ChannelAndSign {
         if (dealFile.exists() && dealFile.isFile && "apk" == dealFile.extension) {
             val curPath = dealFile.parent + File.separator
             dealChannel(dealFile) {
-                zipalignPath(curPath) {
-                    val channelPath = getChannelPath(curPath)
-                    if (channelPath.isNotEmpty()) {
-                        zipalignPath(channelPath) {
-                            signPath(dealSign, channelPath.ifEmpty { curPath }, finish)
-                        }
-                    } else {
-                        signPath(dealSign, channelPath.ifEmpty { curPath }, finish)
-                    }
+                val channelPath = getChannelPath(curPath).ifEmpty { curPath }
+                zipalignPath(channelPath) {
+                    signPath(dealSign, channelPath, finish)
                 }
             }
         } else if (dealFile.isDirectory) {
@@ -63,23 +62,17 @@ object ChannelAndSign {
                 }
             }) { results ->
                 results?.forEach {
-                    it.get()?.forEach { log ->
+                    it?.get()?.forEach { log ->
                         println(log)
                     }
                 }
                 if (apkFileList?.isNotEmpty() == true) {
-                    val channelPath = getChannelPath(inputFilePath)
-                    zipalignPath(inputFilePath) {
-                        if (channelPath.isNotEmpty()) {
-                            zipalignPath(channelPath) {
-                                signPath(dealSign, channelPath, finish)
-                            }
-                        } else {
-                            signPath(dealSign, inputFilePath, finish)
-                        }
+                    val channelPath = getChannelPath(inputFilePath).ifEmpty { inputFilePath }
+                    zipalignPath(channelPath) {
+                        signPath(dealSign, channelPath, finish)
                     }
                 } else {
-                    println("目录为空")
+                    println("目录下未找到apk")
                     finish.invoke()
                 }
             }
@@ -104,7 +97,7 @@ object ChannelAndSign {
      */
     private fun dealChannel(inputApkPath: File, finish: (() -> Unit)? = null): List<String> {
         //如果是渠道包
-        if (inputApkPath.nameWithoutExtension.contains("Market_")) return arrayListOf("不需处理")
+        if (inputApkPath.nameWithoutExtension.contains("_")) return arrayListOf("已是渠道文件，不需处理")
         val logList = arrayListOf<String>()
         val curPath = inputApkPath.parent + File.separator
         val inputZipFile = ZipFile(inputApkPath)
@@ -134,7 +127,7 @@ object ChannelAndSign {
             }
         }) { results ->
             results?.forEach {
-                it.get()?.forEach { log ->
+                it?.get()?.forEach { log ->
                     println(log)
                 }
             }
@@ -148,11 +141,7 @@ object ChannelAndSign {
     }
 
     private fun dealChannelApk(
-        it: String,
-        curPath: String,
-        outNoChannelFile: File,
-        channelPath: String,
-        inputApkPath: File
+        it: String, curPath: String, outNoChannelFile: File, channelPath: String, inputApkPath: File
     ): List<String> {
         val logStr = arrayListOf<String>()
         val fields = it.split(" ")
@@ -206,7 +195,7 @@ object ChannelAndSign {
         val dealFile = File(inputApkPath)
         if (dealFile.isDirectory) {
             val dealFiles = dealFile.listFiles()?.filter {
-                it.isFile
+                it.isFile && "apk" == it.extension
             }
             ThreadPoolHelper.run(runnable = dealFiles?.map {
                 Callable {
@@ -214,7 +203,7 @@ object ChannelAndSign {
                 }
             }) { results ->
                 results?.forEach {
-                    it.get()?.forEach { log ->
+                    it?.get()?.forEach { log ->
                         println(log)
                     }
                 }
@@ -232,19 +221,25 @@ object ChannelAndSign {
      * 签名之前对齐zip
      */
     private fun dealZipalign(inputApkPath: File): List<String> {
-        if (!inputApkPath.isFile || "apk" != inputApkPath.extension) return arrayListOf("不需处理")
+        if (!inputApkPath.isFile || "apk" != inputApkPath.extension) return arrayListOf("非apk，不需处理")
         val logList = arrayListOf<String>()
         val curPath = inputApkPath.parent + File.separator
         if (!ZipalignUtil.check(inputApkPath.path)) {
             logList.add("正在对齐apk:${inputApkPath.name}")
             val zipFilePath = curPath + inputApkPath.nameWithoutExtension + "_zip.apk"
-            ZipalignUtil.zipalign(inputApkPath.path, zipFilePath)
-            //对齐后改为原来的名字
-            inputApkPath.delete()
-            val zipFile = File(zipFilePath)
-            zipFile.renameTo(inputApkPath)
-            zipFile.delete()
-            logList.add("对齐apk:${inputApkPath.name}完成")
+            if (ZipalignUtil.zipalign(inputApkPath.path, zipFilePath)) {
+                //对齐后改为原来的名字
+                inputApkPath.delete()
+                val zipFile = File(zipFilePath)
+                if (zipFile.renameTo(inputApkPath)) {
+                    zipFile.delete()
+                }
+                logList.add("对齐apk:${inputApkPath.name}完成")
+            } else {
+                logList.add("对齐apk:${inputApkPath.name}失败")
+            }
+        } else {
+            logList.add("apk:${inputApkPath.name}已对齐")
         }
         return logList
     }
@@ -257,7 +252,7 @@ object ChannelAndSign {
         val dealFile = File(inputApkPath)
         if (dealFile.isDirectory) {
             val dealFiles = dealFile.listFiles()?.filter {
-                it.isFile
+                it.isFile && "apk" == it.extension
             }
             ThreadPoolHelper.run(runnable = dealFiles?.map {
                 Callable {
@@ -265,7 +260,7 @@ object ChannelAndSign {
                 }
             }) { results ->
                 results?.forEach {
-                    it.get()?.forEach { log ->
+                    it?.get()?.forEach { log ->
                         println(log)
                     }
                 }
@@ -280,27 +275,31 @@ object ChannelAndSign {
     }
 
     private fun signApk(inputFile: File): List<String> {
-        if (!inputFile.isFile || "apk" != inputFile.extension) return arrayListOf("不需处理")
+        if (!inputFile.isFile || "apk" != inputFile.extension) return arrayListOf("已签名，不需处理")
         if (!ZipalignUtil.check(inputFile.path)) return arrayListOf()
         val logList = arrayListOf<String>()
         val curPath = inputFile.parent + File.separator
         val inputFileName = inputFile.nameWithoutExtension
         if (inputFileName.contains("_sign")) return logList
         val outApkFile = curPath + inputFileName + "_sign.apk"
-        ApkSignerUtil.sign(
-            signFile = signFile,
-            signAlias = signAlias,
-            keyStorePassword = signPassword,
-            keyPassword = signAliasPassword,
-            outSignPath = outApkFile,
-            inputApkPath = inputFile.path
-        )
-        if (delApkAfterSign) {
-            if (inputFilePath != inputFile.path) {
-                inputFile.delete()
+        if (ApkSignerUtil.sign(
+                signFile = signFile,
+                signAlias = signAlias,
+                keyStorePassword = signPassword,
+                keyPassword = signAliasPassword,
+                outSignPath = outApkFile,
+                inputApkPath = inputFile.path
+            )
+        ) {
+            if (delApkAfterSign) {
+                if (inputFilePath != inputFile.path) {
+                    inputFile.delete()
+                }
             }
+            logList.add("签名已完成：$outApkFile")
+        } else {
+            logList.add("签名失败：$outApkFile")
         }
-        logList.add("签名已完成：$outApkFile")
         return logList
     }
 }

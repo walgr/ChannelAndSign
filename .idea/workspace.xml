@@ -10,11 +10,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="多线程支持。">
+      <change afterPath="$PROJECT_DIR$/base/src/main/resources/AXMLEditor2Github.jar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/base/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Config.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/Config.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/AXMLEditor2Util.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/AXMLEditor2Util.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ApkSignerUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ApkSignerUtil.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ZipalignUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ZipalignUtil.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,29 +102,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "master",
-    "jdk.selected.JAVA_MODULE": "11",
-    "last_opened_file_path": "D:/JavaProject/ChannelAndSign/AXMLEditor3/src/main/libs/xmlpull_1_1_3_4c.jar",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "工件",
-    "project.structure.proportion": "0.097751714",
-    "project.structure.side.proportion": "0.3579496",
-    "settings.editor.selected.configurable": "settings.qodana",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;11&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/JavaProject/ChannelAndSign/base/src/main/resources/AXMLEditor2Github.jar&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;工件&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.097751714&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.3579496&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.qodana&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources" />
@@ -129,11 +134,11 @@
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\libs" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources\sign" />
+      <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources\xml" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\java" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\libs" />
-      <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\dealfile" />
-      <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain" />
     </key>
     <key name="MoveKotlinTopLevelDeclarationsDialog.RECENTS_KEY">
       <recent name="com.wpf.util.common.ui.base" />
@@ -156,7 +161,8 @@
     <configuration name="MainKt" type="JetRunConfigurationType" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.wpf.base.dealfile.MainKt" />
       <module name="ChannelAndSign.base.main" />
-      <option name="PROGRAM_PARAMETERS" value="-baseChannel D:\Android\ShareFile\tools\insert_base.xml -channelsPath D:\Android\ShareFile\tools\channels.txt -zipalignPath D:\Android\ShareFile\tools\zipalign.exe -signFile D:\Android\ShareFile\签名文件\新安人才网求职端\product.keystore -signPassword www.goodjobs.cn -signAlias android -signAliasPassword www.goodjobs.cn -filePath D:\Android\ShareFile\app-release.apk" />
+      <option name="PROGRAM_PARAMETERS" value="-baseChannel D:\Android\ShareFile\tools\insert_base.xml -channelsPath D:\Android\ShareFile\tools\channels.txt -zipalignPath D:\Android\ShareFile\tools\zipalign.exe -signFile D:\Android\ShareFile\签名文件\新安人才网求职端\product.keystore -signPassword www.goodjobs.cn -signAlias android -signAliasPassword www.goodjobs.cn -filePath D:\test\app-arm64-v8a-release.apk" />
+      <target name="@@@LOCAL@@@" />
       <shortenClasspath name="NONE" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -272,7 +278,15 @@
       <workItem from="1686898097563" duration="1757000" />
       <workItem from="1687225798418" duration="324000" />
       <workItem from="1687251880526" duration="1309000" />
-      <workItem from="1687253454175" duration="763000" />
+      <workItem from="1687253454175" duration="865000" />
+      <workItem from="1687307507196" duration="43000" />
+      <workItem from="1687309010651" duration="1482000" />
+      <workItem from="1687316272585" duration="169000" />
+      <workItem from="1687316455832" duration="5000" />
+      <workItem from="1687317965701" duration="914000" />
+      <workItem from="1687318900741" duration="5361000" />
+      <workItem from="1687330855254" duration="1680000" />
+      <workItem from="1687334389252" duration="4296000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>
@@ -379,7 +393,14 @@
       <option name="project" value="LOCAL" />
       <updated>1686809740966</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="多线程支持。">
+      <created>1687254274389</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1687254274389</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
