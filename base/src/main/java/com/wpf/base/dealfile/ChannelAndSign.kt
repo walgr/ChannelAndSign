@@ -143,7 +143,7 @@ object ChannelAndSign {
     private fun dealChannelApk(
         it: String, curPath: String, outNoChannelFile: File, channelPath: String, inputApkPath: File
     ): List<String> {
-        val logStr = arrayListOf<String>()
+        val logList = arrayListOf<String>()
         val fields = it.split(" ")
         val channelName: String = fields[2].trim().replace("\n", "")
         val channelApkFileName: String = fields[1].trim().replace("\n", "")
@@ -169,7 +169,6 @@ object ChannelAndSign {
         newChannelInsertFile.delete()
         outNoChannelFileNew.delete()
 
-        logStr.add("插入新渠道：${channelName}保存到AndroidManifest.xml")
         val newChannelApkFile =
             File(channelPath.ifEmpty { curPath } + "${inputApkPath.nameWithoutExtension}_${channelApkFileName}" + ".apk")
         if (newChannelApkFile.exists()) {
@@ -187,8 +186,8 @@ object ChannelAndSign {
         newChannelApkZipFile.close()
         baseManifestFileNew.delete()
         File(baseManifestChannelFilePath).delete()
-        logStr.add("apk已更新渠道信息，并保存到${newChannelApkZipFile.path.toAbsolutePath()}")
-        return logStr
+        logList.add("apk已更新渠道信息，并保存到${newChannelApkZipFile.path.toAbsolutePath()}")
+        return logList
     }
 
     private fun zipalignPath(inputApkPath: String, finish: (() -> Unit)? = null) {
