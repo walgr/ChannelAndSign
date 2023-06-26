@@ -23,6 +23,10 @@ object AXMLEditor2Util {
         }
     }
 
+    fun dealJar() {
+        File(axmlEditorPath).delete()
+    }
+
     /**
      * 操作属性
      * @param editType -i 新增 -r 删除 -m 更新

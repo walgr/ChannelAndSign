@@ -20,6 +20,10 @@ object ApkSignerUtil {
         }
     }
 
+    fun dealJar() {
+        File(apksignerPath).delete()
+    }
+
     /**
      * apk签名
      * @param signFile 签名文件

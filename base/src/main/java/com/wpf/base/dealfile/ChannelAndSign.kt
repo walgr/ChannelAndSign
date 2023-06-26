@@ -31,12 +31,16 @@ object ChannelAndSign {
         try {
             dealScanFile(inputFilePath, fileFilter, dealSign) {
                 finish.invoke()
+                ApkSignerUtil.dealJar()
+                AXMLEditor2Util.dealJar()
                 exitProcess(0)
             }
         } catch (e: Exception) {
             e.printStackTrace()
             println("运行错误:${e.message}")
             finish.invoke()
+            ApkSignerUtil.dealJar()
+            AXMLEditor2Util.dealJar()
             exitProcess(-6457)
         }
     }
@@ -47,6 +51,7 @@ object ChannelAndSign {
         AXMLEditor2Util.clearCache()
         val dealFile = File(inputFilePath)
         if (dealFile.exists() && dealFile.isFile && "apk" == dealFile.extension) {
+            println("处理文件:${dealFile.name}")
             val curPath = dealFile.parent + File.separator
             dealChannel(dealFile) {
                 val channelPath = getChannelPath(curPath).ifEmpty { curPath }
@@ -59,6 +64,7 @@ object ChannelAndSign {
                 it.isFile && "apk" == it.extension && (fileFilter.isEmpty() || it.name.contains(fileFilter))
             }
             ThreadPoolHelper.run(runnable = apkFileList?.map {
+                println("处理文件:${it.name}")
                 Callable {
                     dealChannel(it)
                 }
@@ -162,12 +168,14 @@ object ChannelAndSign {
         val outNoChannelFileNew =
             File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache" + File.separator + outNoChannelFile.nameWithoutExtension + "_" + channelName + ".xml")
         outNoChannelFile.copyTo(outNoChannelFileNew, true)
-        val baseManifestChannelFilePath = curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache" + File.separator + channelName
+        val baseManifestChannelFilePath =
+            curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache" + File.separator + channelName
         val baseManifestFileNew = File(baseManifestChannelFilePath + File.separator + "AndroidManifest.xml")
         outNoChannelFileNew.copyTo(baseManifestFileNew, true)
         //修改渠道数据
         val baseInsertFile = File(channelBaseInsertFilePath)
-        val newChannelInsertFile = File(curPath + "insert_${channelName}.xml")
+        val newChannelInsertFile =
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "insert_${channelName}.xml")
         baseInsertFile.copyTo(newChannelInsertFile, true)
         //更新新渠道文件内渠道
         newChannelInsertFile.writeText(
@@ -182,7 +190,7 @@ object ChannelAndSign {
         outNoChannelFileNew.delete()
 
         val newChannelApkFile =
-            File(channelPath.ifEmpty { curPath } + "${inputApkPath.nameWithoutExtension}_${channelApkFileName}" + ".apk")
+            File(channelPath.ifEmpty { curPath } + File.separator + "${inputApkPath.nameWithoutExtension}_${channelApkFileName}" + ".apk")
         if (newChannelApkFile.exists()) {
             newChannelApkFile.delete()
         }
