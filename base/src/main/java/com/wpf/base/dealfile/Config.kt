@@ -2,6 +2,7 @@ package com.wpf.base.dealfile
 
 //渠道基础文件路径
 var channelBaseInsertFilePath = ""
+
 //存储渠道包位置
 var channelSavePath = ""
 
@@ -9,12 +10,16 @@ var channelSavePath = ""
 var channelsFilePath = ""
 
 var zipalignFile = ""
+
 //签名文件
 var signFile = ""
+
 //签名文件密码
 var signPassword = ""
+
 //签名文件别名
 var signAlias = ""
+
 //签名文件别名密码
 var signAliasPassword = ""
 

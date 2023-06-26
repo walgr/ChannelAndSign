@@ -12,7 +12,11 @@ object ApkSignerUtil {
     init {
         apksignerPath = File("").canonicalPath + File.separator + "apksigner.jar"
         if (!File(apksignerPath).exists()) {
-            javaClass.getResource("/apksigner.jar")?.openStream()?.copyTo(FileOutputStream(apksignerPath))
+            val openStream = javaClass.getResource("/apksigner.jar")?.openStream()
+            val outSteam = FileOutputStream(apksignerPath)
+            openStream?.copyTo(outSteam)
+            openStream?.close()
+            outSteam.close()
         }
     }
 

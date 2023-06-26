@@ -3,6 +3,7 @@ package com.wpf.base.dealfile.util
 import cn.wjdiankong.main.Main
 import cn.wjdiankong.main.ParserChunkUtilsHelper
 import cn.wjdiankong.main.XmlEditorHelper
+import com.wpf.base.dealfile.apksignerPath
 import com.wpf.base.dealfile.axmlEditorPath
 import java.io.File
 import java.io.FileOutputStream
@@ -14,7 +15,11 @@ object AXMLEditor2Util {
     init {
         axmlEditorPath = File("").canonicalPath + File.separator + "AXMLEditor2.jar"
         if (!File(axmlEditorPath).exists()) {
-            javaClass.getResource("/AXMLEditor2Github.jar")?.openStream()?.copyTo(FileOutputStream(axmlEditorPath))
+            val openStream = javaClass.getResource("/AXMLEditor2Github.jar")?.openStream()
+            val outSteam = FileOutputStream(axmlEditorPath)
+            openStream?.copyTo(outSteam)
+            openStream?.close()
+            outSteam.close()
         }
     }
 

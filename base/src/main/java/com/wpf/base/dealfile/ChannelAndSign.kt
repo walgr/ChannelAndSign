@@ -20,7 +20,7 @@ object ChannelAndSign {
     private var inputFilePath: String = ""
 
     fun scanFile(
-        inputFilePath: String, dealSign: Boolean = true, finish: (() -> Unit)
+        inputFilePath: String, fileFilter: String = "", dealSign: Boolean = true, finish: (() -> Unit)
     ) {
         if (inputFilePath.isEmpty()) {
             println("输入的文件路径不正确")
@@ -29,7 +29,7 @@ object ChannelAndSign {
         }
         this.inputFilePath = inputFilePath
         try {
-            dealScanFile(inputFilePath, dealSign) {
+            dealScanFile(inputFilePath, fileFilter, dealSign) {
                 finish.invoke()
                 exitProcess(0)
             }
@@ -41,7 +41,9 @@ object ChannelAndSign {
         }
     }
 
-    private fun dealScanFile(inputFilePath: String, dealSign: Boolean = true, finish: (() -> Unit)) {
+    private fun dealScanFile(
+        inputFilePath: String, fileFilter: String = "", dealSign: Boolean = true, finish: (() -> Unit)
+    ) {
         AXMLEditor2Util.clearCache()
         val dealFile = File(inputFilePath)
         if (dealFile.exists() && dealFile.isFile && "apk" == dealFile.extension) {
@@ -54,7 +56,7 @@ object ChannelAndSign {
             }
         } else if (dealFile.isDirectory) {
             val apkFileList = dealFile.listFiles()?.filter {
-                it.isFile && "apk" == it.extension
+                it.isFile && "apk" == it.extension && (fileFilter.isEmpty() || it.name.contains(fileFilter))
             }
             ThreadPoolHelper.run(runnable = apkFileList?.map {
                 Callable {
@@ -107,13 +109,21 @@ object ChannelAndSign {
         channelPathFile.mkdirs()
 
         //解压得到AndroidManifest.xml
-        val baseManifestFile = File(curPath + "AndroidManifest.xml")
+        val baseManifestFile =
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifest.xml")
+        if (!baseManifestFile.exists()) {
+            baseManifestFile.parentFile.mkdirs();
+        }
         baseManifestFile.createNewFile()
         FileUtil.save2File(inputZipFile.getInputStream(inputZipFile.getEntry("AndroidManifest.xml")), baseManifestFile)
         logList.add("解压 ${inputApkPath.name} 得到AndroidManifest.xml")
 
         //先去除旧的渠道数据
-        val outNoChannelFile = File(curPath + "AndroidManifestNoChannel.xml")
+        val outNoChannelFile =
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifestNoChannel.xml")
+        if (!outNoChannelFile.exists()) {
+            outNoChannelFile.parentFile.mkdirs();
+        }
         outNoChannelFile.createNewFile()
         AXMLEditor2Util.doCommandTagDel(
             "meta-data", "UMENG_CHANNEL", baseManifestFile.path, outNoChannelFile.path
@@ -131,9 +141,11 @@ object ChannelAndSign {
                     println(log)
                 }
             }
-            File(curPath + File.separator + "cache").delete()
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache").delete()
             baseManifestFile.delete()
+            outNoChannelFile.parentFile.delete()
             outNoChannelFile.delete()
+            outNoChannelFile.parentFile.delete()
             inputZipFile.close()
             finish?.invoke()
         }
@@ -148,9 +160,9 @@ object ChannelAndSign {
         val channelName: String = fields[2].trim().replace("\n", "")
         val channelApkFileName: String = fields[1].trim().replace("\n", "")
         val outNoChannelFileNew =
-            File(curPath + File.separator + "cache" + File.separator + outNoChannelFile.nameWithoutExtension + "_" + channelName + ".xml")
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache" + File.separator + outNoChannelFile.nameWithoutExtension + "_" + channelName + ".xml")
         outNoChannelFile.copyTo(outNoChannelFileNew, true)
-        val baseManifestChannelFilePath = curPath + File.separator + "cache" + File.separator + channelName
+        val baseManifestChannelFilePath = curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache" + File.separator + channelName
         val baseManifestFileNew = File(baseManifestChannelFilePath + File.separator + "AndroidManifest.xml")
         outNoChannelFileNew.copyTo(baseManifestFileNew, true)
         //修改渠道数据

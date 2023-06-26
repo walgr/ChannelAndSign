@@ -2,15 +2,16 @@ package com.wpf.base.dealfile
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
-        println("参数异常，请按照-baseChannel、-channelSavePath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword、-filePath、-dealSign配置")
+        println("参数异常，请检查输入")
         return
     }
     var filePath = ""
+    var fileFilter = ""
     var dealSign = true
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
         if (arg.startsWith("-") && nextInput.startsWith("-")) {
-            println("参数异常，请按照-baseChannel、-channelSavePath、-channelsPath、-zipalignPath、-signFile、-signPassword、-signAlias、-signAliasPassword、-filePath、-dealSign配置")
+            println("参数异常，请检查输入")
             return
         }
         if ("-baseChannel" == arg) {
@@ -37,6 +38,9 @@ fun main(args: Array<String>? = null) {
         if ("-filePath" == arg) {
             filePath = nextInput
         }
+        if ("-fileFilter" == arg) {
+            fileFilter = nextInput
+        }
         if ("-dealSign" == arg) {
             dealSign = "1" == nextInput
         }
@@ -49,7 +53,7 @@ fun main(args: Array<String>? = null) {
     }
     println("开始处理...")
     val startTime = System.currentTimeMillis()
-    ChannelAndSign.scanFile(inputFilePath = filePath, dealSign = dealSign) {
+    ChannelAndSign.scanFile(inputFilePath = filePath, fileFilter = fileFilter, dealSign = dealSign) {
         println("处理完毕... 用时：${System.currentTimeMillis() - startTime}毫秒")
     }
 }
