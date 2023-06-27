@@ -3,12 +3,14 @@ package com.wpf.base.dealfile
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.wpf.base.dealfile.util.*
+import test.AXMLPrinter
 import java.io.File
 import java.lang.Exception
 import java.util.concurrent.Callable
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
+import kotlin.io.path.name
 import kotlin.system.exitProcess
 
 object ChannelAndSign {
@@ -173,6 +175,7 @@ object ChannelAndSign {
         val fields = it.split(" ")
         val channelName: String = fields[2].trim().replace("\n", "")
         val channelApkFileName: String = fields[1].trim().replace("\n", "")
+        logList.add("当前处理渠道：${channelName}")
         val outNoChannelFileNew =
             File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache" + File.separator + outNoChannelFile.nameWithoutExtension + "_" + channelName + ".xml")
         outNoChannelFile.copyTo(outNoChannelFileNew, true)
@@ -213,6 +216,21 @@ object ChannelAndSign {
         baseManifestFileNew.delete()
         File(baseManifestChannelFilePath).delete()
         logList.add("apk已更新渠道信息，并保存到${newChannelApkZipFile.path.toAbsolutePath()}")
+        val newChannelApkXmlStr = AXMLPrinter.getManifestXMLFromAPK(newChannelApkFile.path)
+        if (newChannelApkXmlStr.isNotEmpty()) {
+            val channelStrS = "<meta-data android:name=\"UMENG_CHANNEL\" android:value=\""
+            val channelStrE = "\">"
+            val channelIndexS = newChannelApkXmlStr.indexOf(channelStrS)
+            val channelIndexE = newChannelApkXmlStr.indexOf(channelStrE, channelIndexS)
+            val apkChannelName = newChannelApkXmlStr.subSequence(channelIndexS + channelStrS.length, channelIndexE).trim()
+            logList.add("获取渠道apk内渠道信息:${apkChannelName}")
+            if (channelName != apkChannelName) {
+                logList.add("获取渠道apk内渠道信息和渠道不一致，请排查问题!!!")
+                throw RuntimeException("获取渠道apk内渠道信息和渠道不一致，请排查问题!!!")
+            }
+        } else {
+            logList.add("获取渠道apk内渠道信息:失败，请排查问题!!!")
+        }
         return logList
     }
 
