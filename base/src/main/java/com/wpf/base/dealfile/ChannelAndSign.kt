@@ -221,7 +221,8 @@ object ChannelAndSign {
             val channelStrE = "\">"
             val channelIndexS = newChannelApkXmlStr.indexOf(channelStrS)
             val channelIndexE = newChannelApkXmlStr.indexOf(channelStrE, channelIndexS)
-            val apkChannelName = newChannelApkXmlStr.subSequence(channelIndexS + channelStrS.length, channelIndexE).trim()
+            val apkChannelName =
+                newChannelApkXmlStr.subSequence(channelIndexS + channelStrS.length, channelIndexE).trim()
             logList.add("获取渠道apk内渠道信息:${apkChannelName}")
             if (channelName != apkChannelName) {
                 logList.add("获取渠道apk内渠道信息和渠道不一致，请排查问题!!!")
@@ -230,6 +231,7 @@ object ChannelAndSign {
         } else {
             logList.add("获取渠道apk内渠道信息:失败，请排查问题!!!")
         }
+        logList.add("")
         return logList
     }
 
@@ -338,7 +340,7 @@ object ChannelAndSign {
                     inputFile.delete()
                 }
             }
-            logList.add("签名已完成：$outApkFile")
+            logList.add("签名成功：$outApkFile")
         } else {
             logList.add("签名失败：$outApkFile")
         }

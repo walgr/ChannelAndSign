@@ -60,7 +60,6 @@ object ApkSignerUtil {
         if (resultStr.isNotEmpty()) {
             println(resultStr)
         }
-        println("$inputApkPath 签名结果:" + if (resultStr.isEmpty()) "成功" else "失败")
         return resultStr.isEmpty()
 //        ApkSignerTool.main(
 //            arrayOf(
