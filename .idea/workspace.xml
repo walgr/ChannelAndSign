@@ -10,12 +10,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="优化代码。">
-      <change afterPath="$PROJECT_DIR$/base/src/main/libs/APKParser.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/base/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -358,7 +355,8 @@
       <workItem from="1687850957840" duration="2193000" />
       <workItem from="1687853207861" duration="257000" />
       <workItem from="1687853538984" duration="5112000" />
-      <workItem from="1687858828812" duration="68000" />
+      <workItem from="1687858828812" duration="250000" />
+      <workItem from="1687859091598" duration="748000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>
@@ -536,7 +534,15 @@
       <option name="project" value="LOCAL" />
       <updated>1687856664399</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="优化代码。">
+      <option name="closed" value="true" />
+      <created>1687858909446</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1687858909446</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

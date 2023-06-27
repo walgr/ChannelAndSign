@@ -10,13 +10,15 @@ object ThreadPoolHelper {
 
     fun <T> run(
         runnable: List<Callable<T>>?,
-        finish: ((List<Future<T>?>?) -> Unit)? = null
+        finish: ((List<T>?) -> Unit)? = null
     ) {
         if (runnable.isNullOrEmpty()) {
             finish?.invoke(null)
             return
         }
-        val result = executorsPool.invokeAll(runnable)
+        val result: List<T> = executorsPool.invokeAll(runnable).map {
+            it.get()
+        }
         finish?.invoke(result)
     }
 }

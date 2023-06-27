@@ -10,7 +10,6 @@ import java.util.concurrent.Callable
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
-import kotlin.io.path.name
 import kotlin.system.exitProcess
 
 object ChannelAndSign {
@@ -80,7 +79,7 @@ object ChannelAndSign {
                 }
             }) { results ->
                 results?.forEach {
-                    it?.get()?.forEach { log ->
+                    it?.forEach { log ->
                         println(log)
                     }
                 }
@@ -153,7 +152,7 @@ object ChannelAndSign {
             }
         }) { results ->
             results?.forEach {
-                it?.get()?.forEach { log ->
+                it?.forEach { log ->
                     println(log)
                 }
             }
@@ -246,7 +245,7 @@ object ChannelAndSign {
                 }
             }) { results ->
                 results?.forEach {
-                    it?.get()?.forEach { log ->
+                    it?.forEach { log ->
                         println(log)
                     }
                 }
@@ -303,7 +302,7 @@ object ChannelAndSign {
                 }
             }) { results ->
                 results?.forEach {
-                    it?.get()?.forEach { log ->
+                    it?.forEach { log ->
                         println(log)
                     }
                 }
