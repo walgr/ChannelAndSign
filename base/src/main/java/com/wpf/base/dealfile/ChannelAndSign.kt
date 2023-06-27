@@ -283,7 +283,7 @@ object ChannelAndSign {
                 logList.add("对齐apk:${inputApkPath.name}失败")
             }
         } else {
-            logList.add("apk:${inputApkPath.name}已对齐")
+            logList.add("不处理,apk:${inputApkPath.name}已对齐")
         }
         return logList
     }
