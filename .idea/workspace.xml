@@ -9,10 +9,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="多线程支持。">
+    <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="优化代码。">
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/_jar.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ZipalignUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ZipalignUtil.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,6 +50,17 @@
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="ChannelAndSign" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="ChannelAndSign" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="ChannelAndSign" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="compose desktop" type="c8890929:TasksNode$1" />
               </path>
             </expand>
             <select />
@@ -141,7 +154,29 @@
       <recent name="cn.wjdiankong" />
     </key>
   </component>
-  <component name="RunManager" selected="Kotlin.桌面端">
+  <component name="RunManager" selected="Kotlin.MainKt">
+    <configuration name="ChannelAndSign [packageReleaseExe]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="packageReleaseExe" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <ForceTestExec>false</ForceTestExec>
+      <method v="2" />
+    </configuration>
     <configuration name="桌面端" type="JetRunConfigurationType">
       <option name="MAIN_CLASS_NAME" value="MainKt" />
       <module name="ChannelAndSign.desktop.jvmMain" />
@@ -153,7 +188,7 @@
     <configuration name="MainKt" type="JetRunConfigurationType" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.wpf.base.dealfile.MainKt" />
       <module name="ChannelAndSign.base.main" />
-      <option name="PROGRAM_PARAMETERS" value="-baseChannel D:\Android\ShareFile\tools\insert_base.xml -channelsPath D:\Android\ShareFile\tools\channels.txt -zipalignPath D:\Android\sdk\build-tools\33.0.2\zipalign.exe -signFile D:\Android\ShareFile\签名文件\新安人才网求职端\product.keystore -signPassword www.goodjobs.cn -signAlias android -signAliasPassword www.goodjobs.cn -filePath D:\test\app-arm64-v8a-release.apk" />
+      <option name="PROGRAM_PARAMETERS" value="-baseChannel D:\Android\ShareFile\tools\insert_base.xml -channelsPath D:\Android\ShareFile\tools\channels.txt -zipalignPath D:\Android\sdk\build-tools\33.0.2\zipalign.exe -signFile D:\Android\ShareFile\product.keystore -signPassword www.goodjobs.cn -signAlias android -signAliasPassword www.goodjobs.cn -filePath D:\test\app-arm64-v8a-release.apk" />
       <target name="@@@LOCAL@@@" />
       <shortenClasspath name="NONE" />
       <method v="2">
@@ -206,12 +241,14 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="Gradle.ChannelAndSign [packageReleaseExe]" />
       <item itemvalue="Kotlin.桌面端" />
       <item itemvalue="Kotlin.MainKt" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Kotlin.MainKt" />
+        <item itemvalue="Gradle.ChannelAndSign [packageReleaseExe]" />
       </list>
     </recent_temporary>
   </component>
@@ -289,7 +326,13 @@
       <workItem from="1687749949352" duration="870000" />
       <workItem from="1687751586777" duration="2073000" />
       <workItem from="1687772680234" duration="2933000" />
-      <workItem from="1687847450586" duration="295000" />
+      <workItem from="1687847450586" duration="415000" />
+      <workItem from="1687847883481" duration="6000" />
+      <workItem from="1687848807382" duration="1269000" />
+      <workItem from="1687850128467" duration="811000" />
+      <workItem from="1687850957840" duration="2193000" />
+      <workItem from="1687853207861" duration="257000" />
+      <workItem from="1687853538984" duration="1265000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>
@@ -443,7 +486,15 @@
       <option name="project" value="LOCAL" />
       <updated>1687830495157</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="优化代码。">
+      <option name="closed" value="true" />
+      <created>1687847842032</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1687847842032</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -483,7 +534,8 @@
     <MESSAGE value="修改命令行。" />
     <MESSAGE value="添加修改文件功能。" />
     <MESSAGE value="多线程支持。" />
-    <option name="LAST_COMMIT_MESSAGE" value="多线程支持。" />
+    <MESSAGE value="优化代码。" />
+    <option name="LAST_COMMIT_MESSAGE" value="优化代码。" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -498,12 +550,6 @@
         </breakpoint>
       </breakpoints>
     </breakpoint-manager>
-    <watches-manager>
-      <configuration name="JetRunConfigurationType">
-        <watch expression="$curPath/cache" language="kotlin" />
-        <watch expression="&quot;$curPath/cache&quot;" language="kotlin" />
-      </configuration>
-    </watches-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

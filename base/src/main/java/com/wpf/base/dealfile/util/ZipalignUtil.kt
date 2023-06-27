@@ -47,10 +47,8 @@ object ZipalignUtilWin : Zipalign {
         if (error.isNotEmpty()) {
             println(error)
         }
-        if (resultStr.contains("succesful")) {
-            result.destroy()
-        }
-        return error.isEmpty()
+        result.destroy()
+        return resultStr.contains("succesful")
     }
 }
 
@@ -71,10 +69,8 @@ object ZipalignUtilLinux : Zipalign {
         if (error.isNotEmpty()) {
             println(error)
         }
-        if (resultStr.contains("succesful")) {
-            result.destroy()
-        }
-        return error.isEmpty()
+        result.destroy()
+        return resultStr.contains("succesful")
     }
 
 }

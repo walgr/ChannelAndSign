@@ -156,11 +156,11 @@ object ChannelAndSign {
                 }
             }
             File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache").delete()
+            inputZipFile.close()
             baseManifestFile.delete()
             outNoChannelFile.parentFile.delete()
             outNoChannelFile.delete()
             outNoChannelFile.parentFile.delete()
-            inputZipFile.close()
             finish?.invoke()
         }
         return logList
@@ -199,16 +199,14 @@ object ChannelAndSign {
 
         val newChannelApkFile =
             File(channelPath.ifEmpty { curPath } + File.separator + "${inputApkPath.nameWithoutExtension}_${channelApkFileName}" + ".apk")
-        if (newChannelApkFile.exists()) {
-            newChannelApkFile.delete()
-        }
-        inputApkPath.copyTo(newChannelApkFile)
-        val newChannelApkZipFile = ZipArchive(newChannelApkFile.toPath())
+        inputApkPath.copyTo(newChannelApkFile, true)
+
         //更新新渠道AndroidManifest.xml到渠道apk中
+        val newChannelApkZipFile = ZipArchive(newChannelApkFile.toPath())
         newChannelApkZipFile.delete("AndroidManifest.xml")
         newChannelApkZipFile.add(
             BytesSource(
-                baseManifestFileNew.toPath(), "AndroidManifest.xml", Deflater.NO_COMPRESSION
+                baseManifestFileNew.toPath(), "AndroidManifest.xml", Deflater.DEFAULT_COMPRESSION
             )
         )
         newChannelApkZipFile.close()
