@@ -107,7 +107,7 @@ object ChannelAndSign {
         //如果是渠道包
         if (inputApkPath.nameWithoutExtension.contains("_")) return arrayListOf("已是渠道文件，不需处理")
         val logList = arrayListOf<String>()
-        val curPath = inputApkPath.parent + File.separator
+        val curPath = inputApkPath.parent
         val inputZipFile = ZipFile(inputApkPath)
         //创建渠道包存储文件夹
         val channelPath = getChannelPath(curPath)
