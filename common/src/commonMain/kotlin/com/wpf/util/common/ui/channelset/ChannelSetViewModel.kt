@@ -9,6 +9,7 @@ import com.wpf.util.common.ui.signset.SignFile
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import java.io.File
+import kotlin.system.exitProcess
 
 object ChannelSetViewModel {
 
@@ -49,7 +50,7 @@ object ChannelSetViewModel {
         signAliasPassword = sign.KeyPass
         var returnTime = 0
         filePathList.forEach {
-            ChannelAndSign.scanFile(it) {
+            ChannelAndSign.scanFile(it, exitProcess = false) {
                 returnTime++
                 if (returnTime == filePathList.size) {
                     //运行结束

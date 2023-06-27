@@ -20,7 +20,11 @@ object ChannelAndSign {
     private var inputFilePath: String = ""
 
     fun scanFile(
-        inputFilePath: String, fileFilter: String = "", dealSign: Boolean = true, finish: (() -> Unit)
+        inputFilePath: String,
+        fileFilter: String = "",
+        dealSign: Boolean = true,
+        exitProcess: Boolean = true,
+        finish: (() -> Unit)
     ) {
         if (inputFilePath.isEmpty()) {
             println("输入的文件路径不正确")
@@ -33,7 +37,9 @@ object ChannelAndSign {
                 finish.invoke()
                 ApkSignerUtil.dealJar()
                 AXMLEditor2Util.dealJar()
-                exitProcess(0)
+                if (exitProcess) {
+                    exitProcess(0)
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -41,7 +47,9 @@ object ChannelAndSign {
             finish.invoke()
             ApkSignerUtil.dealJar()
             AXMLEditor2Util.dealJar()
-            exitProcess(-6457)
+            if (exitProcess) {
+                exitProcess(-6457)
+            }
         }
     }
 
