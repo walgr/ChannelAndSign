@@ -6,10 +6,12 @@ import com.wpf.util.common.json
 import com.wpf.util.common.settings
 import com.wpf.util.common.ui.configset.ConfigPageViewModel
 import com.wpf.util.common.ui.signset.SignFile
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import java.io.File
-import kotlin.system.exitProcess
 
 object ChannelSetViewModel {
 
@@ -49,12 +51,14 @@ object ChannelSetViewModel {
         signAlias = sign.KeyAlias
         signAliasPassword = sign.KeyPass
         var returnTime = 0
-        filePathList.forEach {
-            ChannelAndSign.scanFile(it, exitProcess = false) {
-                returnTime++
-                if (returnTime == filePathList.size) {
-                    //运行结束
-                    callback.invoke()
+        CoroutineScope(Dispatchers.Default).launch {
+            filePathList.forEach {
+                ChannelAndSign.scanFile(it, exitProcess = false) {
+                    returnTime++
+                    if (returnTime == filePathList.size) {
+                        //运行结束
+                        callback.invoke()
+                    }
                 }
             }
         }
