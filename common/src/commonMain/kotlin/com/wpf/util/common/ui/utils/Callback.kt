@@ -4,5 +4,5 @@ interface Callback<T> {
 
     fun onSuccess(t: T)
 
-    fun onFail()
+    fun onFail(msg: String)
 }

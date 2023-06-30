@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +31,6 @@ import kotlin.system.exitProcess
 @Preview
 @Composable
 fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
-
     val menuList = remember {
         mutableStateListOf(
             Menu("渠道打包", true),

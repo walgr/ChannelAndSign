@@ -18,6 +18,7 @@
       <element id="file-copy" path="$PROJECT_DIR$/base/src/main/resources/apksigner.jar" />
       <element id="file-copy" path="$PROJECT_DIR$/base/src/main/resources/AXMLEditor2Github.jar" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.android/zipflinger/7.3.1/16999dcec6ec960f9dc53c76081936bd545b4dc9/zipflinger-7.3.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/base/src/main/libs/APKParser.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
