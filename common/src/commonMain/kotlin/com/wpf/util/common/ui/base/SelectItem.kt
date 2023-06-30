@@ -14,4 +14,15 @@ open class SelectItem(
             field.value = isSelect
             return field
         }
+        set(value) {
+            field.value = value.value
+            isSelect = field.value
+            field = value
+        }
+
+    fun click(): Boolean {
+        isSelect = !isSelect
+        isSelectState.value = isSelect
+        return isSelect
+    }
 }

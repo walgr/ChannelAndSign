@@ -24,8 +24,10 @@ import com.wpf.util.common.ui.base.Menu
 import com.wpf.util.common.ui.channelset.channelPage
 import com.wpf.util.common.ui.configset.configPage
 import com.wpf.util.common.ui.mainBgColor
+import com.wpf.util.common.ui.marketplace.marketPlacePage
 import com.wpf.util.common.ui.signset.signPage
 import com.wpf.util.common.ui.utils.WindowDraggableArea
+import kotlin.system.exitProcess
 
 @Preview
 @Composable
@@ -34,6 +36,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
     val menuList = remember {
         mutableStateListOf(
             Menu("渠道打包", true),
+            Menu("市场配置"),
             Menu("签名配置"),
             Menu("软件配置")
         )
@@ -87,6 +90,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                         ) {
                             IconButton(onClick = {
                                 applicationScope.exitApplication()
+                                exitProcess(0)
                             }) {
                                 Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White)
                             }
@@ -108,9 +112,17 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                         ) {
                             channelPage(window.window as ComposeWindow)
                         }
-                        //签名配置
+                        //上传市场
                         Box(
                             modifier = if (menuList[1].isSelectState.value) Modifier.fillMaxSize() else Modifier.height(
+                                0.dp
+                            )
+                        ) {
+                            marketPlacePage(window.window as ComposeWindow)
+                        }
+                        //签名配置
+                        Box(
+                            modifier = if (menuList[2].isSelectState.value) Modifier.fillMaxSize() else Modifier.height(
                                 0.dp
                             )
                         ) {
@@ -118,7 +130,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                         }
                         //软件配置
                         Box(
-                            modifier = if (menuList[2].isSelectState.value) Modifier.fillMaxSize() else Modifier.height(
+                            modifier = if (menuList[3].isSelectState.value) Modifier.fillMaxSize() else Modifier.height(
                                 0.dp
                             )
                         ) {

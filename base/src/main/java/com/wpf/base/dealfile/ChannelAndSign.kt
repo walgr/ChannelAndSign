@@ -220,7 +220,7 @@ object ChannelAndSign {
             val channelStrS = "<meta-data android:name=\"UMENG_CHANNEL\" android:value=\""
             val channelStrE = "\">"
             val channelIndexS = newChannelApkXmlStr.indexOf(channelStrS)
-            val channelIndexE = newChannelApkXmlStr.indexOf(channelStrE, channelIndexS)
+            val channelIndexE = newChannelApkXmlStr.indexOf(channelStrE, channelIndexS + channelStrS.length)
             val apkChannelName =
                 newChannelApkXmlStr.subSequence(channelIndexS + channelStrS.length, channelIndexE).trim()
             logList.add("获取渠道apk内渠道信息:${apkChannelName}")

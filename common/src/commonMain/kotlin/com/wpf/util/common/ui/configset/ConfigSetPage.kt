@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.wpf.base.dealfile.channelBaseInsertFilePath
 import com.wpf.base.dealfile.channelSavePath
 import com.wpf.base.dealfile.zipalignFile
-import com.wpf.util.common.settings
+import com.wpf.util.common.ui.utils.settings
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.FileSelector
@@ -47,11 +47,12 @@ fun configPage() {
                         Text("软件配置", fontWeight = FontWeight.Bold, color = mainTextColor)
                     }
                     Box(
-                        modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        modifier = Modifier.weight(1f).fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                     ) {
                         Column(
-                            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                            modifier = Modifier.padding(all = 16.dp),
                         ) {
                             Row(
                                 modifier = Modifier.padding(top = 4.dp),
@@ -142,11 +143,6 @@ fun configPage() {
                         }
                     }
                 }
-            }
-            Column(
-                modifier = Modifier.width(150.dp).fillMaxHeight().padding(0.dp, 0.dp, 0.dp, 16.dp),
-            ) {
-
             }
         }
 

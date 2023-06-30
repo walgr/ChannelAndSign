@@ -1,7 +1,7 @@
 package com.wpf.util.common.ui.configset
 
 import com.russhwolf.settings.set
-import com.wpf.util.common.settings
+import com.wpf.util.common.ui.utils.settings
 
 object ConfigPageViewModel {
     fun getChannelBaseFilePath() = settings.getString("channelBaseFilePath", "")

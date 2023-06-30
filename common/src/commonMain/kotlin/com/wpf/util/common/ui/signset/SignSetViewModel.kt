@@ -1,8 +1,8 @@
 package com.wpf.util.common.ui.signset
 
 import com.russhwolf.settings.set
-import com.wpf.util.common.json
-import com.wpf.util.common.settings
+import com.wpf.util.common.ui.utils.json
+import com.wpf.util.common.ui.utils.settings
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 

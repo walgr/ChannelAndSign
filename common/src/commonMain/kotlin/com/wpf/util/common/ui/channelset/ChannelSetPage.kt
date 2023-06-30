@@ -13,7 +13,9 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,11 +28,13 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.utils.DropBoxPanel
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.signset.SignFile
 import com.wpf.util.common.ui.signset.SignSetViewModel
+import com.wpf.util.common.ui.uploadIcon
 import com.wpf.util.common.ui.utils.FileSelector
 import javax.swing.JFileChooser
 
@@ -38,7 +42,6 @@ import javax.swing.JFileChooser
 @Preview
 @Composable
 fun channelPage(window: ComposeWindow) {
-
     //分组列表
     val channelList = remember { mutableStateListOf(*ChannelSetViewModel.getChannelList().toTypedArray()) }
     //渠道包文件名
@@ -47,7 +50,7 @@ fun channelPage(window: ComposeWindow) {
     val channelNameList = remember { mutableStateListOf("") }
 
     //待打渠道包的apk
-    val pathList = remember { mutableStateListOf<Path>() }
+    val pathList = remember { mutableStateListOf(*ChannelSetViewModel.getPathList().toTypedArray()) }
 
     //分组添加Dialog
     val groupDialog = remember { mutableStateOf(false) }
@@ -59,6 +62,9 @@ fun channelPage(window: ComposeWindow) {
     val showSignSelectDialog = remember { mutableStateOf(false) }
 
     var isRunDealFile by remember { mutableStateOf(false) }
+
+    //打完后的市场包列表
+    val marketPlaceList = remember { mutableStateListOf(*ChannelSetViewModel.dealMargetPlace(pathList.map { it.path }).toTypedArray()) }
 
     channelList.find { channel -> channel.isSelect }?.channelPath?.let {
         if (it.isNotEmpty()) {
@@ -72,11 +78,12 @@ fun channelPage(window: ComposeWindow) {
         }
     }
 
-    Box {
+    Box(
+        modifier = Modifier.background(color = Color(1f, 1f, 1f, 0.6f))
+    ) {
         Row {
             Box(
-                modifier = Modifier.weight(1f).fillMaxHeight().clip(shape = RoundedCornerShape(8.dp))
-                    .background(color = Color(1f, 1f, 1f, 0.6f))
+                modifier = Modifier.weight(2f).fillMaxHeight().clip(shape = RoundedCornerShape(8.dp))
             ) {
                 Column {
                     Box(
@@ -192,12 +199,16 @@ fun channelPage(window: ComposeWindow) {
                                                     contentAlignment = Alignment.CenterEnd
                                                 ) {
                                                     IconButton(onClick = {
-                                                        FileSelector.showFileSelector(arrayOf("txt"), selectionMode = JFileChooser.FILES_AND_DIRECTORIES) { path ->
+                                                        FileSelector.showFileSelector(
+                                                            arrayOf("txt"),
+                                                            selectionMode = JFileChooser.FILES_AND_DIRECTORIES
+                                                        ) { path ->
                                                             channelList.find { it.isSelect }?.channelPath = path
                                                             channelFileNameList.clear()
                                                             channelNameList.clear()
                                                             if (path.isNotEmpty()) {
-                                                                val result = ChannelSetViewModel.getChannelDataInFile(path)
+                                                                val result =
+                                                                    ChannelSetViewModel.getChannelDataInFile(path)
                                                                 if (result.isNotEmpty()) {
                                                                     channelFileNameList.addAll(result.map { array -> array[0] })
                                                                     channelNameList.addAll(result.map { array -> array[1] })
@@ -290,8 +301,12 @@ fun channelPage(window: ComposeWindow) {
                                                     contentAlignment = Alignment.CenterEnd
                                                 ) {
                                                     IconButton(onClick = {
-                                                        FileSelector.showFileSelector(arrayOf("apk"), selectionMode = JFileChooser.FILES_AND_DIRECTORIES) {
+                                                        FileSelector.showFileSelector(
+                                                            arrayOf("apk"),
+                                                            selectionMode = JFileChooser.FILES_AND_DIRECTORIES
+                                                        ) {
                                                             pathList.add(Path(name = it, path = it))
+                                                            ChannelSetViewModel.savePathList(pathList)
                                                         }
                                                     }) {
                                                         Icon(
@@ -306,7 +321,7 @@ fun channelPage(window: ComposeWindow) {
                                                 Column {
                                                     Box(modifier = Modifier.padding(bottom = 8.dp)) {
                                                         Text(
-                                                            "选择完apk后，后续生成的相关渠道包会保存在apk同级目录下",
+                                                            "选择完apk后，渠道包默认保存在apk同级目录下或者在软件配置里配置路径",
                                                             fontSize = 10.sp, color = Color.Gray
                                                         )
                                                     }
@@ -318,6 +333,7 @@ fun channelPage(window: ComposeWindow) {
                                                                 modifier = Modifier.combinedClickable(
                                                                     onDoubleClick = {
                                                                         pathList.remove(it)
+                                                                        ChannelSetViewModel.savePathList(pathList)
                                                                     }
                                                                 ) {
 
@@ -334,6 +350,37 @@ fun channelPage(window: ComposeWindow) {
                                                     mutableListOf(Path(name = file, path = file))
                                                 } else mutableListOf()
                                             }.toMutableList())
+                                            ChannelSetViewModel.savePathList(pathList)
+                                        }
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.BottomEnd
+                                        ) {
+                                            IconButton(onClick = {
+                                                if (pathList.isEmpty()) {
+
+                                                } else {
+                                                    if (signList.size == 1) {
+                                                        isRunDealFile = true
+                                                        val filePathList = pathList.map {
+                                                            it.path
+                                                        }
+                                                        ChannelSetViewModel.dealApk(
+                                                            filePathList,
+                                                            channelList.find { it.isSelect }?.channelPath,
+                                                            signList[0]
+                                                        ) {
+                                                            isRunDealFile = false
+                                                            marketPlaceList.clear()
+                                                            marketPlaceList.addAll(ChannelSetViewModel.dealMargetPlace(filePathList))
+                                                        }
+                                                    } else {
+                                                        showSignSelectDialog.value = true
+                                                    }
+                                                }
+                                            }) {
+                                                Icon(if (isRunDealFile) Icons.Default.Close else Icons.Default.PlayArrow, "开始打包")
+                                            }
                                         }
                                     }
                                 }
@@ -342,28 +389,37 @@ fun channelPage(window: ComposeWindow) {
                     }
                 }
             }
-            Column(
-                modifier = Modifier.width(150.dp).fillMaxHeight().padding(0.dp, 0.dp, 0.dp, 16.dp),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier.weight(1f).fillMaxHeight().padding(top = 0.dp, end = 16.dp, bottom = 16.dp),
             ) {
-                IconButton(onClick = {
-                    if (pathList.isEmpty()) {
-
-                    } else {
-                        if (signList.size == 1) {
-                            isRunDealFile = true
-                            ChannelSetViewModel.dealApk(pathList.map {
-                                it.path
-                            }, channelList.find { it.isSelect }?.channelPath, signList[0]) {
-                                isRunDealFile = false
+                Column(
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(100.dp)
+                            .padding(top = 16.dp, bottom = 16.dp)
+                            .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("市场包", fontWeight = FontWeight.Bold, color = mainTextColor)
+                    }
+                    Column {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().weight(2f)
+                                .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor).padding(8.dp),
+                        ) {
+                            LazyColumn {
+                                items(marketPlaceList) {
+                                    ApkItem(it)
+                                }
                             }
-                        } else {
-                            showSignSelectDialog.value = true
                         }
                     }
-                }) {
-                    Icon(if (isRunDealFile) Icons.Default.Close else Icons.Default.PlayArrow, "开始打包")
+                }
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    uploadIcon()
                 }
             }
         }
@@ -392,12 +448,17 @@ fun channelPage(window: ComposeWindow) {
         if (showSignSelectDialog.value) {
             showSelectSignDialog(showSignSelectDialog) {
                 isRunDealFile = true
+                val filePathList = pathList.map { file ->
+                    file.path
+                }
                 ChannelSetViewModel.dealApk(
-                    pathList.map { path -> path.path },
+                    filePathList,
                     channelList.find { channel -> channel.isSelect }?.channelPath,
                     it
                 ) {
                     isRunDealFile = false
+                    marketPlaceList.clear()
+                    marketPlaceList.addAll(ChannelSetViewModel.dealMargetPlace(filePathList))
                 }
             }
         }

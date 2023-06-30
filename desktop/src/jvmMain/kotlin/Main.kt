@@ -1,4 +1,5 @@
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
@@ -12,7 +13,9 @@ fun main() = application {
         resizable = false, state = rememberWindowState(
             position = WindowPosition(
                 Alignment.Center
-            )
+            ),
+            width = 1080.dp,
+            height = 720.dp,
         ),
         title = "打渠道包并签名", onCloseRequest = ::exitApplication
     ) {

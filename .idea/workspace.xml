@@ -10,9 +10,40 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="优化代码。">
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/base/Apk.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/base/ItemView.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ApkItem.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/http/Http.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/MarketApk.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/MarketManager.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/MarketPlacePage.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/MarketType.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/UploadData.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/HuaweiMarket.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/Market.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/VivoMarket.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiMarket.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/Callback.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/StringEx.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/resources/image/api.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/src/commonMain/resources/image/upload.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/base/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/ChannelAndSign.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ThreadPoolHelper.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/common/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/App.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/App.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/Data.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/Data.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/UiConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/UiConfig.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/base/SelectItem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/base/SelectItem.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/Path.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/Path.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/configset/ConfigPageViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/configset/ConfigPageViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/configset/ConfigSet.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/configset/ConfigSetPage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/signset/SignSetPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/signset/SignSetPage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/signset/SignSetViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/signset/SignSetViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/src/jvmMain/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/desktop/src/jvmMain/kotlin/Main.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,8 +101,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Kotlin Class" />
         <option value="Kotlin Object" />
+        <option value="Kotlin Worksheet" />
+        <option value="Kotlin Class" />
       </list>
     </option>
   </component>
@@ -115,13 +147,14 @@
     &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;jdk.selected.JAVA_MODULE&quot;: &quot;11&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/JavaProject/ChannelAndSign/base/src/main/libs&quot;,
+    &quot;ktor.last.update.timestamp&quot;: &quot;1688090813537&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/JavaProject/ChannelAndSign/common/src/commonMain/resources/image&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;工件&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;项目&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.097751714&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.3579496&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
@@ -130,20 +163,21 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\resources\image" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\libs" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources" />
       <recent name="D:\JavaProject\ChannelAndSign\AXMLEditor3\src\main" />
       <recent name="D:\JavaProject\ChannelAndSign\AXMLEditor3\src\main\java" />
-      <recent name="D:\JavaProject\ChannelAndSign\AXMLEditor3\src\main\libs" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\ui\utils" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources\sign" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources\xml" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main" />
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\java" />
-      <recent name="D:\JavaProject\ChannelAndSign\base\src\main\libs" />
     </key>
     <key name="MoveKotlinTopLevelDeclarationsDialog.RECENTS_KEY">
+      <recent name="com.wpf.util.common.ui.marketplace.markets" />
       <recent name="com.wpf.util.common.ui.base" />
       <recent name="com.wpf.util.common.dealfile.util" />
     </key>
@@ -357,7 +391,14 @@
       <workItem from="1687853538984" duration="5112000" />
       <workItem from="1687858828812" duration="250000" />
       <workItem from="1687859091598" duration="1340000" />
-      <workItem from="1687860460343" duration="35000" />
+      <workItem from="1687860460343" duration="127000" />
+      <workItem from="1687912673997" duration="1546000" />
+      <workItem from="1687918391537" duration="468000" />
+      <workItem from="1687944855930" duration="397000" />
+      <workItem from="1688007856235" duration="844000" />
+      <workItem from="1688008886601" duration="1812000" />
+      <workItem from="1688019425156" duration="22529000" />
+      <workItem from="1688093057871" duration="1981000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>
@@ -567,7 +608,15 @@
       <option name="project" value="LOCAL" />
       <updated>1687860202466</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="优化代码。">
+      <option name="closed" value="true" />
+      <created>1687860513799</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1687860513799</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -623,11 +672,6 @@
         </breakpoint>
       </breakpoints>
     </breakpoint-manager>
-    <watches-manager>
-      <configuration name="JetRunConfigurationType">
-        <watch expression="apkChannelName" language="kotlin" />
-      </configuration>
-    </watches-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

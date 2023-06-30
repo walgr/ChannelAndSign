@@ -100,24 +100,74 @@ fun signPage(window: ComposeWindow) {
                                             modifier = Modifier.padding(8.dp)
                                         ) {
                                             Row {
-                                                Text("签名名称", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f))
-                                                Text(it.name, fontSize = 10.sp, color = Color.DarkGray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f))
+                                                Text(
+                                                    "签名名称",
+                                                    fontSize = 10.sp,
+                                                    color = Color.Gray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
+                                                )
+                                                Text(
+                                                    it.name,
+                                                    fontSize = 10.sp,
+                                                    color = Color.DarkGray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
+                                                )
                                             }
                                             Row {
-                                                Text("签名文件位置", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f))
-                                                Text(it.StoreFile, fontSize = 10.sp, color = Color.DarkGray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f))
+                                                Text(
+                                                    "签名文件位置",
+                                                    fontSize = 10.sp,
+                                                    color = Color.Gray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
+                                                )
+                                                Text(
+                                                    it.StoreFile,
+                                                    fontSize = 10.sp,
+                                                    color = Color.DarkGray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
+                                                )
                                             }
                                             Row {
-                                                Text("签名文件密码", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f))
-                                                Text(it.StorePass, fontSize = 10.sp, color = Color.DarkGray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f))
+                                                Text(
+                                                    "签名文件密码",
+                                                    fontSize = 10.sp,
+                                                    color = Color.Gray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
+                                                )
+                                                Text(
+                                                    it.StorePass,
+                                                    fontSize = 10.sp,
+                                                    color = Color.DarkGray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
+                                                )
                                             }
                                             Row {
-                                                Text("签名别名", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f))
-                                                Text(it.KeyAlias, fontSize = 10.sp, color = Color.DarkGray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f))
+                                                Text(
+                                                    "签名别名",
+                                                    fontSize = 10.sp,
+                                                    color = Color.Gray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
+                                                )
+                                                Text(
+                                                    it.KeyAlias,
+                                                    fontSize = 10.sp,
+                                                    color = Color.DarkGray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
+                                                )
                                             }
                                             Row {
-                                                Text("签名别名密码", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f))
-                                                Text(it.KeyPass, fontSize = 10.sp, color = Color.DarkGray, modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f))
+                                                Text(
+                                                    "签名别名密码",
+                                                    fontSize = 10.sp,
+                                                    color = Color.Gray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
+                                                )
+                                                Text(
+                                                    it.KeyPass,
+                                                    fontSize = 10.sp,
+                                                    color = Color.DarkGray,
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
+                                                )
                                             }
                                         }
                                     }
@@ -135,18 +185,11 @@ fun signPage(window: ComposeWindow) {
                     }
                 }
             }
-            Column(
-                modifier = Modifier.width(150.dp).fillMaxHeight().padding(0.dp, 0.dp, 0.dp, 16.dp),
-            ) {
-
-            }
         }
         if (showSignInfoDialog.value) {
             showSignInfoSetDialog(showSignInfoDialog, changeSign) { result ->
-                val findSign = signList.find { it.StoreFile == result.StoreFile }
-                if (findSign == null) {
-                    signList.add(result)
-                }
+                signList.remove(result)
+                signList.add(result)
                 SignSetViewModel.saveSignList(signList)
             }
         }
@@ -155,7 +198,11 @@ fun signPage(window: ComposeWindow) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun showSignInfoSetDialog(showSignInfoDialog: MutableState<Boolean>, signFile: SignFile, callback: ((SignFile) -> Unit)) {
+private fun showSignInfoSetDialog(
+    showSignInfoDialog: MutableState<Boolean>,
+    signFile: SignFile,
+    callback: ((SignFile) -> Unit)
+) {
     val inputName = mutableStateOf(signFile.name)
     val inputStoreFile = mutableStateOf(signFile.StoreFile)
     val inputStorePass = mutableStateOf(signFile.StorePass)
@@ -208,14 +255,14 @@ private fun showSignInfoSetDialog(showSignInfoDialog: MutableState<Boolean>, sig
                         signFile.StoreFile = it.text
                         inputStoreFile.value = signFile.StoreFile
                     },
-                   label = {
+                    label = {
                         Text("请输入签名文件位置")
                     },
                     singleLine = true,
                 )
             }
             Row(
-               modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 4.dp)
             ) {
                 OutlinedTextField(
                     value = TextFieldValue(inputStorePass.value, TextRange(inputStorePass.value.length)),

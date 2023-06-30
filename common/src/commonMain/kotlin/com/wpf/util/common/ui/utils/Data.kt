@@ -1,4 +1,4 @@
-package com.wpf.util.common
+package com.wpf.util.common.ui.utils
 
 import com.russhwolf.settings.Settings
 import kotlinx.serialization.json.Json

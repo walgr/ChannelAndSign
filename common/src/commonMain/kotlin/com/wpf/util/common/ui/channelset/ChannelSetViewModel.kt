@@ -2,10 +2,16 @@ package com.wpf.util.common.ui.channelset
 
 import com.russhwolf.settings.set
 import com.wpf.base.dealfile.*
-import com.wpf.util.common.json
-import com.wpf.util.common.settings
+import com.wpf.util.common.ui.utils.json
+import com.wpf.util.common.ui.utils.settings
+import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.configset.ConfigPageViewModel
+import com.wpf.util.common.ui.marketplace.MarketApk
+import com.wpf.util.common.ui.marketplace.MarketType
 import com.wpf.util.common.ui.signset.SignFile
+import com.wpf.util.common.ui.utils.abiType
+import com.wpf.util.common.ui.utils.channelName
+import com.wpf.util.common.ui.utils.marketType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,6 +30,17 @@ object ChannelSetViewModel {
 
     fun saveChannelList(channelList: List<Channel>) {
         settings["channelList"] = json.encodeToString(channelList)
+    }
+
+    fun getPathList(): List<Path> {
+        settings.getStringOrNull("pathList")?.let {
+            return json.decodeFromString(it)
+        }
+        return arrayListOf()
+    }
+
+    fun savePathList(pathList: List<Path>) {
+        settings["pathList"] = json.encodeToString(pathList)
     }
 
     fun getChannelDataInFile(txtFilePath: String): List<Array<String>> {
@@ -62,5 +79,35 @@ object ChannelSetViewModel {
                 }
             }
         }
+    }
+
+    fun dealMargetPlace(pathList: List<String>): MutableList<MarketApk> {
+        val marketPlaceApkList: MutableList<MarketApk> = mutableListOf()
+        pathList.map {
+            channelSavePath.ifEmpty { if (it.contains(".apk")) File(it).parent else it }
+        }.forEach { path ->
+            File(path).listFiles()?.filter {
+                it.nameWithoutExtension.contains("sign")
+                        && MarketType.values().find { market ->
+                    it.nameWithoutExtension.contains(market.channelName, ignoreCase = true)
+                } != null
+            }?.let {
+                marketPlaceApkList.addAll(it.map { file ->
+                    val findMarket = marketPlaceApkList.find { marketPlaceApkList ->
+                        marketPlaceApkList.channelName == file.nameWithoutExtension.channelName()
+                    }
+                    val apk = Apk(
+                        name = file.nameWithoutExtension,
+                        size = file.length(),
+                        filePath = file.path,
+                    )
+                    findMarket?.abiApk?.add(apk)
+                    findMarket?: MarketApk(apk.channelName.marketType(), file.nameWithoutExtension.channelName() ?: "", arrayListOf(apk))
+                }.toList().sortedBy { market ->
+                    !market.isSelect
+                })
+            }
+        }
+        return marketPlaceApkList
     }
 }
