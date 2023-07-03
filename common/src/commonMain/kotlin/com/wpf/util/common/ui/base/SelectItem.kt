@@ -9,7 +9,7 @@ open class SelectItem(
     @Transient open var isSelect: Boolean = false
 ) {
     @Transient
-    var isSelectState = mutableStateOf(isSelect)
+    open var isSelectState = mutableStateOf(isSelect)
         get() {
             field.value = isSelect
             return field
@@ -20,7 +20,7 @@ open class SelectItem(
             field = value
         }
 
-    fun click(): Boolean {
+    open fun click(): Boolean {
         isSelect = !isSelect
         isSelectState.value = isSelect
         return isSelect

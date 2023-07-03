@@ -1,6 +1,4 @@
-package com.wpf.util.common.ui.marketplace
-
-import java.io.File
+package com.wpf.util.common.ui.marketplace.markets
 
 data class UploadData(
     val apk: MarketApk,

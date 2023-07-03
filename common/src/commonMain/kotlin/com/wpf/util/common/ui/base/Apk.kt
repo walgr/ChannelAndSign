@@ -1,6 +1,6 @@
 package com.wpf.util.common.ui.base
 
-import com.wpf.util.common.ui.marketplace.MarketType
+import com.wpf.util.common.ui.marketplace.markets.MarketType
 import com.wpf.util.common.ui.marketplace.markets.Market
 import com.wpf.util.common.ui.utils.abiType
 import com.wpf.util.common.ui.utils.channelName

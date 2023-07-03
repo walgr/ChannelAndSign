@@ -11,11 +11,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.rounded.Share
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,18 +22,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.utils.DropBoxPanel
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.signset.SignFile
 import com.wpf.util.common.ui.signset.SignSetViewModel
 import com.wpf.util.common.ui.uploadIcon
-import com.wpf.util.common.ui.utils.FileSelector
-import javax.swing.JFileChooser
+import com.wpf.util.common.ui.widget.common.Title
+import com.wpf.util.common.ui.widget.common.FileAddTitle
 
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
@@ -98,31 +93,12 @@ fun channelPage(window: ComposeWindow) {
                     ) {
                         Row {
                             Box(
-                                modifier = Modifier.weight(1f).fillMaxHeight().padding(0.dp, 0.dp, 5.dp, 0.dp)
+                                modifier = Modifier.weight(1f).fillMaxHeight().padding(0.dp, 0.dp, 4.dp, 0.dp)
                                     .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                             ) {
                                 Column {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth().height(44.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            "分组",
-                                            fontWeight = FontWeight.Bold,
-                                            color = mainTextColor,
-                                            textAlign = TextAlign.Center
-                                        )
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd
-                                        ) {
-                                            IconButton(onClick = {
-                                                groupDialog.value = true
-                                            }) {
-                                                Icon(
-                                                    Icons.Default.AddCircle, "添加分组", modifier = Modifier.size(18.dp)
-                                                )
-                                            }
-                                        }
+                                    Title("分组") {
+                                        groupDialog.value = true
                                     }
                                     LazyColumn {
                                         items(channelList) { group ->
@@ -176,7 +152,7 @@ fun channelPage(window: ComposeWindow) {
                                 }
                             }
                             Box(
-                                modifier = Modifier.weight(2f).fillMaxHeight().padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                modifier = Modifier.weight(2f).fillMaxHeight().padding(4.dp, 0.dp, 0.dp, 0.dp)
                             ) {
                                 Column {
                                     Box(
@@ -184,48 +160,22 @@ fun channelPage(window: ComposeWindow) {
                                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                                     ) {
                                         Column {
-                                            Box(
-                                                modifier = Modifier.fillMaxWidth().height(44.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    "渠道列表",
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = mainTextColor,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                                Box(
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    contentAlignment = Alignment.CenterEnd
-                                                ) {
-                                                    IconButton(onClick = {
-                                                        FileSelector.showFileSelector(
-                                                            arrayOf("txt"),
-                                                            selectionMode = JFileChooser.FILES_AND_DIRECTORIES
-                                                        ) { path ->
-                                                            channelList.find { it.isSelect }?.channelPath = path
-                                                            channelFileNameList.clear()
-                                                            channelNameList.clear()
-                                                            if (path.isNotEmpty()) {
-                                                                val result =
-                                                                    ChannelSetViewModel.getChannelDataInFile(path)
-                                                                if (result.isNotEmpty()) {
-                                                                    channelFileNameList.addAll(result.map { array -> array[0] })
-                                                                    channelNameList.addAll(result.map { array -> array[1] })
-                                                                } else {
-                                                                    channelFileNameList.add("文件解析错误，路径:(${path})")
-                                                                    channelNameList.add("文件解析错误，路径:(${path}")
-                                                                }
-                                                            }
-                                                        }
-                                                    }) {
-                                                        Icon(
-                                                            Icons.Default.AddCircle,
-                                                            "导入渠道",
-                                                            modifier = Modifier.size(18.dp)
-                                                        )
+                                            FileAddTitle("渠道列表", arrayOf("txt")) { path ->
+                                                channelList.find { it.isSelect }?.channelPath = path
+                                                channelFileNameList.clear()
+                                                channelNameList.clear()
+                                                if (path.isNotEmpty()) {
+                                                    val result =
+                                                        ChannelSetViewModel.getChannelDataInFile(path)
+                                                    if (result.isNotEmpty()) {
+                                                        channelFileNameList.addAll(result.map { array -> array[0] })
+                                                        channelNameList.addAll(result.map { array -> array[1] })
+                                                    } else {
+                                                        channelFileNameList.add("文件解析错误，路径:(${path})")
+                                                        channelNameList.add("文件解析错误，路径:(${path}")
                                                     }
                                                 }
+
                                             }
                                             Box(modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 8.dp)) {
                                                 Row {
@@ -286,36 +236,9 @@ fun channelPage(window: ComposeWindow) {
                                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                                     ) {
                                         Column {
-                                            Box(
-                                                modifier = Modifier.fillMaxWidth().height(44.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    "apk地址",
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = mainTextColor,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                                Box(
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    contentAlignment = Alignment.CenterEnd
-                                                ) {
-                                                    IconButton(onClick = {
-                                                        FileSelector.showFileSelector(
-                                                            arrayOf("apk"),
-                                                            selectionMode = JFileChooser.FILES_AND_DIRECTORIES
-                                                        ) {
-                                                            pathList.add(Path(name = it, path = it))
-                                                            ChannelSetViewModel.savePathList(pathList)
-                                                        }
-                                                    }) {
-                                                        Icon(
-                                                            Icons.Default.AddCircle,
-                                                            "添加Apk",
-                                                            modifier = Modifier.size(18.dp)
-                                                        )
-                                                    }
-                                                }
+                                            FileAddTitle("apk地址", arrayOf("apk")) {
+                                                pathList.add(Path(name = it, path = it))
+                                                ChannelSetViewModel.savePathList(pathList)
                                             }
                                             Box(modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 8.dp)) {
                                                 Column {
