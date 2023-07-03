@@ -30,7 +30,7 @@ interface Market: SelectInterface {
                 0.dp
             )
         ) {
-            Text("1234")
+
         }
     }
 

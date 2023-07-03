@@ -63,14 +63,12 @@ fun marketPlacePage(window: ComposeWindow) {
                                     .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                             ) {
                                 Column {
-                                    Title("市场") {
-                                        showAddMarketDialog.value = true
-                                    }
+                                    Title("市场")
                                     LazyColumn {
                                         items(marketList) {
                                             ItemTextView(it.name, modifier = Modifier.clickable {
-                                                marketList.forEach {
-                                                    it.changeSelect(false)
+                                                marketList.forEach { market ->
+                                                    market.changeSelect(false)
                                                 }
                                                 it.changeSelect(true)
                                                 MarketPlaceViewModel.saveMarketList(marketList)
