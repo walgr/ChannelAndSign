@@ -23,6 +23,8 @@ import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.widget.common.InputView
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
@@ -39,8 +41,13 @@ class XiaomiMarket : Market {
     var userName: String = ""
     var password: String = ""
     var pubKeyPath: String = ""         //小米公钥路径
+        set(value) {
+            field = value
+            initPubkey()
+        }
 
     override var isSelect = false
+
     @Transient
     override val isSelectState: MutableState<Boolean> = mutableStateOf(isSelect)
 
@@ -95,7 +102,49 @@ class XiaomiMarket : Market {
         }
     }
 
+    override fun query(uploadData: UploadData) {
+        super.query(uploadData)
+        if (uploadData.apk.abiApk.isEmpty()) return
+        val api = "/dev/query"
+        Http.submitForm(
+            baseUrl + api, formParameters =
+            parameters {
+                val requestDataJson = gson.toJson(JsonObject().apply {
+                    addProperty("packageName", uploadData.apk.abiApk[0].packageName)
+                    addProperty("userName", userName)
+                })
+                val formParams = mutableListOf<Pair<String, String>>()
+                formParams.add(Pair("RequestData", requestDataJson))
+                formParams.add(Pair("SIG", encryptByPublicKey(gson.toJson(
+                    JsonObject().apply {
+                        addProperty("sig", gson.toJson(
+                            JsonArray().apply {
+                                add(JsonObject().apply {
+                                    addProperty("name", "RequestData")
+                                    addProperty("hash", DigestUtils.md5Hex(requestDataJson))
+                                })
+                            }
+                        ))
+                        addProperty("password", password)
+                    }
+                ), pubKey)))
+                formParams.forEach {
+                    append(it.first, it.second)
+                }
+            }, callback =
+            object : Callback<String> {
+                override fun onSuccess(t: String) {
+                    println("小米接口请求成功,结果:$t")
+                }
+
+                override fun onFail(msg: String) {
+                    println("小米接口请求失败,结果:$msg")
+                }
+            })
+    }
+
     override fun push(uploadData: UploadData) {
+        return
         if (uploadData.apk.abiApk.isEmpty()) return
         val api = "/dev/push"
         Http.post(baseUrl + api, request = {
@@ -149,11 +198,11 @@ class XiaomiMarket : Market {
             ))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
-                println("接口请求成功,结果:$t")
+                println("小米接口请求成功,结果:$t")
             }
 
             override fun onFail(msg: String) {
-                println("接口请求失败,结果:$msg")
+                println("小米接口请求失败,结果:$msg")
             }
         })
     }
@@ -216,8 +265,10 @@ class XiaomiMarket : Market {
      */
     private fun getPublicKeyByX509Cer(cerFilePath: String): PublicKey? {
         val x509Is: InputStream = FileInputStream(cerFilePath)
-        return try {
-            (CertificateFactory.getInstance("X.509").generateCertificate(x509Is) as X509Certificate).publicKey
+        try {
+            return (CertificateFactory.getInstance("X.509").generateCertificate(x509Is) as X509Certificate).publicKey
+        } catch (e: Exception) {
+            e.printStackTrace()
         } finally {
             try {
                 x509Is.close()
@@ -225,12 +276,17 @@ class XiaomiMarket : Market {
                 e.printStackTrace()
             }
         }
+        return null
     }
 
     // 加载BC库
     init {
         Security.addProvider(BouncyCastleProvider())
-        runCatching {
+        initPubkey()
+    }
+
+    fun initPubkey() {
+        if (pubKeyPath.isNotEmpty()) {
             pubKey = getPublicKeyByX509Cer(pubKeyPath)
         }
     }

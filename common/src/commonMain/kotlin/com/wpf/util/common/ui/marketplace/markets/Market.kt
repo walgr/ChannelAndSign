@@ -34,6 +34,10 @@ interface Market: SelectInterface {
         }
     }
 
+    fun query(uploadData: UploadData) {
+
+    }
+
     fun push(uploadData: UploadData)
 
 }

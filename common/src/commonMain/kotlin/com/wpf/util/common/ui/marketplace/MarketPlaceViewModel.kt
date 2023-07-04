@@ -3,6 +3,7 @@ package com.wpf.util.common.ui.marketplace
 import com.google.gson.reflect.TypeToken
 import com.wpf.util.common.ui.marketplace.markets.Market
 import com.wpf.util.common.ui.marketplace.markets.MarketType
+import com.wpf.util.common.ui.marketplace.markets.XiaomiMarket
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.utils.settings
 
@@ -33,6 +34,11 @@ object MarketPlaceViewModel {
                 }
                 if (marketList.find { find -> find.isSelect } == null) {
                     marketList[0].isSelectState.value = true
+                }
+                marketList.forEach { market ->
+                    if (market is XiaomiMarket) {
+                        market.initPubkey()
+                    }
                 }
                 return marketList
             }

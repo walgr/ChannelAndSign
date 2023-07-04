@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.apiIcon
+import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.widget.common.ItemView
 import com.wpf.util.common.ui.marketplace.markets.MarketApk
 
@@ -36,16 +37,29 @@ fun ApkItem(marketApk: MarketApk) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(isSelect.value, null)
-            Text(text = marketApk.marketType.channelName, fontSize = 14.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = marketApk.marketType.channelName, fontSize = 14.sp)
+                if (marketApk.abiApk.find { it.abi == AbiType.Abi32 } != null) {
+                    Box {
+                        Text("32", fontSize = 8.sp)
+                    }
+                }
+                if (marketApk.abiApk.find { it.abi == AbiType.Abi64 } != null) {
+                    Box {
+                        Text("64", fontSize = 8.sp)
+                    }
+                }
+                if (marketApk.abiApk.find { it.abi == AbiType.Abi32_64 } != null) {
+                    Box {
+                        Text("兼容包", fontSize = 8.sp)
+                    }
+                }
+            }
             if (marketApk.marketType.canApi) {
                 Box(
                     modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd
                 ) {
-                    Box(
-                        modifier = Modifier.width(44.dp).height(44.dp), contentAlignment = Alignment.CenterEnd
-                    ) {
-                        apiIcon()
-                    }
+                    apiIcon()
                 }
             }
         }

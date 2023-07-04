@@ -6,14 +6,14 @@ data class XiaomiPushData(
     val userName: String,                   //用户名，在小米开发者站登录的邮箱
     val synchroType: Int = 1,               //更新类型：0=新增，1=更新包，2=内容更新
     val appInfo: String,                    //应用包实体JSON 字符串
-    val apk: File,                          //应用包实体
-    val secondApk: File,                    //应用包实体
-    val icon: File? = null,                 //应用包Icon
-    val screenshot_1: File?= null,          //应用的第1 幅截图，synchroType=0 时必选
-    val screenshot_2: File?= null,          //应用的第2 幅截图，synchroType=0 时必选
-    val screenshot_3: File?= null,          //应用的第3 幅截图，synchroType=0 时必选
-    val screenshot_4: File?= null,          //应用的第4 幅截图，synchroType=0 时必选
-    val screenshot_5: File?= null,          //应用的第5 幅截图，synchroType=0 时必选
+    @Transient val apk: File,                          //应用包实体
+    @Transient val secondApk: File,                    //应用包实体
+    @Transient val icon: File? = null,                 //应用包Icon
+    @Transient val screenshot_1: File?= null,          //应用的第1 幅截图，synchroType=0 时必选
+    @Transient val screenshot_2: File?= null,          //应用的第2 幅截图，synchroType=0 时必选
+    @Transient val screenshot_3: File?= null,          //应用的第3 幅截图，synchroType=0 时必选
+    @Transient val screenshot_4: File?= null,          //应用的第4 幅截图，synchroType=0 时必选
+    @Transient val screenshot_5: File?= null,          //应用的第5 幅截图，synchroType=0 时必选
 )
 
 

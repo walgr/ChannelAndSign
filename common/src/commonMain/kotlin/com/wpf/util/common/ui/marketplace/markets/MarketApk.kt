@@ -7,7 +7,7 @@ import com.wpf.util.common.ui.marketplace.markets.MarketType
 data class MarketApk(
     val marketType: MarketType,
     val channelName: String,
-    val abiApk: MutableList<Apk>
+    val abiApk: MutableList<Apk> = mutableListOf()
 ) : SelectItem() {
     override var isSelect: Boolean = marketType.canApi
 }

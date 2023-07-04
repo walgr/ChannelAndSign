@@ -43,6 +43,12 @@ object ApkSignerUtil {
     ): Boolean {
         val cmd = arrayOf(
             "sign",
+            "--v1-signing-enabled",
+            "true",
+            "--v2-signing-enabled",
+            "true",
+            "--v3-signing-enabled",
+            "false",
             "--ks",
             signFile,
             "--ks-key-alias",

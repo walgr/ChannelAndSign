@@ -6,6 +6,7 @@ import com.wpf.util.common.ui.utils.json
 import com.wpf.util.common.ui.utils.settings
 import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.configset.ConfigPageViewModel
+import com.wpf.util.common.ui.marketplace.MarketPlaceViewModel
 import com.wpf.util.common.ui.marketplace.markets.MarketApk
 import com.wpf.util.common.ui.marketplace.markets.MarketType
 import com.wpf.util.common.ui.signset.SignFile
@@ -81,7 +82,7 @@ object ChannelSetViewModel {
     }
 
     fun dealMargetPlace(pathList: List<String>): MutableList<MarketApk> {
-        val marketPlaceApkList: MutableList<MarketApk> = mutableListOf()
+        var marketPlaceApkList: MutableList<MarketApk> = mutableListOf()
         pathList.map {
             channelSavePath.ifEmpty { if (it.contains(".apk")) File(it).parent else it }
         }.forEach { path ->
@@ -91,7 +92,7 @@ object ChannelSetViewModel {
                     it.nameWithoutExtension.contains(market.channelName, ignoreCase = true)
                 } != null
             }?.let {
-                marketPlaceApkList.addAll(it.map { file ->
+                it.forEach { file ->
                     val findMarket = marketPlaceApkList.find { marketPlaceApkList ->
                         marketPlaceApkList.channelName == file.nameWithoutExtension.channelName()
                     }
@@ -101,10 +102,19 @@ object ChannelSetViewModel {
                         filePath = file.path,
                     )
                     findMarket?.abiApk?.add(apk)
-                    findMarket?: MarketApk(apk.channelName.marketType(), file.nameWithoutExtension.channelName() ?: "", arrayListOf(apk))
-                }.toList().sortedBy { market ->
+                    if (findMarket == null) {
+                        marketPlaceApkList.add(
+                            MarketApk(
+                                apk.channelName.marketType(),
+                                file.nameWithoutExtension.channelName() ?: "",
+                                arrayListOf(apk)
+                            )
+                        )
+                    }
+                }
+                marketPlaceApkList = marketPlaceApkList.sortedBy { market ->
                     !market.isSelect
-                })
+                }.toMutableList()
             }
         }
         return marketPlaceApkList
