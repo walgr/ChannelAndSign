@@ -379,8 +379,8 @@ fun channelPage(window: ComposeWindow) {
                         marketPlaceList.filter {
                             it.isSelectState.value
                         }.map {
-                            UploadData(it, marketDescription.value, marketScreenShotList.filter {
-                                it.isNotEmpty()
+                            UploadData(it, marketDescription.value, marketScreenShotList.filter { screenShot ->
+                                screenShot.isNotEmpty()
                             })
                         }.forEach {
                             it.upload()

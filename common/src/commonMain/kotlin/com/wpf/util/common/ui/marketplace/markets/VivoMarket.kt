@@ -223,7 +223,7 @@ class VivoMarket : Market {
                     append(t, u.toString())
                 }
                 append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
-                append("file", ByteArray(0), Headers.build {
+                append("file", File(apk.filePath).readBytes(), Headers.build {
                     append(HttpHeaders.ContentType, ContentType.MultiPart.FormData)
                 })
             }))

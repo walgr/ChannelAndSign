@@ -67,7 +67,7 @@ fun DropBoxPanel(
                     event.dropComplete(true)
                 }
             }
-//            window.contentPane.add(component)
+            window.contentPane.add(component)
         }
 
         SideEffect {

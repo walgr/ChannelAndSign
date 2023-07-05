@@ -10,7 +10,7 @@ fun main() = application {
     Window(
         transparent = true,
         undecorated = true,
-        resizable = true, state = rememberWindowState(
+        resizable = false, state = rememberWindowState(
             position = WindowPosition(
                 Alignment.Center
             ),
