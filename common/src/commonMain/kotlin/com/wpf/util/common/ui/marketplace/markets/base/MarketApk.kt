@@ -1,8 +1,7 @@
-package com.wpf.util.common.ui.marketplace.markets
+package com.wpf.util.common.ui.marketplace.markets.base
 
 import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.base.SelectItem
-import com.wpf.util.common.ui.marketplace.markets.MarketType
 
 data class MarketApk(
     val marketType: MarketType,

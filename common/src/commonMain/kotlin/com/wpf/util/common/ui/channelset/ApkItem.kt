@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.apiIcon
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.widget.common.ItemView
-import com.wpf.util.common.ui.marketplace.markets.MarketApk
+import com.wpf.util.common.ui.marketplace.markets.base.MarketApk
 
 @OptIn(ExperimentalFoundationApi::class)
 @Preview

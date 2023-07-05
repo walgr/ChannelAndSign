@@ -1,6 +1,8 @@
 package com.wpf.util.common.ui.marketplace.markets
 
 import com.wpf.util.common.ui.base.AbiType
+import com.wpf.util.common.ui.marketplace.markets.base.Market
+import com.wpf.util.common.ui.marketplace.markets.base.UploadData
 
 class UnknownMarket: Market {
 

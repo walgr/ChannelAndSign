@@ -1,8 +1,8 @@
 package com.wpf.util.common.ui.marketplace
 
 import com.google.gson.reflect.TypeToken
-import com.wpf.util.common.ui.marketplace.markets.Market
-import com.wpf.util.common.ui.marketplace.markets.MarketType
+import com.wpf.util.common.ui.marketplace.markets.base.Market
+import com.wpf.util.common.ui.marketplace.markets.base.MarketType
 import com.wpf.util.common.ui.marketplace.markets.XiaomiMarket
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.utils.settings

@@ -27,8 +27,8 @@ import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.utils.DropBoxPanel
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
-import com.wpf.util.common.ui.marketplace.markets.UploadData
-import com.wpf.util.common.ui.marketplace.markets.upload
+import com.wpf.util.common.ui.marketplace.markets.base.UploadData
+import com.wpf.util.common.ui.marketplace.markets.base.upload
 import com.wpf.util.common.ui.signset.SignFile
 import com.wpf.util.common.ui.signset.SignSetViewModel
 import com.wpf.util.common.ui.uploadIcon
@@ -345,7 +345,9 @@ fun channelPage(window: ComposeWindow) {
                     contentAlignment = Alignment.BottomEnd
                 ) {
                     IconButton(onClick = {
-                        marketPlaceList.map {
+                        marketPlaceList.filter {
+                            it.isSelectState.value
+                        }.map {
                             UploadData(it, "测试上传")
                         }.forEach {
                             it.upload()

@@ -10,13 +10,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.wpf.util.common.ui.base.AbiType
-import com.wpf.util.common.ui.base.SelectItem
 import com.wpf.util.common.ui.http.Http
-import com.wpf.util.common.ui.marketplace.MarketPlaceViewModel
+import com.wpf.util.common.ui.marketplace.markets.base.Market
+import com.wpf.util.common.ui.marketplace.markets.base.UploadData
+import com.wpf.util.common.ui.marketplace.markets.base.XiaomiApk
+import com.wpf.util.common.ui.marketplace.markets.base.XiaomiPushData
 import com.wpf.util.common.ui.utils.Callback
 import com.wpf.util.common.ui.utils.FileSelector
 import com.wpf.util.common.ui.utils.gson
@@ -25,7 +26,6 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.util.*
-import kotlinx.serialization.Serializable
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -58,45 +58,41 @@ class XiaomiMarket : Market {
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 
     @Composable
-    override fun dispositionView(market: Market) {
+    override fun dispositionViewInBox(market: Market) {
+        super.dispositionViewInBox(market)
         if (market !is XiaomiMarket) return
         val xiaomiAccount = remember { mutableStateOf(market.userName) }
         val xiaomiAccountPassword = remember { mutableStateOf(market.password) }
         val xiaomiAccountPub = remember { mutableStateOf(market.pubKeyPath) }
-        Box(
-            modifier = if (market.isSelectState.value) Modifier.fillMaxWidth() else Modifier.height(
-                0.dp
-            )
-        ) {
-            Column {
-                InputView(xiaomiAccount, hint = "请配置小米登录邮箱帐号") {
-                    xiaomiAccount.value = it
-                    market.userName = it
-                }
-                InputView(xiaomiAccountPassword, hint = "请配置小米账号密码") {
-                    xiaomiAccountPassword.value = it
-                    market.password = it
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+
+        Column {
+            InputView(xiaomiAccount, hint = "请配置小米登录邮箱帐号") {
+                xiaomiAccount.value = it
+                market.userName = it
+            }
+            InputView(xiaomiAccountPassword, hint = "请配置小米账号密码") {
+                xiaomiAccountPassword.value = it
+                market.password = it
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                InputView(
+                    xiaomiAccountPub,
+                    modifier = Modifier.weight(1f),
+                    hint = "请配置小米Pubkey文件路径"
                 ) {
-                    InputView(
-                        xiaomiAccountPub,
-                        modifier = Modifier.weight(1f),
-                        hint = "请配置小米Pubkey文件路径"
-                    ) {
+                    xiaomiAccountPub.value = it
+                    market.pubKeyPath = it
+                }
+                Button(onClick = {
+                    FileSelector.showFileSelector(arrayOf("cer")) {
                         xiaomiAccountPub.value = it
                         market.pubKeyPath = it
                     }
-                    Button(onClick = {
-                        FileSelector.showFileSelector(arrayOf("cer")) {
-                            xiaomiAccountPub.value = it
-                            market.pubKeyPath = it
-                        }
-                    }, modifier = Modifier.padding(start = 8.dp)) {
-                        Text("选择")
-                    }
+                }, modifier = Modifier.padding(start = 8.dp)) {
+                    Text("选择")
                 }
             }
         }

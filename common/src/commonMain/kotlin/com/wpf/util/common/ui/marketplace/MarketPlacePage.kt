@@ -22,8 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
-import com.wpf.util.common.ui.marketplace.markets.MarketTypeHelper
+import com.wpf.util.common.ui.marketplace.markets.base.MarketTypeHelper
 import com.wpf.util.common.ui.widget.AddItemDialog
+import com.wpf.util.common.ui.widget.common.InputView
 import com.wpf.util.common.ui.widget.common.ItemTextView
 import com.wpf.util.common.ui.widget.common.Title
 
@@ -75,17 +76,22 @@ fun marketPlacePage(window: ComposeWindow) {
                                 modifier = Modifier.weight(2f).fillMaxHeight().padding(4.dp, 0.dp, 0.dp, 0.dp)
                                     .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor)
                             ) {
-                                Box(modifier = Modifier.padding(start = 8.dp, top = 4.dp, end = 8.dp, bottom = 4.dp)) {
-                                    Column {
-                                        Title("市场配置")
-                                        marketList.forEach {
-                                            it.dispositionView(it)
-                                        }
-                                        Button(onClick = {
-                                            MarketPlaceViewModel.saveMarketList(marketList)
-                                        }, modifier = Modifier.padding(start = 8.dp)) {
-                                            Text("保存")
-                                        }
+                                Column(
+                                    modifier = Modifier.padding(
+                                        start = 8.dp,
+                                        top = 4.dp,
+                                        end = 8.dp,
+                                        bottom = 4.dp
+                                    )
+                                ) {
+                                    Title("市场配置")
+                                    marketList.forEach {
+                                        it.dispositionView(it)
+                                    }
+                                    Button(onClick = {
+                                        MarketPlaceViewModel.saveMarketList(marketList)
+                                    }, modifier = Modifier.padding(start = 8.dp)) {
+                                        Text("保存")
                                     }
                                 }
                             }

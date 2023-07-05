@@ -1,4 +1,4 @@
-package com.wpf.util.common.ui.marketplace.markets
+package com.wpf.util.common.ui.marketplace.markets.base
 
 import com.wpf.util.common.ui.marketplace.MarketPlaceViewModel
 
@@ -14,3 +14,7 @@ fun UploadData.upload() {
         it.name == apk.marketType.market.name
     }?.query(this)
 }
+
+fun UploadData.packageName() = apk.abiApk.getOrNull(0)?.packageName
+fun UploadData.versionCode() = apk.abiApk.getOrNull(0)?.versionCode
+fun UploadData.versionName() = apk.abiApk.getOrNull(0)?.versionName

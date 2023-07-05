@@ -1,4 +1,9 @@
-package com.wpf.util.common.ui.marketplace.markets
+package com.wpf.util.common.ui.marketplace.markets.base
+
+import com.wpf.util.common.ui.marketplace.markets.HuaweiMarket
+import com.wpf.util.common.ui.marketplace.markets.UnknownMarket
+import com.wpf.util.common.ui.marketplace.markets.VivoMarket
+import com.wpf.util.common.ui.marketplace.markets.XiaomiMarket
 
 /**
  * 支持平台

@@ -11,19 +11,25 @@
   <component name="ChangeListManager">
     <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="上传市场支持。">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ApkSignerUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/com/wpf/base/dealfile/util/ApkSignerUtil.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/common/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/base/Apk.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/base/Apk.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ApkItem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ApkItem.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetViewModel.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/http/Http.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/http/Http.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/MarketPlacePage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/MarketPlacePage.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/MarketPlaceViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/MarketPlaceViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/Market.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/Market.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/MarketApk.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/MarketApk.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/UploadData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/UploadData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/HuaweiMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/HuaweiMarket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/Market.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/Market.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/MarketApk.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/MarketApk.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/MarketType.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/MarketType.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/UnknownMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/UnknownMarket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/UploadData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/UploadData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/VivoMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/VivoMarket.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiMarket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiPushData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiPushData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiPushData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/XiaomiPushData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/StringEx.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/StringEx.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/widget/common/InputView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/widget/common/InputView.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,7 +136,8 @@
     "deletionFromPopupRequiresConfirmation": "false",
     "git-widget-placeholder": "master",
     "jdk.selected.JAVA_MODULE": "11",
-    "ktor.last.update.timestamp": "1688431354188",
+    "kotlin.migration.detection.enabled": "false",
+    "ktor.last.update.timestamp": "1688518160354",
     "last_opened_file_path": "D:/JavaProject/ChannelAndSign/common/src/commonMain/kotlin/com/wpf/util/common/ui/widget",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -140,7 +147,7 @@
     "project.structure.last.edited": "模块",
     "project.structure.proportion": "0.097751714",
     "project.structure.side.proportion": "0.3579496",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "settings.editor.selected.configurable": "http.proxy",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -153,11 +160,11 @@
       <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\ui\marketplace\markets\base" />
       <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\ui\widget\common" />
       <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\ui\marketplace\markets" />
       <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\ui\widget" />
       <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\kotlin\com\wpf\util\common\ui\utils" />
-      <recent name="D:\JavaProject\ChannelAndSign\base\src\main\resources\sign" />
     </key>
     <key name="MoveKotlinTopLevelDeclarationsDialog.RECENTS_KEY">
       <recent name="com.wpf.util.common.ui.marketplace.markets" />
@@ -336,7 +343,10 @@
       <workItem from="1688093057871" duration="18041000" />
       <workItem from="1688344611249" duration="15805000" />
       <workItem from="1688367034903" duration="5729000" />
-      <workItem from="1688372827219" duration="4631000" />
+      <workItem from="1688372827219" duration="5252000" />
+      <workItem from="1688433619443" duration="18330000" />
+      <workItem from="1688460668951" duration="3484000" />
+      <workItem from="1688517321406" duration="2868000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>
@@ -586,7 +596,15 @@
       <option name="project" value="LOCAL" />
       <updated>1688367165789</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688433051439</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1688433051439</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -641,6 +659,14 @@
           <properties class="java.lang.ExceptionInInitializerError" package="java.lang" />
           <option name="timeStamp" value="19" />
         </breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/http/Http.kt</url>
+          <line>30</line>
+          <properties>
+            <option name="lambda-ordinal" value="-1" />
+          </properties>
+          <option name="timeStamp" value="20" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>

@@ -6,9 +6,8 @@ import com.wpf.util.common.ui.utils.json
 import com.wpf.util.common.ui.utils.settings
 import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.configset.ConfigPageViewModel
-import com.wpf.util.common.ui.marketplace.MarketPlaceViewModel
-import com.wpf.util.common.ui.marketplace.markets.MarketApk
-import com.wpf.util.common.ui.marketplace.markets.MarketType
+import com.wpf.util.common.ui.marketplace.markets.base.MarketApk
+import com.wpf.util.common.ui.marketplace.markets.base.MarketType
 import com.wpf.util.common.ui.signset.SignFile
 import com.wpf.util.common.ui.utils.channelName
 import com.wpf.util.common.ui.utils.marketType
