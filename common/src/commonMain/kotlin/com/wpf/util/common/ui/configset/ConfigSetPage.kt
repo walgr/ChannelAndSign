@@ -21,6 +21,7 @@ import com.wpf.util.common.ui.utils.settings
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.FileSelector
+import com.wpf.util.common.ui.widget.common.InputView
 
 @Preview
 @Composable
@@ -58,22 +59,11 @@ fun configPage() {
                                 modifier = Modifier.padding(top = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                OutlinedTextField(
-                                    value = TextFieldValue(
-                                        inputChannelBaseFilePath,
-                                        TextRange(inputChannelBaseFilePath.length)
-                                    ),
-                                    onValueChange = {
-                                        inputChannelBaseFilePath = it.text
-                                        ConfigPageViewModel.saveChannelBaseFilePath(it.text)
-                                        channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
-                                    },
-                                    label = {
-                                        Text("请输入渠道基础文件位置")
-                                    },
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                InputView(input = inputChannelBaseFilePath, hint = "请输入渠道基础文件位置") {
+                                    inputChannelBaseFilePath = it
+                                    ConfigPageViewModel.saveChannelBaseFilePath(it)
+                                    channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
+                                }
                                 Button(onClick = {
                                     FileSelector.showFileSelector(arrayOf("xml")) {
                                         inputChannelBaseFilePath = it
@@ -88,43 +78,21 @@ fun configPage() {
                                 modifier = Modifier.padding(top = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                OutlinedTextField(
-                                    value = TextFieldValue(
-                                        inputChannelSaveFilePath,
-                                        TextRange(inputChannelSaveFilePath.length)
-                                    ),
-                                    onValueChange = {
-                                        inputChannelSaveFilePath = it.text
-                                        ConfigPageViewModel.saveChannelSaveFilePath(it.text)
-                                        channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
-                                    },
-                                    label = {
-                                        Text("请输入渠道保存位置,默认当前目录")
-                                    },
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                InputView(input = inputChannelSaveFilePath, hint = "请输入渠道保存位置,默认当前目录") {
+                                    inputChannelSaveFilePath = it
+                                    ConfigPageViewModel.saveChannelSaveFilePath(it)
+                                    channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
+                                }
                             }
                             Row(
                                 modifier = Modifier.padding(top = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                OutlinedTextField(
-                                    value = TextFieldValue(
-                                        inputZipalignFilePath,
-                                        TextRange(inputZipalignFilePath.length)
-                                    ),
-                                    onValueChange = {
-                                        inputZipalignFilePath = it.text
-                                        ConfigPageViewModel.saveZipalignFilePath(it.text)
-                                        zipalignFile = ConfigPageViewModel.getZipalignFilePath()
-                                    },
-                                    label = {
-                                        Text("请输入Apk对齐工具Zipalign位置")
-                                    },
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                InputView(input = inputZipalignFilePath, hint = "请输入Apk对齐工具Zipalign位置") {
+                                    inputZipalignFilePath = it
+                                    ConfigPageViewModel.saveZipalignFilePath(it)
+                                    zipalignFile = ConfigPageViewModel.getZipalignFilePath()
+                                }
                                 Button(onClick = {
                                     FileSelector.showFileSelector(arrayOf("exe")) {
                                         inputZipalignFilePath = it

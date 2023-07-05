@@ -66,11 +66,11 @@ class XiaomiMarket : Market {
         val xiaomiAccountPub = remember { mutableStateOf(market.pubKeyPath) }
 
         Column {
-            InputView(xiaomiAccount, hint = "请配置小米登录邮箱帐号") {
+            InputView(input = xiaomiAccount.value, hint = "请配置小米登录邮箱帐号") {
                 xiaomiAccount.value = it
                 market.userName = it
             }
-            InputView(xiaomiAccountPassword, hint = "请配置小米账号密码") {
+            InputView(input = xiaomiAccountPassword.value, hint = "请配置小米账号密码") {
                 xiaomiAccountPassword.value = it
                 market.password = it
             }
@@ -79,8 +79,8 @@ class XiaomiMarket : Market {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 InputView(
-                    xiaomiAccountPub,
                     modifier = Modifier.weight(1f),
+                    input = xiaomiAccountPub.value,
                     hint = "请配置小米Pubkey文件路径"
                 ) {
                     xiaomiAccountPub.value = it

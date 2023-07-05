@@ -28,7 +28,6 @@ fun DropBoxPanel(
     component: JPanel = JPanel(),
     onFileDrop: (List<String>) -> Unit
 ) {
-
     val dropBoundsBean = remember {
         mutableStateOf(DropBoundsBean())
     }
@@ -68,7 +67,7 @@ fun DropBoxPanel(
                     event.dropComplete(true)
                 }
             }
-            window.contentPane.add(component)
+//            window.contentPane.add(component)
         }
 
         SideEffect {

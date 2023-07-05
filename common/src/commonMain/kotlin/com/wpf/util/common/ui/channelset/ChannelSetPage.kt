@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -32,8 +33,10 @@ import com.wpf.util.common.ui.marketplace.markets.base.upload
 import com.wpf.util.common.ui.signset.SignFile
 import com.wpf.util.common.ui.signset.SignSetViewModel
 import com.wpf.util.common.ui.uploadIcon
+import com.wpf.util.common.ui.widget.common.AddImage
 import com.wpf.util.common.ui.widget.common.Title
 import com.wpf.util.common.ui.widget.common.FileAddTitle
+import com.wpf.util.common.ui.widget.common.InputView
 
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
@@ -60,8 +63,11 @@ fun channelPage(window: ComposeWindow) {
 
     var isRunDealFile by remember { mutableStateOf(false) }
 
+    val marketDescription = remember { mutableStateOf("") }
+    val marketScreenShotList = remember { mutableStateListOf("") }
     //打完后的市场包列表
-    val marketPlaceList = remember { mutableStateListOf(*ChannelSetViewModel.dealMargetPlace(pathList.map { it.path }).toTypedArray()) }
+    val marketPlaceList =
+        remember { mutableStateListOf(*ChannelSetViewModel.dealMargetPlace(pathList.map { it.path }).toTypedArray()) }
 
     channelList.find { channel -> channel.isSelect }?.channelPath?.let {
         if (it.isNotEmpty()) {
@@ -297,14 +303,21 @@ fun channelPage(window: ComposeWindow) {
                                                         ) {
                                                             isRunDealFile = false
                                                             marketPlaceList.clear()
-                                                            marketPlaceList.addAll(ChannelSetViewModel.dealMargetPlace(filePathList))
+                                                            marketPlaceList.addAll(
+                                                                ChannelSetViewModel.dealMargetPlace(
+                                                                    filePathList
+                                                                )
+                                                            )
                                                         }
                                                     } else {
                                                         showSignSelectDialog.value = true
                                                     }
                                                 }
                                             }) {
-                                                Icon(if (isRunDealFile) Icons.Default.Close else Icons.Default.PlayArrow, "开始打包")
+                                                Icon(
+                                                    if (isRunDealFile) Icons.Default.Close else Icons.Default.PlayArrow,
+                                                    "开始打包"
+                                                )
                                             }
                                         }
                                     }
@@ -317,25 +330,43 @@ fun channelPage(window: ComposeWindow) {
             Box(
                 modifier = Modifier.weight(1f).fillMaxHeight().padding(top = 0.dp, end = 16.dp, bottom = 16.dp),
             ) {
-                Column(
-                ) {
+                Column {
                     Box(
-                        modifier = Modifier.fillMaxWidth().height(100.dp)
+                        modifier = Modifier.fillMaxWidth()
                             .padding(top = 16.dp, bottom = 16.dp)
                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
-                        contentAlignment = Alignment.Center
                     ) {
-                        Text("市场包", fontWeight = FontWeight.Bold, color = mainTextColor)
-                    }
-                    Column {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().weight(2f)
-                                .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor).padding(8.dp),
+                        Column(
+                            modifier = Modifier.padding(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            LazyColumn {
-                                items(marketPlaceList) {
-                                    ApkItem(it)
+                            Title("市场包")
+                            InputView(input = marketDescription.value, hint = "请输入更新文案", maxLine = 5) {
+                                marketDescription.value = it
+                            }
+                            LazyRow(
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                            ) {
+                                items(marketScreenShotList) {
+                                    AddImage(it) { new ->
+                                        marketScreenShotList.remove(it)
+                                        marketScreenShotList.add(new)
+                                        if (new.isNotEmpty() && marketScreenShotList.size < 5) {
+                                            marketScreenShotList.add("")
+                                        }
+                                    }
                                 }
+                            }
+                        }
+                    }
+                    Box(
+                        modifier = Modifier.fillMaxWidth().weight(1f)
+                            .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor)
+                            .padding(top = 8.dp, bottom = 8.dp),
+                    ) {
+                        LazyColumn {
+                            items(marketPlaceList) {
+                                ApkItem(it)
                             }
                         }
                     }
@@ -348,7 +379,9 @@ fun channelPage(window: ComposeWindow) {
                         marketPlaceList.filter {
                             it.isSelectState.value
                         }.map {
-                            UploadData(it, "测试上传")
+                            UploadData(it, marketDescription.value, marketScreenShotList.filter {
+                                it.isNotEmpty()
+                            })
                         }.forEach {
                             it.upload()
                         }

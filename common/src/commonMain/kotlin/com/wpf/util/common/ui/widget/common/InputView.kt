@@ -28,12 +28,13 @@ import androidx.compose.ui.unit.dp
 @Preview
 @Composable
 fun InputView(
-    input: MutableState<String> = mutableStateOf(""),
-    hint: String = "",
     modifier: Modifier? = null,
+    input: String = "",
+    hint: String = "",
+    maxLine: Int = 1,
     onTextChange: (String) -> Unit
 ) {
-    val showText = remember { input }
+    val showText = remember { mutableStateOf(input) }
     OutlinedTextField(
         value = TextFieldValue(
             showText.value, TextRange(showText.value.length)
@@ -45,15 +46,18 @@ fun InputView(
         label = {
             Text(hint)
         },
-        singleLine = true,
+        singleLine = maxLine == 1,
+        maxLines = maxLine,
         trailingIcon = {
-            Icon(
-                Icons.Rounded.Clear,
-                "清空",
-                modifier = Modifier.clickable {
-                    showText.value = ""
-                }
-            )
+            if (showText.value.isNotEmpty()) {
+                Icon(
+                    Icons.Rounded.Clear,
+                    "清空",
+                    modifier = Modifier.clickable {
+                        showText.value = ""
+                    }
+                )
+            }
         },
         modifier = if (modifier == null) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().then(modifier)
     )

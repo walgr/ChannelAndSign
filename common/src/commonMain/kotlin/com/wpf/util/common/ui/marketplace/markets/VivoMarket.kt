@@ -413,11 +413,11 @@ class VivoMarket : Market {
         val accessKey = remember { mutableStateOf(ACCESS_KEY) }
         val accessSecret = remember { mutableStateOf(ACCESS_SECRET) }
         Column {
-            InputView(accessKey, "请配置ACCESS_KEY") {
+            InputView(input = accessKey.value, hint = "请配置ACCESS_KEY") {
                 accessKey.value = it
                 ACCESS_KEY = it
             }
-            InputView(accessSecret, "请配置ACCESS_SECRET") {
+            InputView(input = accessSecret.value, hint = "请配置ACCESS_SECRET") {
                 accessSecret.value = it
                 ACCESS_SECRET = it
             }
