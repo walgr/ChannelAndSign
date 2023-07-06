@@ -13,7 +13,7 @@ fun main() = application {
         transparent = true,
         undecorated = true,
         icon = painterResource("/image/icon.png"),
-        resizable = false, state = rememberWindowState(
+        resizable = true, state = rememberWindowState(
             position = WindowPosition(
                 Alignment.Center
             ),

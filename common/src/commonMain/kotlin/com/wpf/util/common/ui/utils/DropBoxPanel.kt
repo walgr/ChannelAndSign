@@ -7,11 +7,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.platform.LocalDensity
+import java.awt.Color
+import java.awt.FlowLayout
 import java.awt.datatransfer.DataFlavor
 import java.awt.dnd.DnDConstants
 import java.awt.dnd.DropTarget
 import java.awt.dnd.DropTargetDropEvent
-import javax.swing.JPanel
+import javax.swing.*
 import kotlin.math.roundToInt
 
 class DropBoundsBean(
@@ -48,9 +50,9 @@ fun DropBoxPanel(
                 dropBoundsBean.value.width,
                 dropBoundsBean.value.height
             )
-            component.dropTarget = object : DropTarget() {
+            val dropTarget = object : DropTarget() {
+                @Synchronized
                 override fun drop(event: DropTargetDropEvent) {
-
                     event.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE)
                     val dataFlavors = event.transferable.transferDataFlavors
                     dataFlavors.forEach {
@@ -67,7 +69,9 @@ fun DropBoxPanel(
                     event.dropComplete(true)
                 }
             }
+            component.dropTarget = dropTarget
             window.contentPane.add(component)
+//            window.layeredPane.add(component)
         }
 
         SideEffect {
