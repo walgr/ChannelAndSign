@@ -30,7 +30,7 @@ import com.wpf.util.common.ui.widget.common.Title
 
 @Preview
 @Composable
-fun marketPlacePage(window: ComposeWindow) {
+fun marketPlacePage() {
 
     val showAddMarketDialog = remember { mutableStateOf(false) }
     val marketList = remember { mutableStateListOf(*MarketPlaceViewModel.getMarketSaveList().toTypedArray()) }

@@ -116,7 +116,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                                 0.dp
                             )
                         ) {
-                            marketPlacePage(window.window as ComposeWindow)
+                            marketPlacePage()
                         }
                         //签名配置
                         Box(
