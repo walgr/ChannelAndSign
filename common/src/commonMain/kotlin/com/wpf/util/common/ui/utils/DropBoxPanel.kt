@@ -10,7 +10,7 @@ import androidx.compose.ui.onExternalDrag
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun DropBoxPanel(
+fun onExternalDrag(
     modifier: Modifier = Modifier, onFileDrop: (List<String>) -> Unit
 ) {
     Box(modifier = modifier.fillMaxSize().onExternalDrag(onDrop = {

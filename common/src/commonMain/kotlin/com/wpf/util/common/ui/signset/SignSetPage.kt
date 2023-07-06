@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
-import com.wpf.util.common.ui.utils.DropBoxPanel
+import com.wpf.util.common.ui.utils.onExternalDrag
 
 @Preview
 @Composable
@@ -174,8 +174,8 @@ fun signPage(window: ComposeWindow) {
                                 }
                             }
                         }
-                        DropBoxPanel {
-                            if (it.size != 1) return@DropBoxPanel
+                        onExternalDrag {
+                            if (it.size != 1) return@onExternalDrag
                             val file = it[0]
                             if (file.contains(".keystore") || file.contains(".jks")) {
                                 changeSign = SignFile(StoreFile = file)

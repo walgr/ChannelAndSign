@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wpf.util.common.ui.utils.DropBoxPanel
+import com.wpf.util.common.ui.utils.onExternalDrag
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.marketplace.markets.base.UploadData
@@ -222,8 +222,8 @@ fun channelPage(window: ComposeWindow) {
                                                 }
                                             }
                                         }
-                                        DropBoxPanel(modifier = Modifier.fillMaxSize()) {
-                                            if (it.size != 1 || !it[0].contains(".txt")) return@DropBoxPanel
+                                        onExternalDrag(modifier = Modifier.fillMaxSize()) {
+                                            if (it.size != 1 || !it[0].contains(".txt")) return@onExternalDrag
                                             channelList.find { channel -> channel.isSelect }?.channelPath = it[0]
                                             channelFileNameList.clear()
                                             channelNameList.clear()
@@ -274,7 +274,7 @@ fun channelPage(window: ComposeWindow) {
                                                 }
                                             }
                                         }
-                                        DropBoxPanel {
+                                        onExternalDrag {
                                             pathList.addAll(it.flatMap { file ->
                                                 //apk或文件夹
                                                 if (file.contains(".apk") || !file.contains(".")) {
