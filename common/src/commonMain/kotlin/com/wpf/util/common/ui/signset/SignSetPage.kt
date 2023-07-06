@@ -54,7 +54,7 @@ fun signPage(window: ComposeWindow) {
                         Text("签名配置", fontWeight = FontWeight.Bold, color = mainTextColor)
                     }
                     Box(
-                        modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 16.dp, end = 16.dp)
+                        modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                     ) {
                         Column {
@@ -174,7 +174,7 @@ fun signPage(window: ComposeWindow) {
                                 }
                             }
                         }
-                        DropBoxPanel(modifier = Modifier.fillMaxSize(), window = window) {
+                        DropBoxPanel {
                             if (it.size != 1) return@DropBoxPanel
                             val file = it[0]
                             if (file.contains(".keystore") || file.contains(".jks")) {

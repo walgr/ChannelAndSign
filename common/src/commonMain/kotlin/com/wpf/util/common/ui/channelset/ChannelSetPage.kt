@@ -222,7 +222,7 @@ fun channelPage(window: ComposeWindow) {
                                                 }
                                             }
                                         }
-                                        DropBoxPanel(modifier = Modifier.fillMaxSize(), window = window) {
+                                        DropBoxPanel(modifier = Modifier.fillMaxSize()) {
                                             if (it.size != 1 || !it[0].contains(".txt")) return@DropBoxPanel
                                             channelList.find { channel -> channel.isSelect }?.channelPath = it[0]
                                             channelFileNameList.clear()
@@ -274,7 +274,7 @@ fun channelPage(window: ComposeWindow) {
                                                 }
                                             }
                                         }
-                                        DropBoxPanel(modifier = Modifier.fillMaxSize(), window = window) {
+                                        DropBoxPanel {
                                             pathList.addAll(it.flatMap { file ->
                                                 //apk或文件夹
                                                 if (file.contains(".apk") || !file.contains(".")) {
