@@ -48,7 +48,7 @@ class VivoMarket : Market {
 
     override fun query(uploadData: UploadData) {
         super.query(uploadData)
-        push(uploadData)
+        query(uploadData.packageName()!!)
     }
 
     override fun push(uploadData: UploadData) {

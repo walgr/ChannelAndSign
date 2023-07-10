@@ -14,10 +14,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.http.Http
-import com.wpf.util.common.ui.marketplace.markets.base.Market
-import com.wpf.util.common.ui.marketplace.markets.base.UploadData
-import com.wpf.util.common.ui.marketplace.markets.base.XiaomiApk
-import com.wpf.util.common.ui.marketplace.markets.base.XiaomiPushData
+import com.wpf.util.common.ui.marketplace.markets.base.*
 import com.wpf.util.common.ui.utils.Callback
 import com.wpf.util.common.ui.utils.FileSelector
 import com.wpf.util.common.ui.utils.gson
@@ -54,7 +51,7 @@ class XiaomiMarket : Market {
     override val name: String = "小米"
 
     @Transient
-    override val baseUrl: String = "http://api.developer.xiaomi.com/devupload"
+    override val baseUrl: String = "https://api.developer.xiaomi.com/devupload"
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 
     @Composable
@@ -103,27 +100,26 @@ class XiaomiMarket : Market {
         if (uploadData.apk.abiApk.isEmpty()) return
         val api = "/dev/query"
         Http.submitForm(
-            baseUrl + api, formParameters =
-            parameters {
+            baseUrl + api, parameters {
                 val requestDataJson = gson.toJson(JsonObject().apply {
-                    addProperty("packageName", uploadData.apk.abiApk[0].packageName)
+                    addProperty("packageName", uploadData.packageName())
                     addProperty("userName", userName)
                 })
                 val formParams = mutableListOf<Pair<String, String>>()
                 formParams.add(Pair("RequestData", requestDataJson))
-                formParams.add(Pair("SIG", encryptByPublicKey(gson.toJson(
+                val sigJson = gson.toJson(
                     JsonObject().apply {
-                        addProperty("sig", gson.toJson(
-                            JsonArray().apply {
-                                add(JsonObject().apply {
+                        addProperty("password", password)
+                        addProperty(
+                            "sig", gson.toJson(
+                                JsonObject().apply {
                                     addProperty("name", "RequestData")
                                     addProperty("hash", DigestUtils.md5Hex(requestDataJson))
                                 })
-                            }
-                        ))
-                        addProperty("password", password)
+                        )
                     }
-                ), pubKey)))
+                )
+                formParams.add(Pair("SIG", encryptByPublicKey(sigJson, pubKey)))
                 formParams.forEach {
                     append(it.first, it.second)
                 }
@@ -140,7 +136,6 @@ class XiaomiMarket : Market {
     }
 
     override fun push(uploadData: UploadData) {
-        return
         if (uploadData.apk.abiApk.isEmpty()) return
         val api = "/dev/push"
         Http.post(baseUrl + api, request = {
@@ -157,7 +152,11 @@ class XiaomiMarket : Market {
                                 )
                             ),
                             apk = File(uploadData.apk.abiApk.getOrNull(0)?.filePath ?: ""),
-                            secondApk = File(uploadData.apk.abiApk.getOrNull(1)?.filePath ?: ""),
+                            secondApk = if (uploadData.apk.abiApk.getOrNull(1) == null) null else File(
+                                uploadData.apk.abiApk.getOrNull(
+                                    1
+                                )?.filePath ?: ""
+                            ),
                         )
                     )
                     append("RequestData", requestDataJson)
