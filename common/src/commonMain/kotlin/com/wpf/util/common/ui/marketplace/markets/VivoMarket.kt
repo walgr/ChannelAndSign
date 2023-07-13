@@ -41,14 +41,15 @@ class VivoMarket : Market {
 
     override val name: String = "Vivo"
 
-        override val baseUrl: String = "https://sandbox-developer-api.vivo.com.cn/router/rest"
+    override val baseUrl: String = "https://sandbox-developer-api.vivo.com.cn/router/rest"
 //    override val baseUrl: String = "https://developer-api.vivo.com.cn/router/rest"
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 
     override fun query(uploadData: UploadData) {
         super.query(uploadData)
-        query(uploadData.packageName()!!)
+//        query(uploadData.packageName()!!)
+        push(uploadData)
     }
 
     override fun push(uploadData: UploadData) {
@@ -59,26 +60,32 @@ class VivoMarket : Market {
         val uploadList = uploadData.apk.abiApk.filter {
             uploadAbi().contains(it.abi)
         }
+        if (uploadList.size != uploadAbi().size) {
+            println("缺少相关Apk,不能上传,请检查，当前符合包：${uploadList.map { it.abi.type }}")
+//            return
+        }
         var uploadSuccess = 0
         val uploadResultList = arrayListOf<VivoResponse>()
+        println("上传Apk中，需要上传:${uploadList.map { it.abi.type }} ${uploadList.size}个Apk")
         uploadList.forEach {
             uploadApk(it, callback = object : Callback<VivoResponse> {
                 override fun onSuccess(t: VivoResponse) {
                     uploadResultList.add(t)
+                    println("第${uploadResultList.size}个Apk上传完成")
                     uploadSuccess++
                     if (uploadSuccess == uploadList.size) {
+                        println("Apk全部上传完成")
                         uploadScreenShotList(packageName, uploadData.imageList, object : Callback<List<VivoResponse>?> {
                             override fun onSuccess(t: List<VivoResponse>?) {
-                                update(
-                                    packageName,
+                                update(packageName,
                                     versionCode,
                                     getSerialnumber(uploadResultList),
                                     getFileMd5(uploadResultList),
                                     uploadData.description,
                                     screenshot = t?.map {
                                         it.data?.serialnumber
-                                    }?.joinToString(separator = ",") ?: ""
-                                , callback = object : Callback<String> {
+                                    }?.joinToString(separator = ",") ?: "",
+                                    callback = object : Callback<String> {
                                         override fun onSuccess(t: String) {
                                             println("Vivo接口请求成功,结果:$t")
                                         }
@@ -132,7 +139,6 @@ class VivoMarket : Market {
             append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
-                println("Vivo接口请求成功,结果:$t")
                 val response = gson.fromJson(t, VivoResponse::class.java)
                 if (response.isSuccess()) {
                     callback.onSuccess("上传成功")
@@ -142,7 +148,7 @@ class VivoMarket : Market {
             }
 
             override fun onFail(msg: String) {
-                println("Vivo接口请求失败,结果:$msg")
+                callback.onFail(msg)
             }
         })
     }
@@ -151,22 +157,23 @@ class VivoMarket : Market {
         packageName: String, screenShotPathList: List<String>?, callback: Callback<List<VivoResponse>?>
     ) {
         if (screenShotPathList.isNullOrEmpty()) {
+            println("没有截图需要上传")
             callback.onSuccess(null)
             return
         }
+        println("需要上传${screenShotPathList.size}个图片")
         val uploadResultList = arrayListOf<VivoResponse>()
         screenShotPathList.map {
             uploadScreenShot(packageName, it, callback = object : Callback<VivoResponse> {
                 override fun onSuccess(t: VivoResponse) {
-                    println("Vivo接口请求成功,结果:$t")
                     uploadResultList.add(t)
+                    println("上传成功${uploadResultList.size}个图片")
                     if (uploadResultList.size == screenShotPathList.size) {
                         callback.onSuccess(uploadResultList)
                     }
                 }
 
                 override fun onFail(msg: String) {
-                    println("Vivo接口请求失败,结果:$msg")
                     callback.onFail(msg)
                 }
             })
@@ -177,17 +184,14 @@ class VivoMarket : Market {
         Http.post(baseUrl, request = {
             setBody(MultiPartFormDataContent(formData {
                 val paramsMap = getScreenShotParams(packageName)
-                paramsMap.forEach { (t, u) ->
-                    append(t, u.toString())
+                paramsMap.toSortedMap().forEach { (t, u) ->
+                    append(t, u)
                 }
+                append("file", File(screenShotPath).readBytes(), pngHeader(screenShotPath))
                 append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
-                append("file", File(screenShotPath).readBytes(), Headers.build {
-                    append(HttpHeaders.ContentType, ContentType.MultiPart.FormData)
-                })
             }))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
-                println("Vivo接口请求成功,结果:$t")
                 val response = gson.fromJson(t, VivoResponse::class.java)
                 if (response.isSuccess()) {
                     callback.onSuccess(response)
@@ -197,7 +201,6 @@ class VivoMarket : Market {
             }
 
             override fun onFail(msg: String) {
-                println("Vivo接口请求失败,结果:$msg")
                 callback.onFail(msg)
             }
         })
@@ -205,6 +208,9 @@ class VivoMarket : Market {
 
     private fun uploadApk(apk: Apk, callback: Callback<VivoResponse>) {
         Http.post(baseUrl, request = {
+            timeout {
+                requestTimeoutMillis = 300000
+            }
             setBody(MultiPartFormDataContent(formData {
                 val paramsMap = when (apk.abi) {
                     AbiType.Abi64 -> {
@@ -220,12 +226,10 @@ class VivoMarket : Market {
                     }
                 }
                 paramsMap.forEach { (t, u) ->
-                    append(t, u.toString())
+                    append(t, u)
                 }
                 append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
-                append("file", File(apk.filePath).readBytes(), Headers.build {
-                    append(HttpHeaders.ContentType, ContentType.MultiPart.FormData)
-                })
+                append("file", File(apk.filePath).readBytes(), apkHeader(apk.filePath))
             }))
             var lastProcess = 0L
             onUpload { bytesSentTotal, contentLength ->
@@ -237,7 +241,6 @@ class VivoMarket : Market {
             }
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
-                println("Vivo接口请求成功,结果:$t")
                 val response = gson.fromJson(t, VivoResponse::class.java)
                 if (response.isSuccess()) {
                     callback.onSuccess(response)
@@ -247,7 +250,6 @@ class VivoMarket : Market {
             }
 
             override fun onFail(msg: String) {
-                println("Vivo接口请求失败,结果:$msg")
                 callback.onFail(msg)
             }
         })
@@ -257,7 +259,7 @@ class VivoMarket : Market {
         Http.submitForm(baseUrl, formParameters = parameters {
             val paramsMap = getQueryParams(packageName)
             paramsMap.forEach { (t, u) ->
-                append(t, u.toString())
+                append(t, u)
             }
             append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
         }, callback = object : Callback<String> {
@@ -277,12 +279,12 @@ class VivoMarket : Market {
     private val methodApk64 = "app.upload.apk.app.64"
     private val methodUpdate = "app.sync.update.app"
     private val methodQuery = "app.query.details"
-    private fun getCommonParams(api: String, signMethod: String = "HMAC-SHA256") = mutableMapOf(
-        Pair("method", api),
+    private fun getCommonParams(api: String) = mutableMapOf(
         Pair("access_key", ACCESS_KEY),
-        Pair("timestamp", System.currentTimeMillis()),
+        Pair("method", api),
+        Pair("timestamp", System.currentTimeMillis().toString()),
         Pair("format", "json"),
-        Pair("sign_method", signMethod),
+        Pair("sign_method", "hmac"),
         Pair("target_app_key", "developer"),
         Pair("v", "1.0"),
     )
@@ -290,13 +292,13 @@ class VivoMarket : Market {
     private fun getQueryParams(packageName: String) = mutableMapOf(
         Pair("packageName", packageName),
     ).plus(
-        getCommonParams(methodQuery, "hmac")
+        getCommonParams(methodQuery)
     )
 
     private fun getScreenShotParams(packageName: String) = mutableMapOf(
         Pair("packageName", packageName),
     ).plus(
-        getCommonParams(methodScreenShot, "hmac")
+        getCommonParams(methodScreenShot)
     )
 
     private fun getUpdateParams(
@@ -315,7 +317,7 @@ class VivoMarket : Market {
         Pair("updateDesc", updateDesc),     //新版说明（长度要求，5~200个字符）
         Pair("screenshot", screenshot),     //截图文件 上传接口返回的流水号（3-5张）多个用逗号分隔
     ).plus(
-        getCommonParams(methodUpdate, "hmac")
+        getCommonParams(methodUpdate)
     ).filterValues {
         it != null
     } as MutableMap<String, Any>
@@ -324,21 +326,21 @@ class VivoMarket : Market {
         Pair("packageName", apk.packageName),
         Pair("fileMd5", getFileMD5(apk.filePath)),
     ).plus(
-        getCommonParams(methodApkAll, "hmac")
+        getCommonParams(methodApkAll)
     )
 
     private fun getUploadApk32Params(apk: Apk) = mutableMapOf(
         Pair("packageName", apk.packageName),
         Pair("fileMd5", getFileMD5(apk.filePath)),
     ).plus(
-        getCommonParams(methodApk32, "hmac")
+        getCommonParams(methodApk32)
     )
 
     private fun getUploadApk64Params(apk: Apk) = mutableMapOf(
         Pair("packageName", apk.packageName),
         Pair("fileMd5", getFileMD5(apk.filePath)),
     ).plus(
-        getCommonParams(methodApk64, "hmac")
+        getCommonParams(methodApk64)
     )
 
     @Throws(IOException::class)
@@ -362,11 +364,11 @@ class VivoMarket : Market {
         keysList.sort()
         val paramList: MutableList<String> = ArrayList()
         for (key in keysList) {
-            val `object` = paramsMap[key] ?: continue
-            val value = "$key=$`object`"
+            val obj = paramsMap[key] ?: continue
+            val value = "$key=$obj"
             paramList.add(value)
         }
-        return java.lang.String.join("&", paramList)
+        return paramList.joinToString("&")
     }
 
 
@@ -432,7 +434,7 @@ data class VivoResponse(
     val msg: String? = null,
     val data: Data? = null,
 ) {
-    fun isSuccess() = code == 0
+    fun isSuccess() = subCode == "0"
 }
 
 data class Data(

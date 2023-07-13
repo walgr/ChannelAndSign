@@ -2,13 +2,15 @@ package com.wpf.util.common.ui.http
 
 import com.wpf.util.common.ui.utils.Callback
 import io.ktor.client.*
-import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,7 +20,12 @@ val client = HttpClient(CIO) {
 //        proxy = ProxyBuilder.http(
 //            "http://127.0.0.1:8888"
 //        )
-        requestTimeout = 120000
+    }
+    install(HttpTimeout) {
+        requestTimeoutMillis = 120000
+    }
+    install(ContentNegotiation) {
+        json()
     }
     install(Logging) {
         logger = Logger.SIMPLE

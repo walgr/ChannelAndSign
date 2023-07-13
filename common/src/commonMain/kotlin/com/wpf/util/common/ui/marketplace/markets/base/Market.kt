@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.base.SelectInterface
+import io.ktor.http.*
+import java.io.File
 
 
 interface Market: SelectInterface {
@@ -43,5 +45,20 @@ interface Market: SelectInterface {
     }
 
     fun push(uploadData: UploadData)
+
+
+    fun pngHeader(screenShotPath: String): Headers {
+        return Headers.build {
+            append(HttpHeaders.ContentType, "image/png")
+            append(HttpHeaders.ContentDisposition, "filename=\"${File(screenShotPath).name}\"")
+        }
+    }
+
+    fun apkHeader(apkPath: String): Headers {
+        return Headers.build {
+            append(HttpHeaders.ContentType, "application/vnd.android.package-archive")
+            append(HttpHeaders.ContentDisposition, "filename=\"${File(apkPath).name}\"")
+        }
+    }
 
 }
