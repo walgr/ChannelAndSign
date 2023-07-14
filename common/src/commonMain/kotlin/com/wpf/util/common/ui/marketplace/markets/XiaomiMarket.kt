@@ -10,8 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.*
@@ -24,6 +22,8 @@ import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
+import net.sf.json.JSONArray
+import net.sf.json.JSONObject
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -104,65 +104,39 @@ class XiaomiMarket : Market {
         super.query(uploadData)
         if (uploadData.apk.abiApk.isEmpty()) return
         val api = "/dev/query"
-        val requestDataJson = gson.toJson(JsonObject().apply {
-            addProperty("packageName", uploadData.packageName())
-            addProperty("userName", userName)
-        })
-        val sigJson = gson.toJson(JsonObject().apply {
-            addProperty("password", password)
-            addProperty(
-                "sig", gson.toJson(JsonObject().apply {
-                    addProperty("name", "RequestData")
-                    addProperty("hash", DigestUtils.md5Hex(requestDataJson))
-                })
-            )
-        })
-        Http.post(baseUrl + api, {
-            contentType(ContentType.Application.Json.withCharset(Charsets.UTF_8))
-            setBody(XiaomiUploadData(requestDataJson, encryptByPublicKey(sigJson, pubKey)))
-        }, callback = object : Callback<String> {
-            override fun onSuccess(t: String) {
-                println("小米接口请求成功,结果:$t")
-            }
+        Http.submitForm(
+            baseUrl + api, parameters {
+                val requestDataJson = JSONObject().apply {
+                    put("packageName", uploadData.packageName()!!)
+                    put("userName", userName)
+                }.toString()
+                val formParams = mutableListOf<Pair<String, String>>()
+                formParams.add(Pair("RequestData", requestDataJson))
+                val sigJson = JSONObject().apply {
+                    put("password", password)
+                    put(
+                        "sig", JSONArray().apply {
+                            add(JSONObject().apply {
+                                put("name", "RequestData")
+                                put("hash", DigestUtils.md5Hex(requestDataJson))
+                            })
+                        }.toString()
+                    )
+                }.toString()
+                formParams.add(Pair("SIG", encryptByPublicKey(sigJson, pubKey)))
+                formParams.forEach {
+                    append(it.first, it.second)
+                }
+            }, callback =
+            object : Callback<String> {
+                override fun onSuccess(t: String) {
+                    println("小米接口请求成功,结果:$t")
+                }
 
-            override fun onFail(msg: String) {
-                println("小米接口请求失败,结果:$msg")
-            }
-        })
-//        Http.submitForm(
-//            baseUrl + api, parameters {
-//                val requestDataJson = gson.toJson(JsonObject().apply {
-//                    addProperty("packageName", uploadData.packageName())
-//                    addProperty("userName", userName)
-//                })
-//                val formParams = mutableListOf<Pair<String, String>>()
-//                formParams.add(Pair("RequestData", requestDataJson))
-//                val sigJson = gson.toJson(
-//                    JsonObject().apply {
-//                        addProperty("password", password)
-//                        addProperty(
-//                            "sig", gson.toJson(
-//                                JsonObject().apply {
-//                                    addProperty("name", "RequestData")
-//                                    addProperty("hash", DigestUtils.md5Hex(requestDataJson))
-//                                })
-//                        )
-//                    }
-//                )
-//                formParams.add(Pair("SIG", encryptByPublicKey(sigJson, pubKey)))
-//                formParams.forEach {
-//                    append(it.first, it.second)
-//                }
-//            }, callback =
-//            object : Callback<String> {
-//                override fun onSuccess(t: String) {
-//                    println("小米接口请求成功,结果:$t")
-//                }
-//
-//                override fun onFail(msg: String) {
-//                    println("小米接口请求失败,结果:$msg")
-//                }
-//            })
+                override fun onFail(msg: String) {
+                    println("小米接口请求失败,结果:$msg")
+                }
+            })
     }
 
     override fun push(uploadData: UploadData) {
@@ -170,52 +144,73 @@ class XiaomiMarket : Market {
         val api = "/dev/push"
         Http.post(baseUrl + api, request = {
             setBody(MultiPartFormDataContent(formData {
-                val requestDataJson = gson.toJson(
-                    XiaomiPushData(
-                        userName = userName,
-                        appInfo = gson.toJson(
-                            XiaomiApk(
-                                appName = uploadData.apk.abiApk.getOrNull(0)?.appName ?: "",
-                                packageName = uploadData.apk.abiApk.getOrNull(0)?.packageName ?: "",
-                                updateDesc = uploadData.description,
-                            )
-                        ),
-                        apk = File(uploadData.apk.abiApk.getOrNull(0)?.filePath ?: ""),
-                        secondApk = if (uploadData.apk.abiApk.getOrNull(1) == null) null else File(
-                            uploadData.apk.abiApk.getOrNull(
-                                1
-                            )?.filePath ?: ""
-                        ),
-                    )
+                val xiaomiPushData = XiaomiPushData(
+                    userName = userName,
+                    appInfo = gson.toJson(
+                        XiaomiApk(
+                            appName = uploadData.apk.abiApk.getOrNull(0)?.appName ?: "",
+                            packageName = uploadData.apk.abiApk.getOrNull(0)?.packageName ?: "",
+                            updateDesc = uploadData.description,
+                        )
+                    ),
+                    apk = File(uploadData.apk.abiApk.getOrNull(0)?.filePath ?: ""),
+                    secondApk = if (uploadData.apk.abiApk.getOrNull(1) == null) null else File(
+                        uploadData.apk.abiApk.getOrNull(
+                            1
+                        )?.filePath ?: ""
+                    ),
                 )
+                val requestDataJson = gson.toJson(xiaomiPushData)
+                append("apk", xiaomiPushData.apk.readBytes())
+                xiaomiPushData.secondApk?.let {
+                    append("secondApk", xiaomiPushData.secondApk.readBytes())
+                }
+                xiaomiPushData.icon?.let {
+                    append("icon", xiaomiPushData.icon.readBytes())
+                }
+                xiaomiPushData.screenshot_1?.let {
+                    append("screenshot_1", xiaomiPushData.screenshot_1.readBytes())
+                }
+                xiaomiPushData.screenshot_2?.let {
+                    append("screenshot_2", xiaomiPushData.screenshot_2.readBytes())
+                }
+                xiaomiPushData.screenshot_3?.let {
+                    append("screenshot_3", xiaomiPushData.screenshot_3.readBytes())
+                }
+                xiaomiPushData.screenshot_4?.let {
+                    append("screenshot_4", xiaomiPushData.screenshot_4.readBytes())
+                }
+                xiaomiPushData.screenshot_5?.let {
+                    append("screenshot_5", xiaomiPushData.screenshot_5.readBytes())
+                }
                 append("RequestData", requestDataJson)
-                append("SIG", encryptByPublicKey(gson.toJson(JsonObject().apply {
-                    addProperty("sig", gson.toJson(JsonArray().apply {
-                        add(JsonObject().apply {
-                            addProperty("name", "RequestData")
-                            addProperty("hash", DigestUtils.md5Hex(requestDataJson))
+                append("SIG", encryptByPublicKey(JSONObject().apply {
+                    put("sig", JSONArray().apply {
+                        add(JSONObject().apply {
+                            put("name", "RequestData")
+                            put("hash", DigestUtils.md5Hex(requestDataJson))
                         })
                         uploadData.apk.abiApk.forEach {
-                            add(JsonObject().apply {
-                                addProperty("name", "apk")
-                                addProperty("hash", getFileMD5(it.filePath))
+                            add(JSONObject().apply {
+                                put("name", "apk")
+                                put("hash", getFileMD5(it.filePath))
                             })
                         }
                         uploadData.apk.abiApk.getOrNull(0)?.appIcon?.let {
-                            add(JsonObject().apply {
-                                addProperty("name", "icon")
-                                addProperty("hash", getFileMD5(it))
+                            add(JSONObject().apply {
+                                put("name", "icon")
+                                put("hash", getFileMD5(it))
                             })
                         }
                         uploadData.imageList?.forEachIndexed { index, imagePath ->
-                            add(JsonObject().apply {
-                                addProperty("name", "screenshot_${index + 1}")
-                                addProperty("hash", getFileMD5(imagePath))
+                            add(JSONObject().apply {
+                                put("name", "screenshot_${index + 1}")
+                                put("hash", getFileMD5(imagePath))
                             })
                         }
-                    }))
-                    addProperty("password", password)
-                }), pubKey))
+                    }.toString())
+                    put("password", password)
+                }.toString(), pubKey))
             }))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {

@@ -19,6 +19,7 @@ kotlin {
                 api(compose.foundation)
                 api(compose.material)
                 implementation(project(":base"))
+                implementation(files("src/commonMain/libs/json-lib-2.4-jdk15.jar"))
                 implementation("org.apache.directory.studio:org.apache.commons.codec:1.8")
 //                implementation("org.bouncycastle:bcpkix-jdk18on:1.75")
                 implementation("org.bouncycastle:bcprov-jdk18on:1.75")
