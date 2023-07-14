@@ -41,7 +41,7 @@ data class Apk(
 fun Apk.canApi(): Boolean {
     return MarketType.values().find { market ->
         channelName.contains(market.channelName, ignoreCase = true)
-    }?.canApi ?: false
+    }?.canApi() ?: false
 }
 
 fun Apk.getMarket(): Market? {

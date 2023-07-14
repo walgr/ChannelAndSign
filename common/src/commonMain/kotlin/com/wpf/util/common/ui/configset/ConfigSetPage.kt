@@ -19,6 +19,7 @@ import com.wpf.base.dealfile.channelSavePath
 import com.wpf.base.dealfile.zipalignFile
 import com.wpf.util.common.ui.utils.settings
 import com.wpf.util.common.ui.centerBgColor
+import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.FileSelector
 import com.wpf.util.common.ui.widget.common.InputView
@@ -27,17 +28,17 @@ import com.wpf.util.common.ui.widget.common.InputView
 @Composable
 fun configPage() {
     //渠道基础文件位置
-    var inputChannelBaseFilePath by remember { mutableStateOf(ConfigPageViewModel.getChannelBaseFilePath()) }
+    val inputChannelBaseFilePath = remember { mutableStateOf(ConfigPageViewModel.getChannelBaseFilePath()) }
     //渠道保存位置
-    var inputChannelSaveFilePath by remember { mutableStateOf(ConfigPageViewModel.getChannelSaveFilePath()) }
+    val inputChannelSaveFilePath = remember { mutableStateOf(ConfigPageViewModel.getChannelSaveFilePath()) }
     //apk对齐工具位置
-    var inputZipalignFilePath by remember { mutableStateOf(ConfigPageViewModel.getZipalignFilePath()) }
+    val inputZipalignFilePath = remember { mutableStateOf(ConfigPageViewModel.getZipalignFilePath()) }
 
     Box {
         Row {
             Box(
                 modifier = Modifier.weight(1f).fillMaxHeight().clip(shape = RoundedCornerShape(8.dp))
-                    .background(color = Color(1f, 1f, 1f, 0.6f))
+                    .background(color = itemBgColor)
             ) {
                 Column {
                     Box(
@@ -60,13 +61,13 @@ fun configPage() {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 InputView(input = inputChannelBaseFilePath, hint = "请输入渠道基础文件位置") {
-                                    inputChannelBaseFilePath = it
+                                    inputChannelBaseFilePath.value = it
                                     ConfigPageViewModel.saveChannelBaseFilePath(it)
                                     channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
                                 }
                                 Button(onClick = {
                                     FileSelector.showFileSelector(arrayOf("xml")) {
-                                        inputChannelBaseFilePath = it
+                                        inputChannelBaseFilePath.value = it
                                         ConfigPageViewModel.saveChannelBaseFilePath(it)
                                         channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
                                     }
@@ -79,7 +80,7 @@ fun configPage() {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 InputView(input = inputChannelSaveFilePath, hint = "请输入渠道保存位置,默认当前目录") {
-                                    inputChannelSaveFilePath = it
+                                    inputChannelSaveFilePath.value = it
                                     ConfigPageViewModel.saveChannelSaveFilePath(it)
                                     channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
                                 }
@@ -89,13 +90,13 @@ fun configPage() {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 InputView(input = inputZipalignFilePath, hint = "请输入Apk对齐工具Zipalign位置") {
-                                    inputZipalignFilePath = it
+                                    inputZipalignFilePath.value = it
                                     ConfigPageViewModel.saveZipalignFilePath(it)
                                     zipalignFile = ConfigPageViewModel.getZipalignFilePath()
                                 }
                                 Button(onClick = {
                                     FileSelector.showFileSelector(arrayOf("exe")) {
-                                        inputZipalignFilePath = it
+                                        inputZipalignFilePath.value = it
                                         ConfigPageViewModel.saveZipalignFilePath(it)
                                         zipalignFile = ConfigPageViewModel.getZipalignFilePath()
                                     }

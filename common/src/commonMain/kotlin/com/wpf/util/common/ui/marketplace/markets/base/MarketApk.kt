@@ -8,5 +8,5 @@ data class MarketApk(
     val channelName: String,
     val abiApk: MutableList<Apk> = mutableListOf()
 ) : SelectItem() {
-    override var isSelect: Boolean = marketType.canApi
+    override var isSelect: Boolean = marketType.canApi()
 }

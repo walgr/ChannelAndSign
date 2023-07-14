@@ -12,9 +12,10 @@ class HuaweiMarket: Market {
     @Transient
     override val isSelectState: MutableState<Boolean> = mutableStateOf(isSelect)
 
-    override val name: String = "华为"
+    override val name: String = "Huawei"
 
     override val baseUrl: String = ""
+
     override fun uploadAbi() = arrayOf(AbiType.Abi32_64)
 
     override fun push(uploadData: UploadData) {

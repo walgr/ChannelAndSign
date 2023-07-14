@@ -49,33 +49,29 @@ class XiaomiMarket : Market {
     @Transient
     override val isSelectState: MutableState<Boolean> = mutableStateOf(isSelect)
 
-    override val name: String = "小米"
+    override val name: String = "Xiaomi"
 
     @Transient
     override val baseUrl: String = "http://api.developer.xiaomi.com/devupload"
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
-
-
-    @Serializable
-    internal data class XiaomiUploadData(
-        private val RequestData: String,
-        private val SIG: String,
-    )
 
     @Composable
     override fun dispositionViewInBox(market: Market) {
         super.dispositionViewInBox(market)
         if (market !is XiaomiMarket) return
         val xiaomiAccount = remember { mutableStateOf(market.userName) }
+        xiaomiAccount.value = market.userName
         val xiaomiAccountPassword = remember { mutableStateOf(market.password) }
+        xiaomiAccountPassword.value = market.password
         val xiaomiAccountPub = remember { mutableStateOf(market.pubKeyPath) }
+        xiaomiAccountPub.value = market.pubKeyPath
 
         Column {
-            InputView(input = xiaomiAccount.value, hint = "请配置小米登录邮箱帐号") {
+            InputView(input = xiaomiAccount, hint = "请配置小米登录邮箱帐号") {
                 xiaomiAccount.value = it
                 market.userName = it
             }
-            InputView(input = xiaomiAccountPassword.value, hint = "请配置小米账号密码") {
+            InputView(input = xiaomiAccountPassword, hint = "请配置小米账号密码") {
                 xiaomiAccountPassword.value = it
                 market.password = it
             }
@@ -83,10 +79,9 @@ class XiaomiMarket : Market {
                 modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
             ) {
                 InputView(
-                    modifier = Modifier.weight(1f), input = xiaomiAccountPub.value, hint = "请配置小米Pubkey文件路径"
+                    modifier = Modifier.weight(1f), input = xiaomiAccountPub, hint = "请配置小米Pubkey文件路径"
                 ) {
                     xiaomiAccountPub.value = it
-                    market.pubKeyPath = it
                 }
                 Button(onClick = {
                     FileSelector.showFileSelector(arrayOf("cer")) {

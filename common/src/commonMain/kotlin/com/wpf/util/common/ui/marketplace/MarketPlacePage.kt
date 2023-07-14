@@ -13,18 +13,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wpf.util.common.ui.centerBgColor
-import com.wpf.util.common.ui.mainTextColor
+import com.wpf.util.common.ui.channelset.ChannelSetViewModel
+import com.wpf.util.common.ui.itemBgColor
+import com.wpf.util.common.ui.marketplace.markets.base.Market
 import com.wpf.util.common.ui.marketplace.markets.base.MarketTypeHelper
 import com.wpf.util.common.ui.widget.AddItemDialog
-import com.wpf.util.common.ui.widget.common.InputView
+import com.wpf.util.common.ui.widget.common.BigTitle
 import com.wpf.util.common.ui.widget.common.ItemTextView
 import com.wpf.util.common.ui.widget.common.Title
 
@@ -33,22 +31,20 @@ import com.wpf.util.common.ui.widget.common.Title
 fun marketPlacePage() {
 
     val showAddMarketDialog = remember { mutableStateOf(false) }
-    val marketList = remember { mutableStateListOf(*MarketPlaceViewModel.getMarketSaveList().toTypedArray()) }
+    val marketList = remember { mutableStateListOf(*MarketPlaceViewModel.getCanApiMarketList().toTypedArray()) }
+    //分组列表
+    val channelList = remember { mutableStateListOf(*ChannelSetViewModel.getChannelList().toTypedArray()) }
+
+    val selectMarket = remember { mutableStateOf(MarketPlaceViewModel.getSelectMarket()) }
 
     Box {
         Row {
             Box(
                 modifier = Modifier.weight(1f).fillMaxHeight().clip(shape = RoundedCornerShape(8.dp))
-                    .background(color = Color(1f, 1f, 1f, 0.6f))
+                    .background(color = itemBgColor)
             ) {
                 Column {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().height(100.dp).padding(all = 16.dp)
-                            .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("市场配置", fontWeight = FontWeight.Bold, color = mainTextColor)
-                    }
+                    BigTitle("市场配置")
                     Box(
                         modifier = Modifier.fillMaxSize().padding(16.dp, 0.dp, 16.dp, 16.dp)
                     ) {
@@ -59,15 +55,28 @@ fun marketPlacePage() {
                             ) {
                                 Column {
                                     Title("市场")
-                                    LazyColumn {
-                                        items(marketList) {
-                                            ItemTextView(it.name, modifier = Modifier.clickable {
-                                                marketList.forEach { market ->
-                                                    market.changeSelect(false)
-                                                }
-                                                it.changeSelect(true)
-                                                MarketPlaceViewModel.saveMarketList(marketList)
-                                            }, isSelectState = it.isSelectState)
+                                    Row {
+                                        LazyColumn(modifier = Modifier.weight(1f)) {
+                                            items(channelList) {
+                                                ItemTextView(it.name, modifier = Modifier.padding(end = 0.dp).clickable {
+                                                    channelList.forEach { market ->
+                                                        market.changeSelect(false)
+                                                    }
+                                                    it.changeSelect(true)
+                                                    selectMarket.value = MarketPlaceViewModel.getSelectMarket(channelList, marketList)
+                                                }, isSelectState = it.isSelectState)
+                                            }
+                                        }
+                                        LazyColumn(modifier = Modifier.weight(1f)) {
+                                            items(marketList) {
+                                                ItemTextView(it.name, modifier = Modifier.padding(start = 0.dp).clickable {
+                                                    marketList.forEach { market ->
+                                                        market.changeSelect(false)
+                                                    }
+                                                    it.changeSelect(true)
+                                                    selectMarket.value = MarketPlaceViewModel.getSelectMarket(channelList, marketList)
+                                                }, isSelectState = it.isSelectState)
+                                            }
                                         }
                                     }
                                 }
@@ -85,11 +94,9 @@ fun marketPlacePage() {
                                     )
                                 ) {
                                     Title("市场配置")
-                                    marketList.forEach {
-                                        it.dispositionView(it)
-                                    }
+                                    selectMarket.value.dispositionView(selectMarket.value)
                                     Button(onClick = {
-                                        MarketPlaceViewModel.saveMarketList(marketList)
+                                        MarketPlaceViewModel.saveMarketList(channelList, selectMarket.value)
                                     }, modifier = Modifier.padding(start = 8.dp)) {
                                         Text("保存")
                                     }

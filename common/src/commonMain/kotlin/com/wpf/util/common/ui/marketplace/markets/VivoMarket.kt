@@ -31,8 +31,8 @@ import javax.crypto.spec.SecretKeySpec
 
 class VivoMarket : Market {
 
-    private var ACCESS_KEY = ""
-    private var ACCESS_SECRET = ""
+    var ACCESS_KEY = ""
+    var ACCESS_SECRET = ""
 
     override var isSelect = false
 
@@ -48,8 +48,7 @@ class VivoMarket : Market {
 
     override fun query(uploadData: UploadData) {
         super.query(uploadData)
-//        query(uploadData.packageName()!!)
-        push(uploadData)
+        query(uploadData.packageName()!!)
     }
 
     override fun push(uploadData: UploadData) {
@@ -412,14 +411,17 @@ class VivoMarket : Market {
     @Composable
     override fun dispositionViewInBox(market: Market) {
         super.dispositionViewInBox(market)
-        val accessKey = remember { mutableStateOf(ACCESS_KEY) }
-        val accessSecret = remember { mutableStateOf(ACCESS_SECRET) }
+        if (market !is VivoMarket) return
+        val accessKey = remember { mutableStateOf(market.ACCESS_KEY) }
+        accessKey.value = market.ACCESS_KEY
+        val accessSecret = remember { mutableStateOf(market.ACCESS_SECRET) }
+        accessSecret.value = market.ACCESS_SECRET
         Column {
-            InputView(input = accessKey.value, hint = "请配置ACCESS_KEY") {
+            InputView(input = accessKey, hint = "请配置ACCESS_KEY") {
                 accessKey.value = it
                 ACCESS_KEY = it
             }
-            InputView(input = accessSecret.value, hint = "请配置ACCESS_SECRET") {
+            InputView(input = accessSecret, hint = "请配置ACCESS_SECRET") {
                 accessSecret.value = it
                 ACCESS_SECRET = it
             }

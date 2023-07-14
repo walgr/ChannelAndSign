@@ -10,7 +10,7 @@ data class UploadData(
 
 
 fun UploadData.upload() {
-    MarketPlaceViewModel.getMarketSaveList().find {
+    MarketPlaceViewModel.getCanApiMarketList().find {
         it.name == apk.marketType.market.name
     }?.query(this)
 }

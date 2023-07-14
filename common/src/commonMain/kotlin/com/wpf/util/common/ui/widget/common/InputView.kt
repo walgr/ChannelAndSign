@@ -29,12 +29,12 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun InputView(
     modifier: Modifier? = null,
-    input: String = "",
+    input: MutableState<String> = mutableStateOf(""),
     hint: String = "",
     maxLine: Int = 1,
     onTextChange: (String) -> Unit
 ) {
-    val showText = remember { mutableStateOf(input) }
+    val showText = remember { input }
     OutlinedTextField(
         value = TextFieldValue(
             showText.value, TextRange(showText.value.length)
@@ -55,6 +55,7 @@ fun InputView(
                     "清空",
                     modifier = Modifier.clickable {
                         showText.value = ""
+                        onTextChange.invoke("")
                     }
                 )
             }

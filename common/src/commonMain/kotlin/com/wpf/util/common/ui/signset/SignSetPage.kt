@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.centerBgColor
+import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.onExternalDrag
 
@@ -43,7 +44,7 @@ fun signPage(window: ComposeWindow) {
         Row {
             Box(
                 modifier = Modifier.weight(1f).fillMaxHeight().clip(shape = RoundedCornerShape(8.dp))
-                    .background(color = Color(1f, 1f, 1f, 0.6f))
+                    .background(color = itemBgColor)
             ) {
                 Column {
                     Box(
@@ -90,7 +91,7 @@ fun signPage(window: ComposeWindow) {
                                         modifier = Modifier.fillMaxWidth()
                                             .padding(8.dp, 4.dp, 8.dp, 4.dp)
                                             .clip(shape = RoundedCornerShape(8.dp))
-                                            .background(color = Color(1f, 1f, 1f, 0.6f))
+                                            .background(color = itemBgColor)
                                             .clickable {
                                                 changeSign = it
                                                 showSignInfoDialog.value = true

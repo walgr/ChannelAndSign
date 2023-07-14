@@ -25,4 +25,9 @@ open class SelectItem(
         isSelectState.value = isSelect
         return isSelect
     }
+
+    fun changeSelect(isSelect: Boolean) {
+        this.isSelect = isSelect
+        isSelectState.value = isSelect
+    }
 }

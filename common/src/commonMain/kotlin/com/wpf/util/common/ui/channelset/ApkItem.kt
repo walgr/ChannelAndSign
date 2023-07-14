@@ -55,7 +55,7 @@ fun ApkItem(marketApk: MarketApk) {
                     }
                 }
             }
-            if (marketApk.marketType.canApi) {
+            if (marketApk.marketType.canApi()) {
                 Box(
                     modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd
                 ) {

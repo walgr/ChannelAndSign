@@ -29,6 +29,7 @@ import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.rememberNotification
 import com.wpf.util.common.ui.utils.onExternalDrag
 import com.wpf.util.common.ui.centerBgColor
+import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.marketplace.markets.base.UploadData
 import com.wpf.util.common.ui.marketplace.markets.base.upload
@@ -87,7 +88,7 @@ fun channelPage(window: ComposeWindow) {
     }
 
     Box(
-        modifier = Modifier.background(color = Color(1f, 1f, 1f, 0.6f))
+        modifier = Modifier.background(color = itemBgColor)
     ) {
         Row {
             Box(
@@ -343,7 +344,7 @@ fun channelPage(window: ComposeWindow) {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Title("市场包")
-                            InputView(input = marketDescription.value, hint = "请输入更新文案", maxLine = 5) {
+                            InputView(input = marketDescription, hint = "请输入更新文案", maxLine = 5) {
                                 marketDescription.value = it
                             }
                             LazyRow(

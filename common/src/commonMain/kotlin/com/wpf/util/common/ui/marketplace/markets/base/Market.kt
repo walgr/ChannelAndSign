@@ -13,7 +13,7 @@ import io.ktor.http.*
 import java.io.File
 
 
-interface Market: SelectInterface {
+interface Market : SelectInterface {
 
     override val isSelectState: MutableState<Boolean>
         get() = mutableStateOf(false)
@@ -27,9 +27,9 @@ interface Market: SelectInterface {
 
     @Composable
     fun dispositionView(market: Market) {
-        if (!market.isSelectState.value) return
+        if (!market.isSelect) return
         Box(
-            modifier = if (market.isSelectState.value) Modifier.fillMaxWidth() else Modifier.height(0.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             dispositionViewInBox(market)
         }
@@ -39,6 +39,7 @@ interface Market: SelectInterface {
     fun dispositionViewInBox(market: Market) {
 
     }
+
 
     fun query(uploadData: UploadData) {
 
