@@ -2,6 +2,7 @@ package com.wpf.util.common.ui.marketplace
 
 import com.wpf.util.common.ui.channelset.Channel
 import com.wpf.util.common.ui.channelset.ChannelSetViewModel
+import com.wpf.util.common.ui.marketplace.markets.HuaweiMarket
 import com.wpf.util.common.ui.marketplace.markets.base.Market
 import com.wpf.util.common.ui.marketplace.markets.base.MarketType
 import com.wpf.util.common.ui.marketplace.markets.XiaomiMarket
@@ -17,10 +18,17 @@ object MarketPlaceViewModel {
         )
     }
 
+    private val marketMap = mutableMapOf<String, Market>()
     fun getSelectMarket(channelName: String, marketName: String): Market {
-        val dataJson = settings.getString("Channel${channelName}Market${marketName}", "{}")
+        val key = "Channel${channelName}Market${marketName}"
+        val market = marketMap[key]
+        if (market != null) {
+            return market
+        }
+        val dataJson = settings.getString(key, "{}")
         val saveMarket = gson.fromJson(dataJson, getCanApiMarketList().find { it.name == marketName }!!.javaClass)
         saveMarket?.changeSelect(getCanApiMarketList().find { it.name == marketName }?.isSelect ?: false)
+        marketMap[key] = saveMarket
         return saveMarket
     }
 
@@ -43,6 +51,12 @@ object MarketPlaceViewModel {
 
     fun saveMarketList(channelList: List<Channel>, marketSelect: Market) {
         val channelSelect = channelList.find { it.isSelect } ?: return
-        settings.putString("Channel${channelSelect.name}Market${marketSelect.name}", gson.toJson(marketSelect))
+        val key = "Channel${channelSelect.name}Market${marketSelect.name}"
+        marketMap.remove(key)
+        settings.putString(key, gson.toJson(marketSelect))
+        if (marketSelect is HuaweiMarket) {
+            //换信息后清空token
+            marketSelect.clearToken()
+        }
     }
 }

@@ -19,6 +19,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
+import kotlinx.serialization.Serializable
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
 import java.io.FileInputStream
@@ -31,8 +32,8 @@ import javax.crypto.spec.SecretKeySpec
 
 class VivoMarket : Market {
 
-    var ACCESS_KEY = ""
-    var ACCESS_SECRET = ""
+    var accessKey = ""
+    var accessSecret = ""
 
     override var isSelect = false
 
@@ -41,6 +42,7 @@ class VivoMarket : Market {
 
     override val name: String = "Vivo"
 
+    @Transient
     override val baseUrl: String = "https://sandbox-developer-api.vivo.com.cn/router/rest"
 //    override val baseUrl: String = "https://developer-api.vivo.com.cn/router/rest"
 
@@ -61,7 +63,7 @@ class VivoMarket : Market {
         }
         if (uploadList.size != uploadAbi().size) {
             println("缺少相关Apk,不能上传,请检查，当前符合包：${uploadList.map { it.abi.type }}")
-//            return
+            return
         }
         var uploadSuccess = 0
         val uploadResultList = arrayListOf<VivoResponse>()
@@ -81,8 +83,8 @@ class VivoMarket : Market {
                                     getSerialnumber(uploadResultList),
                                     getFileMd5(uploadResultList),
                                     uploadData.description,
-                                    screenshot = t?.map {
-                                        it.data?.serialnumber
+                                    screenshot = t?.map { response ->
+                                        response.data?.serialnumber
                                     }?.joinToString(separator = ",") ?: "",
                                     callback = object : Callback<String> {
                                         override fun onSuccess(t: String) {
@@ -135,7 +137,7 @@ class VivoMarket : Market {
             paramsMap.forEach { (t, u) ->
                 append(t, u.toString())
             }
-            append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
+            append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), accessSecret))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
                 val response = gson.fromJson(t, VivoResponse::class.java)
@@ -187,7 +189,7 @@ class VivoMarket : Market {
                     append(t, u)
                 }
                 append("file", File(screenShotPath).readBytes(), pngHeader(screenShotPath))
-                append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
+                append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), accessSecret))
             }))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
@@ -227,7 +229,7 @@ class VivoMarket : Market {
                 paramsMap.forEach { (t, u) ->
                     append(t, u)
                 }
-                append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
+                append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), accessSecret))
                 append("file", File(apk.filePath).readBytes(), apkHeader(apk.filePath))
             }))
             var lastProcess = 0L
@@ -260,7 +262,7 @@ class VivoMarket : Market {
             paramsMap.forEach { (t, u) ->
                 append(t, u)
             }
-            append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), ACCESS_SECRET))
+            append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), accessSecret))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
                 println("Vivo接口请求成功,结果:$t")
@@ -272,14 +274,14 @@ class VivoMarket : Market {
         })
     }
 
-    private val methodScreenShot = "app.upload.screenshot"
-    private val methodApkAll = "app.upload.apk.app"
-    private val methodApk32 = "app.upload.apk.app.32"
-    private val methodApk64 = "app.upload.apk.app.64"
-    private val methodUpdate = "app.sync.update.app"
-    private val methodQuery = "app.query.details"
+    @Transient private val methodScreenShot = "app.upload.screenshot"
+    @Transient private val methodApkAll = "app.upload.apk.app"
+    @Transient private val methodApk32 = "app.upload.apk.app.32"
+    @Transient private val methodApk64 = "app.upload.apk.app.64"
+    @Transient private val methodUpdate = "app.sync.update.app"
+    @Transient private val methodQuery = "app.query.details"
     private fun getCommonParams(api: String) = mutableMapOf(
-        Pair("access_key", ACCESS_KEY),
+        Pair("access_key", accessKey),
         Pair("method", api),
         Pair("timestamp", System.currentTimeMillis().toString()),
         Pair("format", "json"),
@@ -412,25 +414,26 @@ class VivoMarket : Market {
     override fun dispositionViewInBox(market: Market) {
         super.dispositionViewInBox(market)
         if (market !is VivoMarket) return
-        val accessKey = remember { mutableStateOf(market.ACCESS_KEY) }
-        accessKey.value = market.ACCESS_KEY
-        val accessSecret = remember { mutableStateOf(market.ACCESS_SECRET) }
-        accessSecret.value = market.ACCESS_SECRET
+        val accessKey = remember { mutableStateOf(market.accessKey) }
+        accessKey.value = market.accessKey
+        val accessSecret = remember { mutableStateOf(market.accessSecret) }
+        accessSecret.value = market.accessSecret
         Column {
             InputView(input = accessKey, hint = "请配置ACCESS_KEY") {
                 accessKey.value = it
-                ACCESS_KEY = it
+                market.accessKey = it
             }
             InputView(input = accessSecret, hint = "请配置ACCESS_SECRET") {
                 accessSecret.value = it
-                ACCESS_SECRET = it
+                market.accessSecret = it
             }
         }
     }
 }
 
 
-data class VivoResponse(
+@Serializable
+internal data class VivoResponse(
     val code: Int? = null,
     val subCode: String? = null,
     val msg: String? = null,
@@ -439,7 +442,8 @@ data class VivoResponse(
     fun isSuccess() = subCode == "0"
 }
 
-data class Data(
+@Serializable
+internal data class Data(
     val packageName: String? = null,
     val serialnumber: String? = null,
     val versionCode: String? = null,

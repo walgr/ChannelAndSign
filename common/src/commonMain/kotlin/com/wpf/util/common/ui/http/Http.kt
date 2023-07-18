@@ -2,8 +2,11 @@ package com.wpf.util.common.ui.http
 
 import com.wpf.util.common.ui.utils.Callback
 import io.ktor.client.*
+import io.ktor.client.engine.*
+import io.ktor.client.engine.ProxyBuilder.http
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.cache.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
@@ -60,6 +63,17 @@ object Http {
     fun get(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
             val responseData = client.get(serverUrl, request)
+            if (responseData.status == HttpStatusCode.OK) {
+                callback?.onSuccess(responseData.bodyAsText())
+            } else {
+                callback?.onFail(responseData.bodyAsText())
+            }
+        }
+    }
+
+    fun put(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val responseData = client.put(serverUrl, request)
             if (responseData.status == HttpStatusCode.OK) {
                 callback?.onSuccess(responseData.bodyAsText())
             } else {

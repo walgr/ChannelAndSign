@@ -1,5 +1,6 @@
 package com.wpf.util.common.ui.marketplace.markets.base
 
+import com.wpf.util.common.ui.channelset.ChannelSetViewModel
 import com.wpf.util.common.ui.marketplace.MarketPlaceViewModel
 
 data class UploadData(
@@ -10,9 +11,12 @@ data class UploadData(
 
 
 fun UploadData.upload() {
-    MarketPlaceViewModel.getCanApiMarketList().find {
-        it.name == apk.marketType.market.name
-    }?.query(this)
+    MarketPlaceViewModel.getSelectMarket(
+        ChannelSetViewModel.getChannelList().find { it.isSelect }?.name ?: "",
+        MarketPlaceViewModel.getCanApiMarketList().find {
+            it.name == apk.marketType.market.name
+        }?.name ?: ""
+    ).query(this)
 }
 
 fun UploadData.packageName() = apk.abiApk.getOrNull(0)?.packageName

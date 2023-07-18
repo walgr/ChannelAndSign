@@ -10,6 +10,7 @@ class UnknownMarket: Market {
 
     override val name: String = "Unknown"
 
+    @Transient
     override val baseUrl: String = ""
 
     override fun uploadAbi(): Array<AbiType> = arrayOf(AbiType.Abi32_64)

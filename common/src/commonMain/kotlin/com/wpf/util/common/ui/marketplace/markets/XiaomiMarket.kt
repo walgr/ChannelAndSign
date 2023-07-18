@@ -21,7 +21,6 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.util.*
-import kotlinx.serialization.Serializable
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject
 import org.apache.commons.codec.binary.Hex
@@ -250,7 +249,7 @@ class XiaomiMarket : Market {
      * @throws Exception
      */
     @Throws(Exception::class)
-    fun encryptByPublicKey(str: String, publicKey: PublicKey?): String {
+    private fun encryptByPublicKey(str: String, publicKey: PublicKey?): String {
         val data = str.toByteArray()
         val out = ByteArrayOutputStream()
         val segment = ByteArray(ENCRYPT_GROUP_SIZE)
