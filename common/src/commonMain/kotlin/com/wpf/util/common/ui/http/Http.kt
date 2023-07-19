@@ -23,9 +23,11 @@ val client = HttpClient(CIO) {
 //        proxy = ProxyBuilder.http(
 //            "http://127.0.0.1:8888"
 //        )
+        requestTimeout = 30000
     }
     install(HttpTimeout) {
-        requestTimeoutMillis = 120000
+        requestTimeoutMillis = 30000
+        connectTimeoutMillis = 30000
     }
     install(ContentNegotiation) {
         json()
@@ -49,9 +51,9 @@ object Http {
         }
     }
 
-    fun submitForm(serverUrl: String, formParameters: Parameters, callback: Callback<String>? = null) {
+    fun submitForm(serverUrl: String, formParameters: Parameters, block: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
-            val responseData = client.submitForm(serverUrl, formParameters)
+            val responseData = client.submitForm(serverUrl, formParameters, block = block)
             if (responseData.status == HttpStatusCode.OK) {
                 callback?.onSuccess(responseData.bodyAsText())
             } else {

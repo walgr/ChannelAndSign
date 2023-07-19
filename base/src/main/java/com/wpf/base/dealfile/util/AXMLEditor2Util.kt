@@ -1,9 +1,7 @@
 package com.wpf.base.dealfile.util
 
-import cn.wjdiankong.main.Main
-import cn.wjdiankong.main.ParserChunkUtilsHelper
-import cn.wjdiankong.main.XmlEditorHelper
-import com.wpf.base.dealfile.apksignerPath
+//import cn.wjdiankong.main.ParserChunkUtilsHelper
+//import cn.wjdiankong.main.XmlEditorHelper
 import com.wpf.base.dealfile.axmlEditorPath
 import java.io.File
 import java.io.FileOutputStream
@@ -129,7 +127,7 @@ object AXMLEditor2Util {
     }
 
     fun clearCache() {
-        ParserChunkUtilsHelper.clearAll()
-        XmlEditorHelper.clearAll()
+//        ParserChunkUtilsHelper.clearAll()
+//        XmlEditorHelper.clearAll()
     }
 }

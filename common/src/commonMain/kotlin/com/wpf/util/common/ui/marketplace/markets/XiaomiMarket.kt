@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.*
@@ -17,12 +19,11 @@ import com.wpf.util.common.ui.utils.Callback
 import com.wpf.util.common.ui.utils.FileSelector
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.widget.common.InputView
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.util.*
-import net.sf.json.JSONArray
-import net.sf.json.JSONObject
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -51,7 +52,7 @@ class XiaomiMarket : Market {
     override val name: String = "Xiaomi"
 
     @Transient
-    override val baseUrl: String = "http://api.developer.xiaomi.com/devupload"
+    override val baseUrl: String = "https://api.developer.xiaomi.com/devupload"
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 
     @Composable
@@ -100,26 +101,26 @@ class XiaomiMarket : Market {
         val api = "/dev/query"
         Http.submitForm(
             baseUrl + api, parameters {
-                val requestDataJson = JSONObject().apply {
-                    put("packageName", uploadData.packageName()!!)
-                    put("userName", userName)
+                val requestDataJson = JsonObject().apply {
+                    addProperty("packageName", uploadData.packageName()!!)
+                    addProperty("userName", userName)
                 }.toString()
-                val formParams = mutableListOf<Pair<String, String>>()
-                formParams.add(Pair("RequestData", requestDataJson))
-                val sigJson = JSONObject().apply {
-                    put("password", password)
-                    put(
-                        "sig", JSONArray().apply {
-                            add(JSONObject().apply {
-                                put("name", "RequestData")
-                                put("hash", DigestUtils.md5Hex(requestDataJson))
+                append("RequestData", requestDataJson)
+                val sigJson = JsonObject().apply {
+                    addProperty("password", password)
+                    add(
+                        "sig", JsonArray().apply {
+                            add(JsonObject().apply {
+                                addProperty("name", "RequestData")
+                                addProperty("hash", DigestUtils.md5Hex(requestDataJson))
                             })
-                        }.toString()
+                        }
                     )
                 }.toString()
-                formParams.add(Pair("SIG", encryptByPublicKey(sigJson, pubKey)))
-                formParams.forEach {
-                    append(it.first, it.second)
+                append("SIG", encryptByPublicKey(sigJson, pubKey))
+            }, {
+                timeout {
+                    socketTimeoutMillis = 30000
                 }
             }, callback =
             object : Callback<String> {
@@ -178,32 +179,32 @@ class XiaomiMarket : Market {
                     append("screenshot_5", xiaomiPushData.screenshot_5.readBytes())
                 }
                 append("RequestData", requestDataJson)
-                append("SIG", encryptByPublicKey(JSONObject().apply {
-                    put("sig", JSONArray().apply {
-                        add(JSONObject().apply {
-                            put("name", "RequestData")
-                            put("hash", DigestUtils.md5Hex(requestDataJson))
+                append("SIG", encryptByPublicKey(JsonObject().apply {
+                    add("sig", JsonArray().apply {
+                        add(JsonObject().apply {
+                            addProperty("name", "RequestData")
+                            addProperty("hash", DigestUtils.md5Hex(requestDataJson))
                         })
                         uploadData.apk.abiApk.forEach {
-                            add(JSONObject().apply {
-                                put("name", "apk")
-                                put("hash", getFileMD5(it.filePath))
+                            add(JsonObject().apply {
+                                addProperty("name", "apk")
+                                addProperty("hash", getFileMD5(it.filePath))
                             })
                         }
                         uploadData.apk.abiApk.getOrNull(0)?.appIcon?.let {
-                            add(JSONObject().apply {
-                                put("name", "icon")
-                                put("hash", getFileMD5(it))
+                            add(JsonObject().apply {
+                                addProperty("name", "icon")
+                                addProperty("hash", getFileMD5(it))
                             })
                         }
                         uploadData.imageList?.forEachIndexed { index, imagePath ->
-                            add(JSONObject().apply {
-                                put("name", "screenshot_${index + 1}")
-                                put("hash", getFileMD5(imagePath))
+                            add(JsonObject().apply {
+                                addProperty("name", "screenshot_${index + 1}")
+                                addProperty("hash", getFileMD5(imagePath))
                             })
                         }
-                    }.toString())
-                    put("password", password)
+                    })
+                    addProperty("password", password)
                 }.toString(), pubKey))
             }))
         }, callback = object : Callback<String> {

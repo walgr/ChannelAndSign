@@ -22,12 +22,18 @@ object MarketPlaceViewModel {
     fun getSelectMarket(channelName: String, marketName: String): Market {
         val key = "Channel${channelName}Market${marketName}"
         val market = marketMap[key]
+        if (market is XiaomiMarket) {
+            market.initPubkey()
+        }
         if (market != null) {
             return market
         }
         val dataJson = settings.getString(key, "{}")
         val saveMarket = gson.fromJson(dataJson, getCanApiMarketList().find { it.name == marketName }!!.javaClass)
         saveMarket?.changeSelect(getCanApiMarketList().find { it.name == marketName }?.isSelect ?: false)
+        if (saveMarket is XiaomiMarket) {
+            saveMarket.initPubkey()
+        }
         marketMap[key] = saveMarket
         return saveMarket
     }
