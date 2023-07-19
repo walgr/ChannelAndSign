@@ -25,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.rememberNotification
 import com.wpf.util.common.ui.utils.onExternalDrag
 import com.wpf.util.common.ui.centerBgColor
@@ -44,7 +43,7 @@ import com.wpf.util.common.ui.widget.common.InputView
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
-fun channelPage(window: ComposeWindow) {
+fun channelPage() {
     //分组列表
     val channelList = remember { mutableStateListOf(*ChannelSetViewModel.getChannelList().toTypedArray()) }
     //渠道包文件名
@@ -71,9 +70,6 @@ fun channelPage(window: ComposeWindow) {
     //打完后的市场包列表
     val marketPlaceList =
         remember { mutableStateListOf(*ChannelSetViewModel.dealMargetPlace(pathList.map { it.path }).toTypedArray()) }
-
-    //提醒
-    val dealIsEmpty = rememberNotification("提醒", "内容为空")
 
     channelList.find { channel -> channel.isSelect }?.channelPath?.let {
         if (it.isNotEmpty()) {
@@ -292,7 +288,7 @@ fun channelPage(window: ComposeWindow) {
                                         ) {
                                             IconButton(onClick = {
                                                 if (pathList.isEmpty()) {
-                                                    dealIsEmpty
+
                                                 } else {
                                                     if (signList.size == 1) {
                                                         isRunDealFile = true

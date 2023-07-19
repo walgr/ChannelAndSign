@@ -3,7 +3,6 @@ package com.wpf.util.common.ui.http
 import com.wpf.util.common.ui.utils.Callback
 import io.ktor.client.*
 import io.ktor.client.engine.*
-import io.ktor.client.engine.ProxyBuilder.http
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.cache.*

@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
@@ -32,7 +31,7 @@ import com.wpf.util.common.ui.utils.onExternalDrag
 
 @Preview
 @Composable
-fun signPage(window: ComposeWindow) {
+fun signPage() {
     //签名列表
     val signList = remember { mutableStateListOf(*SignSetViewModel.getSignList().toTypedArray()) }
 

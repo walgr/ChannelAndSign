@@ -108,7 +108,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                                 0.dp
                             )
                         ) {
-                            channelPage(window.window as ComposeWindow)
+                            channelPage()
                         }
                         //上传市场
                         Box(
@@ -124,7 +124,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                                 0.dp
                             )
                         ) {
-                            signPage(window.window as ComposeWindow)
+                            signPage()
                         }
                         //软件配置
                         Box(
