@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
@@ -36,12 +37,10 @@ fun InputView(
 ) {
     val showText = remember { input }
     OutlinedTextField(
-        value = TextFieldValue(
-            showText.value, TextRange(showText.value.length)
-        ),
+        value = showText.value,
         onValueChange = {
-            showText.value = it.text
-            onTextChange.invoke(it.text)
+            showText.value = it
+            onTextChange.invoke(it)
         },
         label = {
             Text(hint)
@@ -60,6 +59,7 @@ fun InputView(
                 )
             }
         },
+        keyboardOptions = KeyboardOptions(),
         modifier = if (modifier == null) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().then(modifier)
     )
 }

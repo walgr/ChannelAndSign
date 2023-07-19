@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -41,104 +40,68 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
     }
 
     MaterialTheme {
-        Box(
-            modifier = Modifier.fillMaxSize()
-                .clip(shape = RoundedCornerShape(8.dp))
-                .background(color = mainBgColor)
+        Row(
+            modifier = Modifier.fillMaxSize().clip(shape = RoundedCornerShape(8.dp)).background(color = mainBgColor)
         ) {
-            Row {
-                Box(
-                    modifier = Modifier.requiredWidth(150.dp)
-                        .fillMaxHeight()
-                        .background(color = Color(28, 30, 46))
-                ) {
-                    Column {
-                        window.WindowDraggableArea {
-                            Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                                Text("WPF", fontSize = 36.sp, color = Color.White)
-                            }
-                        }
-                        LazyColumn {
-                            items(count = menuList.size) { pos ->
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Box(
-                                        modifier = if (menuList[pos].isSelectState.value) Modifier.fillMaxWidth()
-                                            .height(56.dp)
-                                            .background(Color(1f, 1f, 1f, 0.2f))
-                                        else Modifier.fillMaxWidth().height(56.dp),
-                                    )
-                                    Text(menuList[pos].menuName, modifier = Modifier
-                                        .clickable {
-                                            menuList.forEach { item ->
-                                                item.isSelect = false
-                                                item.isSelectState.value = false
-                                            }
-                                            menuList[pos].isSelect = true
-                                            menuList[pos].isSelectState.value = true
-                                        }, fontSize = 16.sp, color = Color.White
-                                    )
-                                }
-                            }
-                        }
+            Column(
+                modifier = Modifier.requiredWidth(150.dp).fillMaxHeight().background(color = Color(28, 30, 46))
+            ) {
+                window.WindowDraggableArea {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center
+                    ) {
+                        Text("WPF", fontSize = 36.sp, color = Color.White)
+                    }
+                }
+                LazyColumn {
+                    items(count = menuList.size) { pos ->
                         Box(
-                            modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(bottom = 16.dp),
-                            contentAlignment = Alignment.BottomCenter
+                            contentAlignment = Alignment.Center,
                         ) {
-                            IconButton(onClick = {
-                                applicationScope.exitApplication()
-                                exitProcess(0)
-                            }) {
-                                Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White)
-                            }
+                            Box(
+                                modifier = if (menuList[pos].isSelectState.value) Modifier.fillMaxWidth().height(56.dp)
+                                    .background(Color(1f, 1f, 1f, 0.2f))
+                                else Modifier.fillMaxWidth().height(56.dp),
+                            )
+                            Text(
+                                menuList[pos].menuName, modifier = Modifier.clickable {
+                                    menuList.forEach { item ->
+                                        item.isSelect = false
+                                        item.isSelectState.value = false
+                                    }
+                                    menuList[pos].isSelect = true
+                                    menuList[pos].isSelectState.value = true
+                                }, fontSize = 16.sp, color = Color.White
+                            )
                         }
                     }
                 }
                 Box(
-                    modifier = Modifier.fillMaxSize()
-                        .padding(all = 12.dp)
-                        .clip(shape = RoundedCornerShape(8.dp))
-                        .background(color = Color(226, 228, 246))
+                    modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(bottom = 16.dp),
+                    contentAlignment = Alignment.BottomCenter
                 ) {
-                    Column {
-                        //渠道配置
-                        Box(
-                            modifier = if (menuList[0].isSelectState.value) Modifier.fillMaxSize() else Modifier.height(
-                                0.dp
-                            )
-                        ) {
-                            channelPage()
-                        }
-                        //上传市场
-                        Box(
-                            modifier = if (menuList[1].isSelectState.value) Modifier.fillMaxSize() else Modifier.height(
-                                0.dp
-                            )
-                        ) {
-                            marketPlacePage()
-                        }
-                        //签名配置
-                        Box(
-                            modifier = if (menuList[2].isSelectState.value) Modifier.fillMaxSize() else Modifier.height(
-                                0.dp
-                            )
-                        ) {
-                            signPage()
-                        }
-                        //软件配置
-                        Box(
-                            modifier = if (menuList[3].isSelectState.value) Modifier.fillMaxSize() else Modifier.height(
-                                0.dp
-                            )
-                        ) {
-                            configPage()
-                        }
+                    IconButton(onClick = {
+                        applicationScope.exitApplication()
+                        exitProcess(0)
+                    }) {
+                        Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White)
                     }
                 }
-
+            }
+            Column(
+                modifier = Modifier.fillMaxSize().padding(all = 12.dp).clip(shape = RoundedCornerShape(8.dp))
+                    .background(color = Color(226, 228, 246))
+            ) {
+                if (menuList[0].isSelectState.value) {
+                    channelPage()
+                } else if (menuList[1].isSelectState.value) {
+                    marketPlacePage()
+                } else if (menuList[2].isSelectState.value) {
+                    signPage()
+                } else if (menuList[3].isSelectState.value) {
+                    configPage()
+                }
             }
         }
     }
-
 }
