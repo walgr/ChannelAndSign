@@ -34,10 +34,11 @@ import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import javax.crypto.Cipher
 
-class XiaomiMarket : Market {
+data class XiaomiMarket(
+    var userName: String = "",
+    var password: String = "",
+) : Market {
 
-    var userName: String = ""
-    var password: String = ""
     var pubKeyPath: String = ""         //小米公钥路径
         set(value) {
             field = value
@@ -49,7 +50,7 @@ class XiaomiMarket : Market {
     @Transient
     override val isSelectState: MutableState<Boolean> = mutableStateOf(isSelect)
 
-    override val name: String = "Xiaomi"
+    override val name: String = MarketType.小米.channelName
 
     @Transient
     override val baseUrl: String = "https://api.developer.xiaomi.com/devupload"

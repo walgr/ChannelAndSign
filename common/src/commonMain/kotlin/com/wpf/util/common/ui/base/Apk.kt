@@ -43,9 +43,3 @@ fun Apk.canApi(): Boolean {
         channelName.contains(market.channelName, ignoreCase = true)
     }?.canApi() ?: false
 }
-
-fun Apk.getMarket(): Market? {
-    return MarketType.values().find { market ->
-        channelName.contains(market.channelName, ignoreCase = true)
-    }?.market
-}

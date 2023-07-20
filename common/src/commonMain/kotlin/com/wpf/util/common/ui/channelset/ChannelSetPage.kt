@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
@@ -25,7 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.rememberNotification
 import com.wpf.util.common.ui.utils.onExternalDrag
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
@@ -35,10 +33,8 @@ import com.wpf.util.common.ui.marketplace.markets.base.upload
 import com.wpf.util.common.ui.signset.SignFile
 import com.wpf.util.common.ui.signset.SignSetViewModel
 import com.wpf.util.common.ui.uploadIcon
-import com.wpf.util.common.ui.widget.common.AddImage
-import com.wpf.util.common.ui.widget.common.Title
-import com.wpf.util.common.ui.widget.common.FileAddTitle
-import com.wpf.util.common.ui.widget.common.InputView
+import com.wpf.util.common.ui.widget.common.*
+import kotlin.math.min
 
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
@@ -249,7 +245,7 @@ fun channelPage() {
                                                 pathList.add(Path(name = it, path = it))
                                                 ChannelSetViewModel.savePathList(pathList)
                                             }
-                                            Box(modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 8.dp)) {
+                                            Box(modifier = Modifier.padding(8.dp, 0.dp, 8.dp, 0.dp)) {
                                                 Column {
                                                     Box(modifier = Modifier.padding(bottom = 8.dp)) {
                                                         Text(
@@ -259,15 +255,23 @@ fun channelPage() {
                                                     }
                                                     LazyColumn {
                                                         items(pathList) {
-                                                            Text(it.path,
-                                                                fontSize = 11.sp,
-                                                                color = Color.DarkGray,
-                                                                modifier = Modifier.combinedClickable(
+                                                            ItemView(modifier = Modifier.heightIn(min = 24.dp)
+                                                                .combinedClickable(
                                                                     onDoubleClick = {
                                                                         pathList.remove(it)
                                                                         ChannelSetViewModel.savePathList(pathList)
                                                                     }
-                                                                ) {})
+                                                                ) {}) {
+                                                                Text(
+                                                                    it.path,
+                                                                    fontSize = 11.sp,
+                                                                    color = Color.DarkGray,
+                                                                    modifier = Modifier.padding(
+                                                                        start = 8.dp,
+                                                                        end = 8.dp
+                                                                    )
+                                                                )
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -361,9 +365,9 @@ fun channelPage() {
                     Box(
                         modifier = Modifier.fillMaxWidth().weight(1f)
                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor)
-                            .padding(top = 8.dp, bottom = 8.dp),
+                            .padding(8.dp),
                     ) {
-                        LazyColumn {
+                        LazyColumn(verticalArrangement  = Arrangement.spacedBy(4.dp)) {
                             items(marketPlaceList) {
                                 ApkItem(it)
                             }
@@ -377,8 +381,8 @@ fun channelPage() {
                     IconButton(onClick = {
                         marketPlaceList.filter {
                             it.isSelectState.value
-                        }.map {
-                            UploadData(it, marketDescription.value, marketScreenShotList.filter { screenShot ->
+                        }.map { marketApk ->
+                            UploadData(marketApk, marketDescription.value, marketScreenShotList.filter { screenShot ->
                                 screenShot.isNotEmpty()
                             })
                         }.forEach {

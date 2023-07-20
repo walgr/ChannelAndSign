@@ -18,7 +18,7 @@ fun ItemView(
     isSelectState: Boolean = false, modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxWidth().height(44.dp).padding(start = 8.dp, top = 4.dp, end = 8.dp, bottom = 4.dp).clip(shape = RoundedCornerShape(8.dp))
+        modifier = Modifier.fillMaxWidth().clip(shape = RoundedCornerShape(8.dp))
             .background(color = if (isSelectState) mainTextColor else Color.White)
             .then(modifier), contentAlignment = Alignment.CenterStart, content = content
     )

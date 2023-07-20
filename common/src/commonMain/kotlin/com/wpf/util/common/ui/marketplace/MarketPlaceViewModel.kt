@@ -8,13 +8,14 @@ import com.wpf.util.common.ui.marketplace.markets.base.MarketType
 import com.wpf.util.common.ui.marketplace.markets.XiaomiMarket
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.utils.settings
+import kotlin.reflect.KClass
 
 object MarketPlaceViewModel {
 
     fun getSelectMarket(channelList: List<Channel>? = null, marketList: List<Market>? = null): Market {
         return getSelectMarket(
             (channelList ?: ChannelSetViewModel.getChannelList()).find { it.isSelect }?.name ?: "",
-            (marketList ?: getCanApiMarketList()).find { it.isSelect }!!.name
+            (marketList ?: getCanApiMarketList()).find { it.isSelect }?.name ?: ""
         )
     }
 
@@ -38,19 +39,24 @@ object MarketPlaceViewModel {
         return saveMarket
     }
 
+    private var canApiMarketList : MutableList<Market>? = null
     fun getCanApiMarketList(): List<Market> {
+        if (canApiMarketList == null) {
+            canApiMarketList = MarketType.values().filter { marketType ->
+                marketType.canApi()
+            }.map { marketType ->
+                gson.fromJson("{}", marketType.market.java)
+            }.toMutableList()
+            if (canApiMarketList!!.find { find -> find.isSelect } == null) {
+                canApiMarketList!![0].changeSelect(true)
+            }
+        }
+        return canApiMarketList!!
+    }
+
+    fun getCanApiMarketTypeList(): List<MarketType> {
         val marketList = MarketType.values().filter { marketType ->
             marketType.canApi()
-        }.map { marketType ->
-            marketType.market
-        }.toMutableList()
-        if (marketList.find { find -> find.isSelect } == null) {
-            marketList[0].changeSelect(true)
-        }
-        marketList.forEach { market ->
-            if (market is XiaomiMarket) {
-                market.initPubkey()
-            }
         }
         return marketList
     }

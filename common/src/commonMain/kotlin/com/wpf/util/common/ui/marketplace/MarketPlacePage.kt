@@ -21,6 +21,7 @@ import com.wpf.util.common.ui.channelset.ChannelSetViewModel
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.marketplace.markets.base.Market
 import com.wpf.util.common.ui.marketplace.markets.base.MarketTypeHelper
+import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.widget.AddItemDialog
 import com.wpf.util.common.ui.widget.common.BigTitle
 import com.wpf.util.common.ui.widget.common.ItemTextView
@@ -110,7 +111,7 @@ fun marketPlacePage() {
         AddItemDialog(showAddMarketDialog) {
             showAddMarketDialog.value = false
             MarketTypeHelper.find(it)?.let { market ->
-                marketList.add(market.market)
+                marketList.add(gson.fromJson("{}", market.market.java))
             }
         }
     }

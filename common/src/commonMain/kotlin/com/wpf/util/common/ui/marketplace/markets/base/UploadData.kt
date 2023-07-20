@@ -9,13 +9,10 @@ data class UploadData(
     val imageList: List<String>? = null
 )
 
-
 fun UploadData.upload() {
     MarketPlaceViewModel.getSelectMarket(
         ChannelSetViewModel.getChannelList().find { it.isSelect }?.name ?: "",
-        MarketPlaceViewModel.getCanApiMarketList().find {
-            it.name == apk.marketType.market.name
-        }?.name ?: ""
+        MarketPlaceViewModel.getCanApiMarketList().find { it.name == apk.channelName }?.name ?: ""
     ).query(this)
 }
 
