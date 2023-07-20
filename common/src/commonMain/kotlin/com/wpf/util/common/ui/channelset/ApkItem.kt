@@ -37,7 +37,7 @@ fun ApkItem(marketApk: MarketApk) {
         ) {
             Checkbox(isSelect.value, null)
             Column(verticalArrangement = Arrangement.Center, modifier = Modifier.offset(x = 8.dp)) {
-                Text(text = marketApk.marketType.channelName, fontSize = 14.sp)
+                Text(text = marketApk.marketType.name, fontSize = 14.sp)
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.offset(y = 4.dp)) {
                     if (marketApk.abiApk.find { it.abi == AbiType.Abi32 } != null) {
                         ShapeText("32", fontSize = 6.sp, bgColor = if (MarketPlaceViewModel.getCanApiMarketList().find {
