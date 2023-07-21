@@ -45,7 +45,7 @@ interface Market : SelectInterface {
 
     }
 
-    fun push(uploadData: UploadData, callback: Callback<String>)
+    fun push(uploadData: UploadData, callback: Callback<MarketType>)
 
 
     fun pngHeader(screenShotPath: String): Headers {

@@ -24,6 +24,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.util.*
+import kotlinx.serialization.Serializable
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -135,7 +136,7 @@ data class XiaomiMarket(
             })
     }
 
-    override fun push(uploadData: UploadData, callback: Callback<String>) {
+    override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.apk.abiApk.isEmpty()) return
         val api = "/dev/push"
         Http.post(baseUrl + api, request = {
@@ -210,11 +211,16 @@ data class XiaomiMarket(
             }))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
-                println("小米接口请求成功,结果:$t")
+                val response = gson.fromJson(t, XiaomiBaseResponse::class.java)
+                if (response.isSuccess()) {
+                    callback.onSuccess(MarketType.小米)
+                } else {
+                    callback.onFail(name)
+                }
             }
 
             override fun onFail(msg: String) {
-                println("小米接口请求失败,结果:$msg")
+                callback.onFail("$name:$msg")
             }
         })
     }
@@ -306,5 +312,15 @@ data class XiaomiMarket(
         if (pubKeyPath.isNotEmpty()) {
             pubKey = getPublicKeyByX509Cer(pubKeyPath)
         }
+    }
+}
+
+@Serializable
+internal data class XiaomiBaseResponse(
+    val result: Int? = null,
+    val message: String? = null,
+) {
+    fun isSuccess(): Boolean {
+        return result == 0
     }
 }

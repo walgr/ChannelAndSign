@@ -178,17 +178,25 @@ data class SamsungMarket(
         }
     }
 
-    override fun push(uploadData: UploadData, callback: Callback<String>) {
+    override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.packageName().isNullOrEmpty()) return
         update(uploadData, {}) {
-            submit(callback = callback)
+            submit(callback = object : SuccessCallback<String> {
+                override fun onSuccess(t: String) {
+                    callback.onSuccess(MarketType.三星)
+                }
+
+                override fun onFail(msg: String) {
+                    super.onFail(msg)
+                    callback.onFail(name)
+                }
+
+            })
         }
     }
 
-    private fun submit(callback: Callback<String>) {
-        getToken({
-            callback.onFail(it)
-        }) { token ->
+    private fun submit(callback: SuccessCallback<String>) {
+        getToken({ callback.onFail(it) }) { token ->
             Http.post("$baseUrl/seller/contentSubmit", {
                 timeout {
                     requestTimeoutMillis = 10000

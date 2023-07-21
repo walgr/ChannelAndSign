@@ -17,7 +17,7 @@ class UnknownMarket: Market {
 
     override fun uploadAbi(): Array<AbiType> = arrayOf(AbiType.Abi32_64)
 
-    override fun push(uploadData: UploadData, callback: Callback<String>) {
+    override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
 
     }
 }

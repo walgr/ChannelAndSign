@@ -49,7 +49,7 @@ data class VivoMarket(
         query(uploadData.packageName()!!)
     }
 
-    override fun push(uploadData: UploadData, callback: Callback<String>) {
+    override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.packageName().isNullOrEmpty()) return
         val packageName = uploadData.packageName()!!
         val versionCode = uploadData.versionCode()!!
