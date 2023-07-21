@@ -24,6 +24,7 @@ import com.wpf.util.common.ui.configset.configPage
 import com.wpf.util.common.ui.mainBgColor
 import com.wpf.util.common.ui.marketplace.marketPlacePage
 import com.wpf.util.common.ui.signset.signPage
+import com.wpf.util.common.ui.utils.OnApplicationExit
 import com.wpf.util.common.ui.utils.WindowDraggableArea
 import kotlin.system.exitProcess
 
@@ -81,8 +82,10 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     IconButton(onClick = {
-                        applicationScope.exitApplication()
-                        exitProcess(0)
+                        OnApplicationExit.exit() {
+                            applicationScope.exitApplication()
+                            exitProcess(0)
+                        }
                     }) {
                         Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White)
                     }

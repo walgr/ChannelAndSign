@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.Market
+import com.wpf.util.common.ui.marketplace.markets.base.MarketType
 import com.wpf.util.common.ui.marketplace.markets.base.UploadData
 import com.wpf.util.common.ui.marketplace.markets.base.packageName
 import com.wpf.util.common.ui.utils.Callback
@@ -26,17 +27,17 @@ import java.io.File
 /**
  * api地址：https://developer.huawei.com/consumer/cn/doc/development/AppGallery-connect-References/agcapi-obtain_token-0000001158365043
  */
-class HuaweiMarket : Market {
-
-    var clientId: String = ""
+data class HuaweiMarket(
+    var clientId: String = "",
     var clientSecret: String = ""
+) : Market {
 
     override var isSelect = false
 
     @Transient
     override val isSelectState: MutableState<Boolean> = mutableStateOf(isSelect)
 
-    override val name: String = "Huawei"
+    override val name: String = MarketType.华为.channelName
 
     @Transient
     override val baseUrl: String = "https://connect-api.cloud.huawei.com/api"
@@ -51,7 +52,7 @@ class HuaweiMarket : Market {
         settings.putString("huaweiToken", gson.toJson(token))
     }
 
-    fun clearToken() {
+    private fun clearToken() {
         settings.putString("huaweiToken", "")
     }
 
@@ -119,7 +120,12 @@ class HuaweiMarket : Market {
         })
     }
 
-    override fun push(uploadData: UploadData) {
+    override fun push(uploadData: UploadData, callback: Callback<String>) {
+
+    }
+
+    //提交审核
+    private fun submit() {
 
     }
 
@@ -156,11 +162,6 @@ class HuaweiMarket : Market {
                 })
             }
         })
-    }
-
-    //提交审核
-    private fun submit() {
-
     }
 
     private fun updateAppFileInfo(
@@ -215,7 +216,7 @@ class HuaweiMarket : Market {
                             setBody(MultiPartFormDataContent(formData {
                                 append("authCode", t.authCode)
                                 append("fileCount", 1)
-                                append("file", File(uploadApk!!.filePath).readBytes(), apkHeader(uploadApk.filePath))
+                                append("file", File(uploadApk!!.filePath).readBytes(), apkHeader(uploadApk.fileName))
                             }))
                         }, object : Callback<String> {
                             override fun onSuccess(t: String) {
@@ -485,6 +486,11 @@ class HuaweiMarket : Market {
                 market.clientSecret = it
             }
         }
+    }
+
+    override fun clearInitData() {
+        super.clearInitData()
+        clearToken()
     }
 }
 

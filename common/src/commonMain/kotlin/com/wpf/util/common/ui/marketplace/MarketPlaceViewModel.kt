@@ -23,18 +23,14 @@ object MarketPlaceViewModel {
     fun getSelectMarket(channelName: String, marketName: String): Market {
         val key = "Channel${channelName}Market${marketName}"
         val market = marketMap[key]
-        if (market is XiaomiMarket) {
-            market.initPubkey()
-        }
+        market?.initByData()
         if (market != null) {
             return market
         }
         val dataJson = settings.getString(key, "{}")
         val saveMarket = gson.fromJson(dataJson, getCanApiMarketList().find { it.name == marketName }!!.javaClass)
         saveMarket?.changeSelect(getCanApiMarketList().find { it.name == marketName }?.isSelect ?: false)
-        if (saveMarket is XiaomiMarket) {
-            saveMarket.initPubkey()
-        }
+        saveMarket.initByData()
         marketMap[key] = saveMarket
         return saveMarket
     }
@@ -66,9 +62,7 @@ object MarketPlaceViewModel {
         val key = "Channel${channelSelect.name}Market${marketSelect.name}"
         marketMap.remove(key)
         settings.putString(key, gson.toJson(marketSelect))
-        if (marketSelect is HuaweiMarket) {
-            //换信息后清空token
-            marketSelect.clearToken()
-        }
+        //换信息后清空初始化的数据
+        marketSelect.clearInitData()
     }
 }

@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.apiIcon
 import com.wpf.util.common.ui.base.AbiType
-import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.marketplace.MarketPlaceViewModel
 import com.wpf.util.common.ui.widget.common.ItemView
@@ -40,21 +39,23 @@ fun ApkItem(marketApk: MarketApk) {
                 Text(text = marketApk.marketType.name, fontSize = 14.sp)
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.offset(y = 4.dp)) {
                     if (marketApk.abiApk.find { it.abi == AbiType.Abi32 } != null) {
-                        ShapeText("32", fontSize = 6.sp, bgColor = if (MarketPlaceViewModel.getCanApiMarketList().find {
+                        ShapeText("32", fontSize = 8.sp, bgColor = if (MarketPlaceViewModel.getCanApiMarketList().find {
                                 it.name == marketApk.channelName
                             }?.uploadAbi()?.contains(AbiType.Abi32) == true) mainTextColor else Color.Gray)
                     }
                     if (marketApk.abiApk.find { it.abi == AbiType.Abi64 } != null) {
                         Box(modifier = Modifier.width(4.dp))
-                        ShapeText("64", fontSize = 6.sp, bgColor = if (MarketPlaceViewModel.getCanApiMarketList().find {
+                        ShapeText("64", fontSize = 8.sp, bgColor = if (MarketPlaceViewModel.getCanApiMarketList().find {
                                 it.name == marketApk.channelName
                             }?.uploadAbi()?.contains(AbiType.Abi64) == true) mainTextColor else Color.Gray)
                     }
                     if (marketApk.abiApk.find { it.abi == AbiType.Abi32_64 } != null) {
                         Box(modifier = Modifier.width(4.dp))
-                        ShapeText("兼容包", fontSize = 6.sp, bgColor = if (MarketPlaceViewModel.getCanApiMarketList().find {
-                                it.name == marketApk.channelName
-                            }?.uploadAbi()?.contains(AbiType.Abi32_64) == true) mainTextColor else Color.Gray)
+                        ShapeText(
+                            "兼容包", fontSize = 8.sp, bgColor = if (MarketPlaceViewModel.getCanApiMarketList().find {
+                                    it.name == marketApk.channelName
+                                }?.uploadAbi()?.contains(AbiType.Abi32_64) == true) mainTextColor else Color.Gray
+                        )
                     }
                 }
             }

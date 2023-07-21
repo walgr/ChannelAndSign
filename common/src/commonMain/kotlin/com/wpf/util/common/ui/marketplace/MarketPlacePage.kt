@@ -59,7 +59,7 @@ fun marketPlacePage() {
                                     Row {
                                         LazyColumn(modifier = Modifier.weight(1f)) {
                                             items(channelList) {
-                                                ItemTextView(it.name, modifier = Modifier.padding(end = 0.dp).clickable {
+                                                ItemTextView(it.name, modifier = Modifier.padding(start = 4.dp, end = 0.dp).clickable {
                                                     channelList.forEach { market ->
                                                         market.changeSelect(false)
                                                     }
@@ -70,7 +70,7 @@ fun marketPlacePage() {
                                         }
                                         LazyColumn(modifier = Modifier.weight(1f)) {
                                             items(marketList) {
-                                                ItemTextView(it.name, modifier = Modifier.padding(start = 0.dp).clickable {
+                                                ItemTextView(it.name, modifier = Modifier.padding(start = 4.dp).clickable {
                                                     marketList.forEach { market ->
                                                         market.changeSelect(false)
                                                     }

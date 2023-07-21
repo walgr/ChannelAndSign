@@ -8,10 +8,7 @@ import androidx.compose.runtime.remember
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.http.Http
-import com.wpf.util.common.ui.marketplace.markets.base.Market
-import com.wpf.util.common.ui.marketplace.markets.base.UploadData
-import com.wpf.util.common.ui.marketplace.markets.base.packageName
-import com.wpf.util.common.ui.marketplace.markets.base.versionCode
+import com.wpf.util.common.ui.marketplace.markets.base.*
 import com.wpf.util.common.ui.utils.Callback
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.widget.common.InputView
@@ -30,21 +27,20 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 
-class VivoMarket : Market {
-
-    var accessKey = ""
-    var accessSecret = ""
+data class VivoMarket(
+    var accessKey: String = "",
+    var accessSecret: String = ""
+) : Market {
 
     override var isSelect = false
 
     @Transient
     override val isSelectState: MutableState<Boolean> = mutableStateOf(isSelect)
 
-    override val name: String = "Vivo"
+    override val name: String = MarketType.Vivo.channelName
 
     @Transient
     override val baseUrl: String = "https://sandbox-developer-api.vivo.com.cn/router/rest"
-//    override val baseUrl: String = "https://developer-api.vivo.com.cn/router/rest"
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 
@@ -53,7 +49,7 @@ class VivoMarket : Market {
         query(uploadData.packageName()!!)
     }
 
-    override fun push(uploadData: UploadData) {
+    override fun push(uploadData: UploadData, callback: Callback<String>) {
         if (uploadData.packageName().isNullOrEmpty()) return
         val packageName = uploadData.packageName()!!
         val versionCode = uploadData.versionCode()!!
@@ -430,7 +426,6 @@ class VivoMarket : Market {
         }
     }
 }
-
 
 @Serializable
 internal data class VivoResponse(

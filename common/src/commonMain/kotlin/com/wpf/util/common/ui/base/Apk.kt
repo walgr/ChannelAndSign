@@ -17,6 +17,7 @@ data class Apk(
     val name: String,
     val size: Long,
     val filePath: String,
+    val fileName: String,
     var appIcon: String? = null,
     var appName: String = "",
     var packageName: String = "",

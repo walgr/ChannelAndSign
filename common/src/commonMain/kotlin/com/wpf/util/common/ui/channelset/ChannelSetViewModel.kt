@@ -99,6 +99,7 @@ object ChannelSetViewModel {
                         name = file.nameWithoutExtension,
                         size = file.length(),
                         filePath = file.path,
+                        fileName = file.name
                     )
                     findMarket?.abiApk?.add(apk)
                     if (findMarket == null) {

@@ -80,7 +80,7 @@ data class XiaomiMarket(
                 modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
             ) {
                 InputView(
-                    modifier = Modifier.weight(1f), input = xiaomiAccountPub, hint = "请配置小米Pubkey文件路径"
+                    modifier = Modifier.weight(1f), input = xiaomiAccountPub, hint = "请配置小米公钥文件路径"
                 ) {
                     xiaomiAccountPub.value = it
                 }
@@ -135,7 +135,7 @@ data class XiaomiMarket(
             })
     }
 
-    override fun push(uploadData: UploadData) {
+    override fun push(uploadData: UploadData, callback: Callback<String>) {
         if (uploadData.apk.abiApk.isEmpty()) return
         val api = "/dev/push"
         Http.post(baseUrl + api, request = {
@@ -294,10 +294,15 @@ data class XiaomiMarket(
     // 加载BC库
     init {
         Security.addProvider(BouncyCastleProvider())
+
+    }
+
+    override fun initByData() {
+        super.initByData()
         initPubkey()
     }
 
-    fun initPubkey() {
+    private fun initPubkey() {
         if (pubKeyPath.isNotEmpty()) {
             pubKey = getPublicKeyByX509Cer(pubKeyPath)
         }

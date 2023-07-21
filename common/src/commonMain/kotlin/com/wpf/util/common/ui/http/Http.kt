@@ -38,6 +38,18 @@ val client = HttpClient(CIO) {
 }
 
 object Http {
+
+    fun get(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val responseData = client.get(serverUrl, request)
+            if (responseData.status == HttpStatusCode.OK) {
+                callback?.onSuccess(responseData.bodyAsText())
+            } else {
+                callback?.onFail(responseData.bodyAsText())
+            }
+        }
+    }
+
     fun post(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
             val responseData = client.post(serverUrl, request)
@@ -61,9 +73,9 @@ object Http {
         }
     }
 
-    fun get(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
+    fun put(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
-            val responseData = client.get(serverUrl, request)
+            val responseData = client.put(serverUrl, request)
             if (responseData.status == HttpStatusCode.OK) {
                 callback?.onSuccess(responseData.bodyAsText())
             } else {
@@ -72,9 +84,9 @@ object Http {
         }
     }
 
-    fun put(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
+    fun delete(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
-            val responseData = client.put(serverUrl, request)
+            val responseData = client.delete(serverUrl, request)
             if (responseData.status == HttpStatusCode.OK) {
                 callback?.onSuccess(responseData.bodyAsText())
             } else {
