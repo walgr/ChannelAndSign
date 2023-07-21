@@ -353,9 +353,11 @@ fun channelPage() {
                                 items(marketScreenShotList) {
                                     AddImage(it) { new ->
                                         marketScreenShotList.remove(it)
-                                        marketScreenShotList.add(new)
-                                        if (new.isNotEmpty() && marketScreenShotList.size < 5) {
-                                            marketScreenShotList.add("")
+                                        if (new.isNotEmpty()) {
+                                            marketScreenShotList.add(new)
+                                            if (marketScreenShotList.size < 5) {
+                                                marketScreenShotList.add("")
+                                            }
                                         }
                                     }
                                 }

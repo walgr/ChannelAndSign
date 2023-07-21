@@ -10,6 +10,7 @@ import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.*
 import com.wpf.util.common.ui.utils.Callback
+import com.wpf.util.common.ui.utils.SuccessCallback
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.widget.common.InputView
 import io.ktor.client.plugins.*
@@ -28,8 +29,7 @@ import javax.crypto.spec.SecretKeySpec
 
 
 data class VivoMarket(
-    var accessKey: String = "",
-    var accessSecret: String = ""
+    var accessKey: String = "", var accessSecret: String = ""
 ) : Market {
 
     override var isSelect = false
@@ -41,104 +41,97 @@ data class VivoMarket(
 
     @Transient
     override val baseUrl: String = "https://sandbox-developer-api.vivo.com.cn/router/rest"
+//    override val baseUrl: String = "https://developer-api.vivo.com.cn/router/rest"
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 
     override fun query(uploadData: UploadData) {
         super.query(uploadData)
         query(uploadData.packageName()!!)
+//        push(uploadData, object : Callback<MarketType> {
+//            override fun onSuccess(t: MarketType) {
+//                println("Vivo上传成功")
+//            }
+//
+//            override fun onFail(msg: String) {
+//                println("Vivo上传失败")
+//            }
+//
+//        })
     }
 
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.packageName().isNullOrEmpty()) return
         val packageName = uploadData.packageName()!!
         val versionCode = uploadData.versionCode()!!
-        //先上传apk和相应的图片资源
-        val uploadList = uploadData.apk.abiApk.filter {
-            uploadAbi().contains(it.abi)
-        }
-        if (uploadList.size != uploadAbi().size) {
-            println("缺少相关Apk,不能上传,请检查，当前符合包：${uploadList.map { it.abi.type }}")
-            return
-        }
-        var uploadSuccess = 0
-        val uploadResultList = arrayListOf<VivoResponse>()
-        println("上传Apk中，需要上传:${uploadList.map { it.abi.type }} ${uploadList.size}个Apk")
-        uploadList.forEach {
-            uploadApk(it, callback = object : Callback<VivoResponse> {
-                override fun onSuccess(t: VivoResponse) {
-                    uploadResultList.add(t)
-                    println("第${uploadResultList.size}个Apk上传完成")
-                    uploadSuccess++
-                    if (uploadSuccess == uploadList.size) {
-                        println("Apk全部上传完成")
-                        uploadScreenShotList(packageName, uploadData.imageList, object : Callback<List<VivoResponse>?> {
-                            override fun onSuccess(t: List<VivoResponse>?) {
-                                update(packageName,
-                                    versionCode,
-                                    getSerialnumber(uploadResultList),
-                                    getFileMd5(uploadResultList),
-                                    uploadData.description,
-                                    screenshot = t?.map { response ->
-                                        response.data?.serialnumber
-                                    }?.joinToString(separator = ",") ?: "",
-                                    callback = object : Callback<String> {
-                                        override fun onSuccess(t: String) {
-                                            println("Vivo接口请求成功,结果:$t")
-                                        }
-
-                                        override fun onFail(msg: String) {
-                                            println("Vivo接口请求失败,结果:$msg")
-                                        }
-                                    })
-                            }
-
-                            override fun onFail(msg: String) {
-
-                            }
-                        })
-                    }
+        uploadApkList(uploadData, { callback.onFail(it) }) { uploadResultList ->
+            uploadScreenShotList(packageName,
+                uploadData.imageList,
+                { error -> callback.onFail(error) }) { screenFiles ->
+                update(packageName,
+                    versionCode,
+                    uploadResultList.find { find -> find.abi == AbiType.Abi32 }?.data?.serialnumber!!,
+                    uploadResultList.find { find -> find.abi == AbiType.Abi64 }?.data?.serialnumber!!,
+                    uploadData.description,
+                    screenshot = screenFiles.map { response ->
+                        response.data?.serialnumber
+                    }.joinToString(separator = ","),
+                    { callback.onFail(it) }) {
+                    callback.onSuccess(MarketType.Vivo)
                 }
-
-                override fun onFail(msg: String) {
-
-                }
-            })
-        }
-    }
-
-    private fun getSerialnumber(uploadResultList: List<VivoResponse>): String {
-        return uploadResultList.joinToString(separator = ",") {
-            it.data?.serialnumber ?: ""
-        }
-    }
-
-    private fun getFileMd5(uploadResultList: List<VivoResponse>): String {
-        return uploadResultList.joinToString(separator = ",") {
-            it.data?.fileMd5 ?: ""
+            }
         }
     }
 
     private fun update(
         packageName: String,
         versionCode: String,
-        serialnumber: String,
-        fileMd5: String,
+        serialnumber32: String,
+        serialnumber64: String,
         updateDesc: String,
         screenshot: String? = null,
-        callback: Callback<String>
+        onFail: ((String) -> Unit)? = null,
+        callback: (String) -> Unit
+    ) {
+        update(packageName,
+            versionCode,
+            serialnumber32,
+            serialnumber64,
+            updateDesc,
+            screenshot,
+            object : SuccessCallback<String> {
+                override fun onSuccess(t: String) {
+                    callback.invoke(t)
+                }
+
+                override fun onFail(msg: String) {
+                    super.onFail(msg)
+                    onFail?.invoke(msg)
+                }
+            })
+    }
+
+    private fun update(
+        packageName: String,
+        versionCode: String,
+        serialnumber32: String,
+        serialnumber64: String,
+        updateDesc: String,
+        screenshot: String? = null,
+        callback: SuccessCallback<String>
     ) {
         Http.submitForm(baseUrl, formParameters = parameters {
-            val paramsMap = getUpdateParams(packageName, versionCode, serialnumber, fileMd5, updateDesc, screenshot)
+            val paramsMap =
+                getUpdateParams(packageName, versionCode, serialnumber32, serialnumber64, updateDesc, screenshot)
             paramsMap.forEach { (t, u) ->
                 append(t, u.toString())
             }
             append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), accessSecret))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
-                val response = gson.fromJson(t, VivoResponse::class.java)
+                val response = gson.fromJson(t, VivoBaseResponse::class.java)
                 if (response.isSuccess()) {
-                    callback.onSuccess("上传成功")
+                    callback.onSuccess("")
                 } else {
                     callback.onFail(response.msg ?: "")
                 }
@@ -151,33 +144,70 @@ data class VivoMarket(
     }
 
     private fun uploadScreenShotList(
-        packageName: String, screenShotPathList: List<String>?, callback: Callback<List<VivoResponse>?>
+        packageName: String,
+        screenShotPathList: List<String>?,
+        onFail: ((String) -> Unit)? = null,
+        callback: (List<VivoUploadFileResponse>) -> Unit
+    ) {
+        uploadScreenShotList(packageName, screenShotPathList, object : SuccessCallback<List<VivoUploadFileResponse>> {
+            override fun onSuccess(t: List<VivoUploadFileResponse>) {
+                callback.invoke(t)
+            }
+
+            override fun onFail(msg: String) {
+                super.onFail(msg)
+                onFail?.invoke(msg)
+            }
+        })
+    }
+
+    private fun uploadScreenShotList(
+        packageName: String, screenShotPathList: List<String>?, callback: SuccessCallback<List<VivoUploadFileResponse>>
     ) {
         if (screenShotPathList.isNullOrEmpty()) {
-            println("没有截图需要上传")
-            callback.onSuccess(null)
+            callback.onSuccess(arrayListOf())
             return
         }
         println("需要上传${screenShotPathList.size}个图片")
-        val uploadResultList = arrayListOf<VivoResponse>()
+        val uploadResultList = arrayListOf<VivoUploadFileResponse>()
         screenShotPathList.map {
-            uploadScreenShot(packageName, it, callback = object : Callback<VivoResponse> {
-                override fun onSuccess(t: VivoResponse) {
-                    uploadResultList.add(t)
-                    println("上传成功${uploadResultList.size}个图片")
-                    if (uploadResultList.size == screenShotPathList.size) {
-                        callback.onSuccess(uploadResultList)
-                    }
+            uploadScreenShot(packageName, it, { error -> callback.onFail(error) }) { uploadFile ->
+                uploadResultList.add(uploadFile)
+                println("上传成功${uploadResultList.size}个图片")
+                if (uploadResultList.size == screenShotPathList.size) {
+                    callback.onSuccess(uploadResultList)
                 }
-
-                override fun onFail(msg: String) {
-                    callback.onFail(msg)
-                }
-            })
+            }
         }
     }
 
-    private fun uploadScreenShot(packageName: String, screenShotPath: String, callback: Callback<VivoResponse>) {
+    private fun uploadScreenShot(
+        packageName: String,
+        screenShotPath: String,
+        onFail: ((String) -> Unit)? = null,
+        callback: (VivoUploadFileResponse) -> Unit
+    ) {
+        uploadScreenShot(packageName, screenShotPath, object : SuccessCallback<VivoUploadFileResponse> {
+            override fun onSuccess(t: VivoUploadFileResponse) {
+                callback.invoke(t)
+            }
+
+            override fun onFail(msg: String) {
+                super.onFail(msg)
+                onFail?.invoke(msg)
+            }
+        })
+    }
+
+    private val uploadScreenShotMap = mutableMapOf<String, VivoUploadFileResponse>()
+    private fun uploadScreenShot(
+        packageName: String, screenShotPath: String, callback: SuccessCallback<VivoUploadFileResponse>
+    ) {
+        val successResult = uploadScreenShotMap[packageName + screenShotPath]
+        if (successResult != null) {
+            callback.onSuccess(successResult)
+            return
+        }
         Http.post(baseUrl, request = {
             setBody(MultiPartFormDataContent(formData {
                 val paramsMap = getScreenShotParams(packageName)
@@ -189,8 +219,9 @@ data class VivoMarket(
             }))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
-                val response = gson.fromJson(t, VivoResponse::class.java)
+                val response = gson.fromJson(t, VivoUploadFileResponse::class.java)
                 if (response.isSuccess()) {
+                    uploadScreenShotMap[packageName + screenShotPath] = response
                     callback.onSuccess(response)
                 } else {
                     callback.onFail(response.msg ?: "")
@@ -203,7 +234,65 @@ data class VivoMarket(
         })
     }
 
-    private fun uploadApk(apk: Apk, callback: Callback<VivoResponse>) {
+    private fun uploadApkList(
+        uploadData: UploadData, onFail: ((String) -> Unit)? = null, callback: (List<VivoUploadFileResponse>) -> Unit
+    ) {
+        uploadApkList(uploadData, object : SuccessCallback<List<VivoUploadFileResponse>> {
+            override fun onSuccess(t: List<VivoUploadFileResponse>) {
+                callback.invoke(t)
+            }
+
+            override fun onFail(msg: String) {
+                super.onFail(msg)
+                onFail?.invoke(msg)
+            }
+        })
+    }
+
+    private fun uploadApkList(uploadData: UploadData, callback: SuccessCallback<List<VivoUploadFileResponse>>) {
+        //先上传apk和相应的图片资源
+        val uploadList = uploadData.apk.abiApk.filter {
+            uploadAbi().contains(it.abi)
+        }
+        if (uploadList.size != uploadAbi().size) {
+            println("缺少相关Apk,不能上传,请检查，当前符合包：${uploadList.map { it.abi.type }}")
+            return
+        }
+        val uploadResultList = arrayListOf<VivoUploadFileResponse>()
+        println("上传Apk中，需要上传:${uploadList.map { it.abi.type }} ${uploadList.size}个Apk")
+        uploadList.forEach {
+            uploadApk(it, { error -> callback.onFail(error) }) { uploadFile ->
+                uploadResultList.add(uploadFile)
+                println("第${uploadResultList.size}个Apk上传完成")
+                if (uploadResultList.size == uploadList.size) {
+                    println("Apk全部上传完成")
+                    callback.onSuccess(uploadResultList)
+                }
+            }
+        }
+    }
+
+    private fun uploadApk(apk: Apk, onFail: ((String) -> Unit)? = null, callback: (VivoUploadFileResponse) -> Unit) {
+        uploadApk(apk, object : SuccessCallback<VivoUploadFileResponse> {
+            override fun onSuccess(t: VivoUploadFileResponse) {
+                callback.invoke(t)
+            }
+
+            override fun onFail(msg: String) {
+                super.onFail(msg)
+                onFail?.invoke(msg)
+            }
+        })
+    }
+
+    @Transient
+    private val uploadApkMap = mutableMapOf<Apk, VivoUploadFileResponse>()
+    private fun uploadApk(apk: Apk, callback: SuccessCallback<VivoUploadFileResponse>) {
+        val successResult = uploadApkMap[apk]
+        if (successResult != null) {
+            callback.onSuccess(successResult)
+            return
+        }
         Http.post(baseUrl, request = {
             timeout {
                 requestTimeoutMillis = 300000
@@ -238,8 +327,10 @@ data class VivoMarket(
             }
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
-                val response = gson.fromJson(t, VivoResponse::class.java)
+                val response = gson.fromJson(t, VivoUploadFileResponse::class.java)
                 if (response.isSuccess()) {
+                    response.abi = apk.abi
+                    uploadApkMap[apk] = response
                     callback.onSuccess(response)
                 } else {
                     callback.onFail(response.msg ?: "")
@@ -270,12 +361,24 @@ data class VivoMarket(
         })
     }
 
-    @Transient private val methodScreenShot = "app.upload.screenshot"
-    @Transient private val methodApkAll = "app.upload.apk.app"
-    @Transient private val methodApk32 = "app.upload.apk.app.32"
-    @Transient private val methodApk64 = "app.upload.apk.app.64"
-    @Transient private val methodUpdate = "app.sync.update.app"
-    @Transient private val methodQuery = "app.query.details"
+    @Transient
+    private val methodScreenShot = "app.upload.screenshot"
+
+    @Transient
+    private val methodApkAll = "app.upload.apk.app"
+
+    @Transient
+    private val methodApk32 = "app.upload.apk.app.32"
+
+    @Transient
+    private val methodApk64 = "app.upload.apk.app.64"
+
+    @Transient
+    private val methodUpdate = "app.sync.update.subpackage.app"
+
+    @Transient
+    private val methodQuery = "app.query.details"
+
     private fun getCommonParams(api: String) = mutableMapOf(
         Pair("access_key", accessKey),
         Pair("method", api),
@@ -301,15 +404,15 @@ data class VivoMarket(
     private fun getUpdateParams(
         packageName: String,
         versionCode: String,
-        serialnumber: String,
-        fileMd5: String,
+        serialnumber32: String,
+        serialnumber64: String,
         updateDesc: String,
         screenshot: String? = null
     ) = mutableMapOf(
         Pair("packageName", packageName),
         Pair("versionCode", versionCode),
-        Pair("apk", serialnumber),
-        Pair("fileMd5", fileMd5),
+        Pair("apk32", serialnumber32),
+        Pair("apk64", serialnumber64),
         Pair("onlineType", 1),
         Pair("updateDesc", updateDesc),     //新版说明（长度要求，5~200个字符）
         Pair("screenshot", screenshot),     //截图文件 上传接口返回的流水号（3-5张）多个用逗号分隔
@@ -428,17 +531,22 @@ data class VivoMarket(
 }
 
 @Serializable
-internal data class VivoResponse(
+internal data class VivoUploadFileResponse(
+    @kotlinx.serialization.Transient var abi: AbiType? = null
+) : VivoBaseResponse<VivoFileData>()
+
+@Serializable
+internal open class VivoBaseResponse<T>(
     val code: Int? = null,
     val subCode: String? = null,
     val msg: String? = null,
-    val data: Data? = null,
+    val data: T? = null,
 ) {
     fun isSuccess() = subCode == "0"
 }
 
 @Serializable
-internal data class Data(
+internal data class VivoFileData(
     val packageName: String? = null,
     val serialnumber: String? = null,
     val versionCode: String? = null,
