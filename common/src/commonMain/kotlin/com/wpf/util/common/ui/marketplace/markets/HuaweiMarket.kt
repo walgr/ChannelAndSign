@@ -92,9 +92,6 @@ data class HuaweiMarket(
     private fun getAppInfo(packageName: String, callback: SuccessCallback<String>) {
         getAppId(packageName, { callback.onFail(it) }) { appId ->
             Http.get("$baseUrl/publish/v2/app-info", request = {
-                timeout {
-                    requestTimeoutMillis = 30000
-                }
                 headers {
                     append("client_id", clientId)
                     bearerAuth(getEfficientToken())
@@ -148,9 +145,6 @@ data class HuaweiMarket(
         getToken({ callback.onFail(it) }) { token ->
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.put("$baseUrl/publish/v2/app-submit", {
-                    timeout {
-                        requestTimeoutMillis = 30000
-                    }
                     headers {
                         append("client_id", clientId)
                         bearerAuth(token)
@@ -205,9 +199,6 @@ data class HuaweiMarket(
         getToken({ callback.onFail(it) }) { token ->
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.put("$baseUrl/publish/v2/app-language-info", {
-                    timeout {
-                        requestTimeoutMillis = 30000
-                    }
                     headers {
                         append("client_id", clientId)
                         bearerAuth(token)
@@ -427,9 +418,6 @@ data class HuaweiMarket(
         getToken({ callback.onFail(it) }) { token ->
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.put("$baseUrl/publish/v2/app-file-info", {
-                    timeout {
-                        requestTimeoutMillis = 30000
-                    }
                     headers {
                         append("client_id", clientId)
                         bearerAuth(token)
@@ -489,9 +477,6 @@ data class HuaweiMarket(
         }
         getToken({ callback.onFail(it) }) { token ->
             Http.get("$baseUrl/publish/v2/upload-url", {
-                timeout {
-                    requestTimeoutMillis = 30000
-                }
                 headers {
                     append("client_id", clientId)
                     bearerAuth(token)
@@ -545,9 +530,6 @@ data class HuaweiMarket(
         }
         getToken({ callback.onFail(it) }) {
             Http.get("$baseUrl/publish/v2/appid-list", request = {
-                timeout {
-                    requestTimeoutMillis = 30000
-                }
                 headers {
                     append("client_id", clientId)
                     bearerAuth(it)
@@ -594,9 +576,6 @@ data class HuaweiMarket(
             return
         }
         Http.post("$baseUrl/oauth2/v1/token", request = {
-            timeout {
-                requestTimeoutMillis = 30000
-            }
             headers {
                 append(HttpHeaders.ContentType, ContentType.Application.Json.withCharset(Charsets.UTF_8))
             }

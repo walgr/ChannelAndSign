@@ -117,10 +117,6 @@ data class XiaomiMarket(
                 })
             }.toString()
             append("SIG", encryptByPublicKey(sigJson, pubKey))
-        }, {
-            timeout {
-                socketTimeoutMillis = 30000
-            }
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {
                 callback.onSuccess(MarketType.小米)

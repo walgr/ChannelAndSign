@@ -22,11 +22,11 @@ val client = HttpClient(CIO) {
 //        proxy = ProxyBuilder.http(
 //            "http://127.0.0.1:8888"
 //        )
-        requestTimeout = 30000
+        requestTimeout = 60000
     }
     install(HttpTimeout) {
-        requestTimeoutMillis = 30000
-        connectTimeoutMillis = 30000
+        requestTimeoutMillis = 60000
+        connectTimeoutMillis = 60000
     }
     install(ContentNegotiation) {
         json()
@@ -48,7 +48,7 @@ object Http {
                 } else {
                     callback?.onFail(responseData.bodyAsText())
                 }
-            }.getOrElse {
+            }.onFailure {
                 callback?.onFail(it.message ?: "")
             }
         }
@@ -63,7 +63,7 @@ object Http {
                 } else {
                     callback?.onFail(responseData.bodyAsText())
                 }
-            }.getOrElse {
+            }.onFailure {
                 callback?.onFail(it.message ?: "")
             }
         }
@@ -83,7 +83,7 @@ object Http {
                 } else {
                     callback?.onFail(responseData.bodyAsText())
                 }
-            }.getOrElse {
+            }.onFailure {
                 callback?.onFail(it.message ?: "")
             }
         }
@@ -98,7 +98,7 @@ object Http {
                 } else {
                     callback?.onFail(responseData.bodyAsText())
                 }
-            }.getOrElse {
+            }.onFailure {
                 callback?.onFail(it.message ?: "")
             }
         }
@@ -113,7 +113,7 @@ object Http {
                 } else {
                     callback?.onFail(responseData.bodyAsText())
                 }
-            }.getOrElse {
+            }.onFailure {
                 callback?.onFail(it.message ?: "")
             }
         }

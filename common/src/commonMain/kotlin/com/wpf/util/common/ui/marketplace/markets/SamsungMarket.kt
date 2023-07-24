@@ -155,9 +155,6 @@ data class SamsungMarket(
     private fun getAppInfo(callback: SuccessCallback<SamsungAppInfo>) {
         getToken {
             Http.get("$baseUrl/seller/contentInfo?contentId=${contentId}", {
-                timeout {
-                    requestTimeoutMillis = 30000
-                }
                 headers {
                     append(HttpHeaders.ContentType, ContentType.Application.Json)
                     append("service-account-id", serviceAccountId)
@@ -279,9 +276,6 @@ data class SamsungMarket(
                                 )
                             })))
                         }, {
-                            timeout {
-                                requestTimeoutMillis = 30000
-                            }
                             headers {
                                 append(HttpHeaders.ContentType, ContentType.Application.Json)
                                 append("service-account-id", serviceAccountId)

@@ -18,6 +18,7 @@ fun UploadData.upload() {
     ).query(this, object : Callback<MarketType> {
         override fun onSuccess(t: MarketType) {
             apk.uploadState.value = UploadState.UPLOAD_SUCCESS
+            apk.changeSelect(false)
         }
 
         override fun onFail(msg: String) {
