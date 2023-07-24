@@ -74,14 +74,17 @@ data class HuaweiMarket(
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32_64)
 
-    override fun query(uploadData: UploadData) {
-        super.query(uploadData)
+    override fun query(uploadData: UploadData, callback: Callback<MarketType>) {
+        super.query(uploadData, callback)
         if (uploadData.packageName().isNullOrEmpty()) return
         getAppInfo(uploadData.packageName()!!, object : SuccessCallback<String> {
             override fun onSuccess(t: String) {
-                println(t)
+                callback.onSuccess(MarketType.华为)
             }
 
+            override fun onFail(msg: String) {
+                callback.onFail(msg)
+            }
         })
     }
 

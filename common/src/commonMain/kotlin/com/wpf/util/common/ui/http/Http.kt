@@ -41,56 +41,80 @@ object Http {
 
     fun get(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
-            val responseData = client.get(serverUrl, request)
-            if (responseData.status == HttpStatusCode.OK) {
-                callback?.onSuccess(responseData.bodyAsText())
-            } else {
-                callback?.onFail(responseData.bodyAsText())
+            runCatching {
+                val responseData = client.get(serverUrl, request)
+                if (responseData.status == HttpStatusCode.OK) {
+                    callback?.onSuccess(responseData.bodyAsText())
+                } else {
+                    callback?.onFail(responseData.bodyAsText())
+                }
+            }.getOrElse {
+                callback?.onFail(it.message ?: "")
             }
         }
     }
 
     fun post(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
-            val responseData = client.post(serverUrl, request)
-            if (responseData.status == HttpStatusCode.OK) {
-                callback?.onSuccess(responseData.bodyAsText())
-            } else {
-                callback?.onFail(responseData.bodyAsText())
+            runCatching {
+                val responseData = client.post(serverUrl, request)
+                if (responseData.status == HttpStatusCode.OK) {
+                    callback?.onSuccess(responseData.bodyAsText())
+                } else {
+                    callback?.onFail(responseData.bodyAsText())
+                }
+            }.getOrElse {
+                callback?.onFail(it.message ?: "")
             }
-
         }
     }
 
-    fun submitForm(serverUrl: String, formParameters: Parameters, block: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
+    fun submitForm(
+        serverUrl: String,
+        formParameters: Parameters,
+        block: HttpRequestBuilder.() -> Unit = {},
+        callback: Callback<String>? = null
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
-            val responseData = client.submitForm(serverUrl, formParameters, block = block)
-            if (responseData.status == HttpStatusCode.OK) {
-                callback?.onSuccess(responseData.bodyAsText())
-            } else {
-                callback?.onFail(responseData.bodyAsText())
+            runCatching {
+                val responseData = client.submitForm(serverUrl, formParameters, block = block)
+                if (responseData.status == HttpStatusCode.OK) {
+                    callback?.onSuccess(responseData.bodyAsText())
+                } else {
+                    callback?.onFail(responseData.bodyAsText())
+                }
+            }.getOrElse {
+                callback?.onFail(it.message ?: "")
             }
         }
     }
 
     fun put(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
-            val responseData = client.put(serverUrl, request)
-            if (responseData.status == HttpStatusCode.OK) {
-                callback?.onSuccess(responseData.bodyAsText())
-            } else {
-                callback?.onFail(responseData.bodyAsText())
+            runCatching {
+                val responseData = client.put(serverUrl, request)
+                if (responseData.status == HttpStatusCode.OK) {
+                    callback?.onSuccess(responseData.bodyAsText())
+                } else {
+                    callback?.onFail(responseData.bodyAsText())
+                }
+            }.getOrElse {
+                callback?.onFail(it.message ?: "")
             }
         }
     }
 
     fun delete(serverUrl: String, request: HttpRequestBuilder.() -> Unit = {}, callback: Callback<String>? = null) {
         CoroutineScope(Dispatchers.IO).launch {
-            val responseData = client.delete(serverUrl, request)
-            if (responseData.status == HttpStatusCode.OK) {
-                callback?.onSuccess(responseData.bodyAsText())
-            } else {
-                callback?.onFail(responseData.bodyAsText())
+            runCatching {
+                val responseData = client.delete(serverUrl, request)
+                if (responseData.status == HttpStatusCode.OK) {
+                    callback?.onSuccess(responseData.bodyAsText())
+                } else {
+                    callback?.onFail(responseData.bodyAsText())
+                }
+            }.getOrElse {
+                callback?.onFail(it.message ?: "")
             }
         }
     }

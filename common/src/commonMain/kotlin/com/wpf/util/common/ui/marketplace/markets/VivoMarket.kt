@@ -46,9 +46,17 @@ data class VivoMarket(
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 
-    override fun query(uploadData: UploadData) {
-        super.query(uploadData)
-        query(uploadData.packageName()!!)
+    override fun query(uploadData: UploadData, callback: Callback<MarketType>) {
+        super.query(uploadData, callback)
+        query(uploadData.packageName()!!, object : Callback<String> {
+            override fun onSuccess(t: String) {
+                callback.onSuccess(MarketType.Vivo)
+            }
+
+            override fun onFail(msg: String) {
+                callback.onFail(msg)
+            }
+        })
 //        push(uploadData, object : Callback<MarketType> {
 //            override fun onSuccess(t: MarketType) {
 //                println("Vivo上传成功")
@@ -345,22 +353,14 @@ data class VivoMarket(
         })
     }
 
-    private fun query(packageName: String) {
+    private fun query(packageName: String, callback: Callback<String>) {
         Http.submitForm(baseUrl, formParameters = parameters {
             val paramsMap = getQueryParams(packageName)
             paramsMap.forEach { (t, u) ->
                 append(t, u)
             }
             append("sign", hmacSHA256(getUrlParamsFromMap(paramsMap), accessSecret))
-        }, callback = object : Callback<String> {
-            override fun onSuccess(t: String) {
-                println("Vivo接口请求成功,结果:$t")
-            }
-
-            override fun onFail(msg: String) {
-                println("Vivo接口请求失败,结果:$msg")
-            }
-        })
+        }, callback = callback)
     }
 
     @Transient

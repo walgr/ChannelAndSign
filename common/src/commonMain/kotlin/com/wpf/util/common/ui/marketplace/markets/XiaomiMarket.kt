@@ -97,43 +97,39 @@ data class XiaomiMarket(
         }
     }
 
-    override fun query(uploadData: UploadData) {
-        super.query(uploadData)
+    override fun query(uploadData: UploadData, callback: Callback<MarketType>) {
+        super.query(uploadData, callback)
         if (uploadData.apk.abiApk.isEmpty()) return
         val api = "/dev/query"
-        Http.submitForm(
-            baseUrl + api, parameters {
-                val requestDataJson = JsonObject().apply {
-                    addProperty("packageName", uploadData.packageName()!!)
-                    addProperty("userName", userName)
-                }.toString()
-                append("RequestData", requestDataJson)
-                val sigJson = JsonObject().apply {
-                    addProperty("password", password)
-                    add(
-                        "sig", JsonArray().apply {
-                            add(JsonObject().apply {
-                                addProperty("name", "RequestData")
-                                addProperty("hash", DigestUtils.md5Hex(requestDataJson))
-                            })
-                        }
-                    )
-                }.toString()
-                append("SIG", encryptByPublicKey(sigJson, pubKey))
-            }, {
-                timeout {
-                    socketTimeoutMillis = 30000
-                }
-            }, callback =
-            object : Callback<String> {
-                override fun onSuccess(t: String) {
-                    println("小米接口请求成功,结果:$t")
-                }
+        Http.submitForm(baseUrl + api, parameters {
+            val requestDataJson = JsonObject().apply {
+                addProperty("packageName", uploadData.packageName()!!)
+                addProperty("userName", userName)
+            }.toString()
+            append("RequestData", requestDataJson)
+            val sigJson = JsonObject().apply {
+                addProperty("password", password)
+                add("sig", JsonArray().apply {
+                    add(JsonObject().apply {
+                        addProperty("name", "RequestData")
+                        addProperty("hash", DigestUtils.md5Hex(requestDataJson))
+                    })
+                })
+            }.toString()
+            append("SIG", encryptByPublicKey(sigJson, pubKey))
+        }, {
+            timeout {
+                socketTimeoutMillis = 30000
+            }
+        }, callback = object : Callback<String> {
+            override fun onSuccess(t: String) {
+                callback.onSuccess(MarketType.小米)
+            }
 
-                override fun onFail(msg: String) {
-                    println("小米接口请求失败,结果:$msg")
-                }
-            })
+            override fun onFail(msg: String) {
+                callback.onFail(msg)
+            }
+        })
     }
 
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {

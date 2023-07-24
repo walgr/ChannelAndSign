@@ -122,14 +122,18 @@ data class SamsungMarket(
         }
     }
 
-    override fun query(uploadData: UploadData) {
-        super.query(uploadData)
+    override fun query(uploadData: UploadData, callback: Callback<MarketType>) {
+        super.query(uploadData, callback)
         if (uploadData.packageName().isNullOrEmpty()) return
         getAppInfo(object : SuccessCallback<SamsungAppInfo> {
             override fun onSuccess(t: SamsungAppInfo) {
-                println(t.appTitle)
+                callback.onSuccess(MarketType.三星)
             }
 
+            override fun onFail(msg: String) {
+                super.onFail(msg)
+                callback.onFail(msg)
+            }
         })
     }
 

@@ -40,11 +40,11 @@ data class OppoMarket(
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 
-    override fun query(uploadData: UploadData) {
-        super.query(uploadData)
+    override fun query(uploadData: UploadData, callback: Callback<MarketType>) {
+        super.query(uploadData, callback)
         if (uploadData.packageName().isNullOrEmpty()) return
-        getAppInfo(uploadData.packageName()!!) {
-
+        getAppInfo(uploadData.packageName()!!, { callback.onFail(it)} ) {
+            callback.onSuccess(MarketType.Oppo)
         }
     }
 

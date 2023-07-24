@@ -39,7 +39,7 @@ interface Market : SelectInterface {
 
     }
 
-    fun query(uploadData: UploadData) {
+    fun query(uploadData: UploadData, callback: Callback<MarketType>) {
 
     }
 

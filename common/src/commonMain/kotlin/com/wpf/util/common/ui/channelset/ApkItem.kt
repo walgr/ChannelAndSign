@@ -5,7 +5,14 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Checkbox
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -19,6 +26,8 @@ import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.marketplace.MarketPlaceViewModel
 import com.wpf.util.common.ui.widget.common.ItemView
 import com.wpf.util.common.ui.marketplace.markets.base.MarketApk
+import com.wpf.util.common.ui.marketplace.markets.base.UploadState
+import com.wpf.util.common.ui.marketplace.markets.base.UploadState.*
 import com.wpf.util.common.ui.widget.common.ShapeText
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -27,6 +36,7 @@ import com.wpf.util.common.ui.widget.common.ShapeText
 fun ApkItem(marketApk: MarketApk) {
 
     val isSelect = remember { marketApk.isSelectState }
+    val uploadState = remember { marketApk.uploadState }
 
     ItemView(modifier = Modifier.heightIn(min = 48.dp).combinedClickable(enabled = true, onClick = {
         isSelect.value = marketApk.click()
@@ -59,11 +69,29 @@ fun ApkItem(marketApk: MarketApk) {
                     }
                 }
             }
-            if (marketApk.marketType.canApi()) {
-                Box(
-                    modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd
-                ) {
-                    apiIcon()
+            Box(
+                modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd
+            ) {
+                Row {
+                    if (marketApk.marketType.canApi()) {
+                        apiIcon()
+                    }
+                    Box(modifier = Modifier.size(if (uploadState.value != UPLOAD_WAIT) 24.dp else 0.dp).offset(4.dp)) {
+                        when (uploadState.value) {
+                            UPLOADING -> {
+                                CircularProgressIndicator()
+                            }
+                            UPLOAD_SUCCESS -> {
+                                Icon(Icons.Outlined.CheckCircle, "成功")
+                            }
+                            UPLOAD_FAIL -> {
+                                Icon(Icons.Default.Close, "失败")
+                            }
+                            UPLOAD_WAIT -> {
+
+                            }
+                        }
+                    }
                 }
             }
         }
