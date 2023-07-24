@@ -267,7 +267,7 @@ data class HuaweiMarket(
                     setBody(MultiPartFormDataContent(formData {
                         append("authCode", uploadUrl.authCode)
                         append("fileCount", 1)
-                        append("file", File(apk.filePath).readBytes(), apkHeader(apk.fileName))
+                        append("file", File(apk.filePath).readBytes(), apkHeader(apk.filePath))
                     }))
                 }, object : Callback<String> {
                     override fun onSuccess(t: String) {

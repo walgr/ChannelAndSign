@@ -5,8 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.base.SelectInterface
 import com.wpf.util.common.ui.utils.Callback
@@ -56,11 +54,17 @@ interface Market : SelectInterface {
         }
     }
 
-    fun apkHeader(fileName: String): Headers {
+    fun apkHeader(filePath: String): Headers {
         return Headers.build {
             append(HttpHeaders.ContentType, "application/vnd.android.package-archive")
             append("type", "application/vnd.android.package-archive")
-            append(HttpHeaders.ContentDisposition, "filename=\"${fileName}\"")
+            append(HttpHeaders.ContentDisposition, "filename=\"${File(filePath).name}\"")
+        }
+    }
+
+    fun fileHeader(filePath: String): Headers {
+        return Headers.build {
+            append(HttpHeaders.ContentDisposition, "filename=\"${File(filePath).name}\"")
         }
     }
 

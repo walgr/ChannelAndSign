@@ -2,19 +2,25 @@ package com.wpf.util.common.ui.marketplace
 
 import com.wpf.util.common.ui.channelset.Channel
 import com.wpf.util.common.ui.channelset.ChannelSetViewModel
-import com.wpf.util.common.ui.marketplace.markets.HuaweiMarket
 import com.wpf.util.common.ui.marketplace.markets.base.Market
 import com.wpf.util.common.ui.marketplace.markets.base.MarketType
-import com.wpf.util.common.ui.marketplace.markets.XiaomiMarket
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.utils.settings
-import kotlin.reflect.KClass
 
 object MarketPlaceViewModel {
 
+    fun getDefaultSelectChannelList(): List<Channel> {
+        return ChannelSetViewModel.getChannelList().apply {
+            forEach {
+                it.changeSelect(false)
+            }
+            first().changeSelect(true)
+        }
+    }
+
     fun getSelectMarket(channelList: List<Channel>? = null, marketList: List<Market>? = null): Market {
         return getSelectMarket(
-            (channelList ?: ChannelSetViewModel.getChannelList()).find { it.isSelect }?.name ?: "",
+            (channelList ?: getDefaultSelectChannelList()).find { it.isSelect }?.name ?: "",
             (marketList ?: getCanApiMarketList()).find { it.isSelect }?.name ?: ""
         )
     }

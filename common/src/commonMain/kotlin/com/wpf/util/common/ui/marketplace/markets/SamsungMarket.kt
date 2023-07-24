@@ -371,7 +371,7 @@ data class SamsungMarket(
                     }
                     setBody(MultiPartFormDataContent(formData {
                         append("sessionId", fileId.sessionId!!)
-                        append("file", File(apk.filePath).readBytes(), apkHeader(apk.fileName))
+                        append("file", File(apk.filePath).readBytes(), apkHeader(apk.filePath))
                     }))
                 }, object : Callback<String> {
                     override fun onSuccess(t: String) {
@@ -518,6 +518,7 @@ data class SamsungMarket(
     }
 
     //过期时间
+    @Transient
     private val extTime = 20 * 60
 
     @Transient

@@ -32,7 +32,7 @@ fun ItemTextView(
             .then(modifier), contentAlignment = Alignment.CenterStart, content = content ?: {
             Text(
                 text = text,
-                modifier = Modifier.padding(start = 4.dp, end = 4.dp),
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp),
                 color = if (isSelect.value) Color.White else Color.Black,
                 fontSize = 14.sp
             )

@@ -29,7 +29,8 @@ import javax.crypto.spec.SecretKeySpec
 
 
 data class VivoMarket(
-    var accessKey: String = "", var accessSecret: String = ""
+    var accessKey: String = "",
+    var accessSecret: String = ""
 ) : Market {
 
     override var isSelect = false
@@ -168,14 +169,15 @@ data class VivoMarket(
             callback.onSuccess(arrayListOf())
             return
         }
-        println("需要上传${screenShotPathList.size}个图片")
+        println("需要上传${screenShotPathList.size}个")
         val uploadResultList = arrayListOf<VivoUploadFileResponse>()
         screenShotPathList.map {
             uploadScreenShot(packageName, it, { error -> callback.onFail(error) }) { uploadFile ->
                 uploadResultList.add(uploadFile)
-                println("上传成功${uploadResultList.size}个图片")
                 if (uploadResultList.size == screenShotPathList.size) {
                     callback.onSuccess(uploadResultList)
+                } else {
+                    println("当前:${it}上传成功， 还有${screenShotPathList.size - uploadResultList.size}个")
                 }
             }
         }
@@ -322,7 +324,7 @@ data class VivoMarket(
                 val curProcess = bytesSentTotal * 100 / contentLength
                 if (curProcess != lastProcess) {
                     lastProcess = curProcess
-                    println("上传进度:${curProcess}%")
+                    println("文件:${apk.fileName} 上传进度:${curProcess}%")
                 }
             }
         }, callback = object : Callback<String> {
