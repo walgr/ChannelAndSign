@@ -6,7 +6,6 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.wpf.util.common.MainView
-import com.wpf.util.common.ui.icon
 
 fun main() = application {
     Window(

@@ -3,7 +3,6 @@ pluginManagement {
         google()
         gradlePluginPortal()
         mavenCentral()
-        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 
     plugins {
@@ -15,7 +14,9 @@ pluginManagement {
 
 rootProject.name = "ChannelAndSign"
 
-include("base")
-include(":desktop", ":common")
-include("fileReplace")
-include("AXMLEditor3")
+include(":fileReplace")
+include(":AXMLEditor3")
+include(":base")
+include(":WebView")
+include(":common")
+include(":desktop")

@@ -41,8 +41,8 @@ data class VivoMarket(
     override val name: String = MarketType.Vivo.channelName
 
     @Transient
-    override val baseUrl: String = "https://sandbox-developer-api.vivo.com.cn/router/rest"
-//    override val baseUrl: String = "https://developer-api.vivo.com.cn/router/rest"
+//    override val baseUrl: String = "https://sandbox-developer-api.vivo.com.cn/router/rest"
+    override val baseUrl: String = "https://developer-api.vivo.com.cn/router/rest"
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
 

@@ -13,15 +13,16 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 val client = HttpClient(CIO) {
     engine {
-//        proxy = ProxyBuilder.http(
-//            "http://127.0.0.1:8888"
-//        )
+        proxy = ProxyBuilder.http(
+            "http://127.0.0.1:8888"
+        )
         requestTimeout = 60000
     }
     install(HttpTimeout) {

@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.compose")
 }
 
-group = "com.wpf.util"
+group = "com.wpf.compose.desktop"
 version = "1.0-SNAPSHOT"
 
 
@@ -28,6 +28,20 @@ compose.desktop {
     application {
         mainClass = "MainKt"
         nativeDistributions {
+            //配置需要的模块
+            modules(
+                "java.instrument",
+                "java.net.http",
+                "jdk.jfr",
+                "jdk.jsobject",
+                "jdk.unsupported",
+                "jdk.unsupported.desktop",
+                "jdk.xml.dom"
+            )
+            windows {
+                iconFile.set(project.file("icon.png"))
+                dirChooser = true
+            }
             targetFormats(TargetFormat.Exe)
             packageName = "ChannelAndSign"
             packageVersion = "1.0.0"

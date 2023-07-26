@@ -22,6 +22,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
+import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import java.io.File
 
@@ -144,8 +145,9 @@ data class HuaweiMarket(
     private fun submit(packageName: String, callback: SuccessCallback<String>) {
         getToken({ callback.onFail(it) }) { token ->
             getAppId(packageName, { callback.onFail(it) }) { appId ->
-                Http.put("$baseUrl/publish/v2/app-submit", {
+                Http.post("$baseUrl/publish/v2/app-submit", {
                     headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Json)
                         append("client_id", clientId)
                         bearerAuth(token)
                     }
@@ -199,14 +201,18 @@ data class HuaweiMarket(
         getToken({ callback.onFail(it) }) { token ->
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.put("$baseUrl/publish/v2/app-language-info", {
+                    timeout {
+                        requestTimeoutMillis = 60000
+                    }
                     headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Json.withCharset(Charsets.UTF_8))
                         append("client_id", clientId)
                         bearerAuth(token)
                     }
                     url {
                         parameters.append("appId", appId.getAppId())
                     }
-                    setBody(HuaweiUpdateLanguageBody(description))
+                    setBody(HuaweiUpdateLanguageBody(newFeatures = description))
                 }, object : Callback<String> {
                     override fun onSuccess(t: String) {
                         val response = gson.fromJson(t, HuaweiBaseResponse::class.java)
@@ -249,12 +255,21 @@ data class HuaweiMarket(
     private fun uploadApk(apk: Apk, callback: SuccessCallback<HuaweiUploadFileResponse>) {
         val successResult = uploadApkMap[apk]
         if (successResult != null) {
-            callback.onSuccess(successResult)
+            updateAppFileInfo(apk.packageName, HuaweiUpdateFileInfoBody(
+                5, listOf(
+                    HuaweiFileInfoBody(
+                        apk.fileName,
+                        successResult.result?.UploadFileRsp?.fileInfoList?.getOrNull(0)?.fileDestUlr ?: ""
+                    )
+                )
+            ), { callback.onFail(it) }) {
+                callback.onSuccess(successResult)
+            }
             return
         }
         getAppId(apk.packageName, { callback.onFail(it) }) { appId ->
             getUploadUrl(appId.getAppId(), "apk", apk, { callback.onFail(it) }) { uploadUrl ->
-                Http.put(uploadUrl.uploadUrl, {
+                Http.post(uploadUrl.uploadUrl, {
                     timeout {
                         requestTimeoutMillis = 120000
                     }
@@ -275,6 +290,7 @@ data class HuaweiMarket(
                                     )
                                 )
                             ), { callback.onFail(it) }) {
+                                uploadApkMap[apk] = response
                                 callback.onSuccess(response)
                             }
                         } else {
@@ -419,12 +435,13 @@ data class HuaweiMarket(
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.put("$baseUrl/publish/v2/app-file-info", {
                     headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Json)
                         append("client_id", clientId)
                         bearerAuth(token)
                     }
-                    parameters {
-                        append("appId", appId.getAppId())
-                        append("releaseType", "1")
+                    url {
+                        parameters.append("appId", appId.getAppId())
+                        parameters.append("releaseType", "1")
                     }
                     setBody(infoBody)
                 }, object : Callback<String> {

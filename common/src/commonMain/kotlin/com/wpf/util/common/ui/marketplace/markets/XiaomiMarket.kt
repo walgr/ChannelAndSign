@@ -132,15 +132,16 @@ data class XiaomiMarket(
         if (uploadData.apk.abiApk.isEmpty()) return
         val api = "/dev/push"
         Http.post(baseUrl + api, request = {
+            timeout {
+                requestTimeoutMillis = 120000
+            }
             setBody(MultiPartFormDataContent(formData {
                 val xiaomiPushData = XiaomiPushData(
                     userName = userName,
-                    appInfo = gson.toJson(
-                        XiaomiApk(
-                            appName = uploadData.apk.abiApk.getOrNull(0)?.appName ?: "",
-                            packageName = uploadData.apk.abiApk.getOrNull(0)?.packageName ?: "",
-                            updateDesc = uploadData.description,
-                        )
+                    appInfo = XiaomiApk(
+                        appName = uploadData.apk.abiApk.getOrNull(0)?.appName ?: "",
+                        packageName = uploadData.packageName()!!,
+                        updateDesc = uploadData.description,
                     ),
                     apk = File(uploadData.apk.abiApk.getOrNull(0)?.filePath ?: ""),
                     secondApk = if (uploadData.apk.abiApk.getOrNull(1) == null) null else File(
@@ -150,13 +151,48 @@ data class XiaomiMarket(
                     ),
                 )
                 val requestDataJson = gson.toJson(xiaomiPushData)
-                append("apk", xiaomiPushData.apk.readBytes())
+                append("RequestData", requestDataJson)
+                val SIGStr = JsonObject().apply {
+                    add("sig", JsonArray().apply {
+                        add(JsonObject().apply {
+                            addProperty("name", "RequestData")
+                            addProperty("hash", DigestUtils.md5Hex(requestDataJson))
+                        })
+                        uploadData.apk.abiApk.getOrNull(0)?.let {
+                            add(JsonObject().apply {
+                                addProperty("name", "apk")
+                                addProperty("hash", getFileMD5(it.filePath))
+                            })
+                        }
+                        uploadData.apk.abiApk.getOrNull(1)?.let {
+                            add(JsonObject().apply {
+                                addProperty("name", "secondApk")
+                                addProperty("hash", getFileMD5(it.filePath))
+                            })
+                        }
+//                        uploadData.apk.abiApk.getOrNull(0)?.appIcon?.let {
+//                            add(JsonObject().apply {
+//                                addProperty("name", "icon")
+//                                addProperty("hash", getFileMD5(it))
+//                            })
+//                        }
+                        uploadData.imageList?.forEachIndexed { index, imagePath ->
+                            add(JsonObject().apply {
+                                addProperty("name", "screenshot_${index + 1}")
+                                addProperty("hash", getFileMD5(imagePath))
+                            })
+                        }
+                    })
+                    addProperty("password", password)
+                }.toString()
+                append("SIG", encryptByPublicKey(SIGStr, pubKey))
+                append("apk", xiaomiPushData.apk.readBytes(), apkHeader(xiaomiPushData.apk.path))
                 xiaomiPushData.secondApk?.let {
-                    append("secondApk", xiaomiPushData.secondApk.readBytes())
+                    append("secondApk", xiaomiPushData.secondApk.readBytes(), apkHeader(xiaomiPushData.secondApk.path))
                 }
-                xiaomiPushData.icon?.let {
-                    append("icon", xiaomiPushData.icon.readBytes())
-                }
+//                xiaomiPushData.icon?.let {
+//                    append("icon", xiaomiPushData.icon.readBytes())
+//                }
                 xiaomiPushData.screenshot_1?.let {
                     append("screenshot_1", xiaomiPushData.screenshot_1.readBytes())
                 }
@@ -172,34 +208,6 @@ data class XiaomiMarket(
                 xiaomiPushData.screenshot_5?.let {
                     append("screenshot_5", xiaomiPushData.screenshot_5.readBytes())
                 }
-                append("RequestData", requestDataJson)
-                append("SIG", encryptByPublicKey(JsonObject().apply {
-                    add("sig", JsonArray().apply {
-                        add(JsonObject().apply {
-                            addProperty("name", "RequestData")
-                            addProperty("hash", DigestUtils.md5Hex(requestDataJson))
-                        })
-                        uploadData.apk.abiApk.forEach {
-                            add(JsonObject().apply {
-                                addProperty("name", "apk")
-                                addProperty("hash", getFileMD5(it.filePath))
-                            })
-                        }
-                        uploadData.apk.abiApk.getOrNull(0)?.appIcon?.let {
-                            add(JsonObject().apply {
-                                addProperty("name", "icon")
-                                addProperty("hash", getFileMD5(it))
-                            })
-                        }
-                        uploadData.imageList?.forEachIndexed { index, imagePath ->
-                            add(JsonObject().apply {
-                                addProperty("name", "screenshot_${index + 1}")
-                                addProperty("hash", getFileMD5(imagePath))
-                            })
-                        }
-                    })
-                    addProperty("password", password)
-                }.toString(), pubKey))
             }))
         }, callback = object : Callback<String> {
             override fun onSuccess(t: String) {

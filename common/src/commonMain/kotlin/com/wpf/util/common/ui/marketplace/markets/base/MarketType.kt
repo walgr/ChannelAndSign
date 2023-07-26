@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
  * 支持平台
  */
 enum class MarketType(val channelName: String, val url: String = "", val market: KClass<out Market> = UnknownMarket::class) {
-    `360`("360", "https://i.360.cn/login/?src=pcw_open_app&destUrl=https%3A%2F%2Fdev.360.cn%3A443%2Fmod4%2Fmobilenavs%2Findex"),
+    qh360("360", market = QH360Market::class),
     百度("Baidu", "https://app.baidu.com/newapp/index"),
     应用宝("QQ", "https://open.qq.com/login"),
     魅族("Meizu", "https://login.flyme.cn/"),

@@ -32,7 +32,7 @@ fun size44(content: @Composable BoxScope.() -> Unit) {
 @Composable
 fun icon() = size44 {
     Image(
-        painterResource("/image/icon.png"), contentDescription = "icon", modifier = Modifier.fillMaxSize()
+        painterResource("/icon.png"), contentDescription = "icon", modifier = Modifier.fillMaxSize()
     )
 }
 
