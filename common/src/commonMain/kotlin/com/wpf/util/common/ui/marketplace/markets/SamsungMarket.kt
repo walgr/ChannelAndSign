@@ -181,7 +181,7 @@ data class SamsungMarket(
 
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.packageName().isNullOrEmpty()) return
-        update(uploadData, {}) {
+        update(uploadData, { callback.onFail(it) }) {
             submit(callback = object : SuccessCallback<String> {
                 override fun onSuccess(t: String) {
                     callback.onSuccess(MarketType.三星)
@@ -189,7 +189,8 @@ data class SamsungMarket(
 
                 override fun onFail(msg: String) {
                     super.onFail(msg)
-                    callback.onFail(name)
+                    println(msg)
+                    callback.onFail("$name:$msg")
                 }
 
             })
@@ -352,7 +353,7 @@ data class SamsungMarket(
     }
 
     private fun uploadApk(apk: Apk, callback: SuccessCallback<SamsungUploadFileResponse>) {
-        createUploadFileId(onFail = {
+        createUploadFileId(apk.filePath, onFail = {
             callback.onFail(it)
         }) { fileId ->
             getToken(onFail = {
@@ -360,7 +361,7 @@ data class SamsungMarket(
             }) {
                 Http.post(fileId.url!!, {
                     timeout {
-                        requestTimeoutMillis = 120000
+                        requestTimeoutMillis = 180000
                     }
                     headers {
                         append(HttpHeaders.ContentType, ContentType.MultiPart.FormData)
@@ -444,7 +445,7 @@ data class SamsungMarket(
     }
 
     private fun uploadScreenShot(screenShotPath: String, callback: SuccessCallback<SamsungUploadFileResponse>) {
-        createUploadFileId(onFail = {
+        createUploadFileId(screenShotPath, onFail = {
             callback.onFail(it)
         }) { fileId ->
             getToken(onFail = {
@@ -483,9 +484,9 @@ data class SamsungMarket(
     }
 
     private fun createUploadFileId(
-        onFail: ((String) -> Unit)? = null, callback: (SamsungCreateFileIdResponse) -> Unit
+        key: Any, onFail: ((String) -> Unit)? = null, callback: (SamsungCreateFileIdResponse) -> Unit
     ) {
-        createUploadFileId(object : SuccessCallback<SamsungCreateFileIdResponse> {
+        createUploadFileId(key, object : SuccessCallback<SamsungCreateFileIdResponse> {
             override fun onSuccess(t: SamsungCreateFileIdResponse) {
                 callback.invoke(t)
             }
@@ -497,22 +498,40 @@ data class SamsungMarket(
         })
     }
 
-    private fun createUploadFileId(callback: SuccessCallback<SamsungCreateFileIdResponse>) {
-        Http.post("$baseUrl/seller/createUploadSessionId", callback = object : Callback<String> {
-            override fun onSuccess(t: String) {
-                val response = gson.fromJson(t, SamsungCreateFileIdResponse::class.java)
-                if (response?.sessionId?.isEmpty() == false && response.url?.isEmpty() == false) {
-                    callback.onSuccess(response)
-                } else {
-                    callback.onFail("")
+    @Transient
+    private val uploadFileIdMap = mutableMapOf<Any, SamsungCreateFileIdResponse>()
+    private fun createUploadFileId(key: Any, callback: SuccessCallback<SamsungCreateFileIdResponse>) {
+        val successResult = uploadFileIdMap[key]
+        if (successResult != null) {
+            callback.onSuccess(successResult)
+            return
+        }
+        getToken {
+            Http.post("$baseUrl/seller/createUploadSessionId", {
+                timeout {
+                    requestTimeoutMillis = 30000
                 }
-            }
+                headers {
+                    append("service-account-id", serviceAccountId)
+                    bearerAuth(it)
+                }
+            }, callback = object : Callback<String> {
+                override fun onSuccess(t: String) {
+                    val response = gson.fromJson(t, SamsungCreateFileIdResponse::class.java)
+                    if (response?.sessionId?.isEmpty() == false && response.url?.isEmpty() == false) {
+                        uploadFileIdMap[key] = response
+                        callback.onSuccess(response)
+                    } else {
+                        callback.onFail("")
+                    }
+                }
 
-            override fun onFail(msg: String) {
-                callback.onFail(msg)
-            }
+                override fun onFail(msg: String) {
+                    callback.onFail(msg)
+                }
 
-        })
+            })
+        }
     }
 
     //过期时间
