@@ -133,7 +133,7 @@ data class XiaomiMarket(
         val api = "/dev/push"
         Http.post(baseUrl + api, request = {
             timeout {
-                requestTimeoutMillis = 120000
+                requestTimeoutMillis = 300000
             }
             setBody(MultiPartFormDataContent(formData {
                 val xiaomiPushData = XiaomiPushData(

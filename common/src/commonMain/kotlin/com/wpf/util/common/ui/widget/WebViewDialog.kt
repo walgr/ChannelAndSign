@@ -9,8 +9,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.rememberDialogState
+import androidx.compose.ui.window.*
 import rememberWebViewNavigator
 import rememberWebViewState
 
@@ -26,7 +25,7 @@ fun ShowWebView(
     val showDialog = remember { show }
 
     if (showDialog.value) {
-        Dialog(state = rememberDialogState(
+        Window(state = rememberWindowState(
             width = 1280.dp,
             height = 960.dp,
         ), title = title, onCloseRequest = {
@@ -39,7 +38,7 @@ fun ShowWebView(
 }
 
 @Composable
-fun WebViewShow(url: String, cookies: MutableMap<String, String>?= null, urlChange: UrlChange? = null) {
+fun WebViewShow(url: String, cookies: MutableMap<String, String>? = null, urlChange: UrlChange? = null) {
     val browserUrl = rememberWebViewState(url, urlChange = urlChange)
     WebView(
         browserUrl,

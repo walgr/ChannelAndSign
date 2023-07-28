@@ -1,6 +1,6 @@
 package com.wpf.util.common.ui.marketplace
 
-import com.wpf.util.common.ui.channelset.Channel
+import com.wpf.util.common.ui.channelset.Client
 import com.wpf.util.common.ui.channelset.ChannelSetViewModel
 import com.wpf.util.common.ui.marketplace.markets.base.Market
 import com.wpf.util.common.ui.marketplace.markets.base.MarketType
@@ -9,8 +9,8 @@ import com.wpf.util.common.ui.utils.settings
 
 object MarketPlaceViewModel {
 
-    fun getDefaultSelectChannelList(): List<Channel> {
-        return ChannelSetViewModel.getChannelList().apply {
+    fun getDefaultSelectChannelList(): List<Client> {
+        return ChannelSetViewModel.getClientList().apply {
             forEach {
                 it.changeSelect(false)
             }
@@ -18,9 +18,9 @@ object MarketPlaceViewModel {
         }
     }
 
-    fun getSelectMarket(channelList: List<Channel>? = null, marketList: List<Market>? = null): Market {
+    fun getSelectMarket(clientList: List<Client>? = null, marketList: List<Market>? = null): Market {
         return getSelectMarket(
-            (channelList ?: getDefaultSelectChannelList()).find { it.isSelect }?.name ?: "",
+            (clientList ?: getDefaultSelectChannelList()).find { it.isSelect }?.name ?: "",
             (marketList ?: getCanApiMarketList()).find { it.isSelect }?.name ?: ""
         )
     }
@@ -63,8 +63,8 @@ object MarketPlaceViewModel {
         return marketList
     }
 
-    fun saveMarketList(channelList: List<Channel>, marketSelect: Market) {
-        val channelSelect = channelList.find { it.isSelect } ?: return
+    fun saveMarketList(clientList: List<Client>, marketSelect: Market) {
+        val channelSelect = clientList.find { it.isSelect } ?: return
         val key = "Channel${channelSelect.name}Market${marketSelect.name}"
         marketMap.remove(key)
         settings.putString(key, gson.toJson(marketSelect))

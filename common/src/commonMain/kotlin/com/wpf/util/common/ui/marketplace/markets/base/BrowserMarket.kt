@@ -1,14 +1,10 @@
 package com.wpf.util.common.ui.marketplace.markets.base
 
-import androidx.compose.material.Button
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.remember
-import com.wpf.util.common.ui.widget.ShowWebView
 import javafx.scene.web.WebView
 
 interface BrowserMarket : Market {
+
 
     override val baseUrl: String
         get() = ""
@@ -19,20 +15,34 @@ interface BrowserMarket : Market {
 
     val cookies: MutableMap<String, String>
 
-    @Composable
-    override fun dispositionViewInBox(market: Market) {
-        super.dispositionViewInBox(market)
-        val showBrowser = remember { showBrowserS }
-        Button(onClick = {
-            showBrowser.value = true
-        }) {
-            Text("获取Token")
-        }
-        ShowWebView(showBrowserS, url = browserUrl, cookies = cookies, urlChange = ::onWebUrlChange)
-    }
+    val canPush: Boolean
 
     fun onWebUrlChange(url: String?, webView: WebView) {
 
+    }
+
+    fun WebView.querySelector(selector: String, attribute: String): String? {
+        return this.engine.executeScript("document.querySelector('a[class=\\'$selector\\']')?.$attribute")?.toString()
+    }
+
+    fun WebView.setElementValue(name: String, value: String) {
+        if (findElements(name)) {
+            this.engine.executeScript("document.getElementsByName('${name}').item(0).value = '${value}'")
+        }
+    }
+
+    fun WebView.setElementCheck(name: String, value: Boolean) {
+        if (findElements(name)) {
+            this.engine.executeScript("document.getElementsByName('${name}').item(0).checked = '${value}'")
+        }
+    }
+
+    fun WebView.findElements(name: String): Boolean {
+        val returnObj = this.engine.executeScript("document.getElementsByName('${name}')?.length")
+        return returnObj != "undefined" && (returnObj != 0 || returnObj != "0")
+    }
+    fun WebView.buttonSubmit(name: String) {
+        this.engine.executeScript("\$('.$name').submit();")
     }
 
 }

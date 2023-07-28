@@ -6,14 +6,15 @@ import com.wpf.util.common.ui.utils.Callback
 
 data class UploadData(
     val apk: MarketApk,
-    val description: String,
+    val description: String,  //更新文案
+    val leaveMessage: String?, //留言
     val imageList: List<String>? = null
 )
 
 fun UploadData.upload() {
     apk.uploadState.value = UploadState.UPLOADING
     MarketPlaceViewModel.getSelectMarket(
-        ChannelSetViewModel.getChannelList().find { it.isSelect }?.name ?: "",
+        ChannelSetViewModel.getClientList().find { it.isSelect }?.name ?: "",
         MarketPlaceViewModel.getCanApiMarketList().find { it.name == apk.channelName }?.name ?: ""
     ).push(this, object : Callback<MarketType> {
         override fun onSuccess(t: MarketType) {

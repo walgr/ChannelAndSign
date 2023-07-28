@@ -82,6 +82,7 @@ data class VivoMarket(
                     uploadResultList.find { find -> find.abi == AbiType.Abi32 }?.data?.serialnumber!!,
                     uploadResultList.find { find -> find.abi == AbiType.Abi64 }?.data?.serialnumber!!,
                     uploadData.description,
+                    uploadData.leaveMessage,
                     screenshot = screenFiles.map { response ->
                         response.data?.serialnumber
                     }.joinToString(separator = ","),
@@ -98,6 +99,7 @@ data class VivoMarket(
         serialnumber32: String,
         serialnumber64: String,
         updateDesc: String,
+        remark: String?,
         screenshot: String? = null,
         onFail: ((String) -> Unit)? = null,
         callback: (String) -> Unit
@@ -107,6 +109,7 @@ data class VivoMarket(
             serialnumber32,
             serialnumber64,
             updateDesc,
+            remark,
             screenshot,
             object : SuccessCallback<String> {
                 override fun onSuccess(t: String) {
@@ -126,12 +129,21 @@ data class VivoMarket(
         serialnumber32: String,
         serialnumber64: String,
         updateDesc: String,
+        remark: String?,
         screenshot: String? = null,
         callback: SuccessCallback<String>
     ) {
         Http.submitForm(baseUrl, formParameters = parameters {
             val paramsMap =
-                getUpdateParams(packageName, versionCode, serialnumber32, serialnumber64, updateDesc, screenshot)
+                getUpdateParams(
+                    packageName,
+                    versionCode,
+                    serialnumber32,
+                    serialnumber64,
+                    updateDesc,
+                    remark,
+                    screenshot
+                )
             paramsMap.forEach { (t, u) ->
                 append(t, u.toString())
             }
@@ -409,6 +421,7 @@ data class VivoMarket(
         serialnumber32: String,
         serialnumber64: String,
         updateDesc: String,
+        remark: String?,
         screenshot: String? = null
     ) = mutableMapOf(
         Pair("packageName", packageName),
@@ -417,6 +430,7 @@ data class VivoMarket(
         Pair("apk64", serialnumber64),
         Pair("onlineType", 1),
         Pair("updateDesc", updateDesc),     //新版说明（长度要求，5~200个字符）
+        Pair("remark", remark),             //审核留言  （长度要求，10~200个字符）
         Pair("screenshot", screenshot),     //截图文件 上传接口返回的流水号（3-5张）多个用逗号分隔
     ).plus(
         getCommonParams(methodUpdate)

@@ -4,7 +4,7 @@ import com.wpf.util.common.ui.base.Group
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Channel(
+class Client(
     override var name: String = "",
     override var isSelect: Boolean = false,
     var channelPath: String = ""

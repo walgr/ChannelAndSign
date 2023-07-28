@@ -1,10 +1,7 @@
 package com.wpf.util.common.ui.marketplace.markets
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import com.google.gson.reflect.TypeToken
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.base.Apk
@@ -22,7 +19,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import java.io.File
 
@@ -114,12 +111,16 @@ data class HuaweiMarket(
         }
     }
 
+
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         updateAppLanguageInfo(uploadData.packageName()!!, uploadData.description, { callback.onFail(it) }) {
             uploadScreenShotList(uploadData, { callback.onFail(it) }) {
                 uploadApk(uploadData.apk.abiApk.find { uploadAbi().contains(it.abi) }!!, { callback.onFail(it) }) {
-                    submit(uploadData.packageName()!!, { callback.onFail(it) }) {
-                        callback.onSuccess(MarketType.华为)
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(10000)
+                        submit(uploadData.packageName()!!, { callback.onFail(it) }) {
+                            callback.onSuccess(MarketType.华为)
+                        }
                     }
                 }
             }

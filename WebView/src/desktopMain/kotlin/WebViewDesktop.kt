@@ -74,6 +74,8 @@ internal fun WebViewDesktop(
 
     SwingPanel(factory = {
         JFXPanel().also { jfxP ->
+            //解决第二次打开白屏问题
+            Platform.setImplicitExit(false)
             Platform.runLater {
                 val rootVewView = WebView()
                 webView = rootVewView
@@ -99,35 +101,29 @@ internal fun WebViewDesktop(
                 jfxP.scene = scene
             }
         }
-    }, modifier = modifier) { jfxP ->
-
-    }
+    }, modifier = modifier)
 }
 
 
 fun addEngineListener(
-    webView: WebView,
-    state: WebViewState,
-    navigator: WebViewNavigator
+    webView: WebView, state: WebViewState, navigator: WebViewNavigator
 ) {
     val engine = webView.engine
-    engine
     engine.loadWorker.exceptionProperty().addListener { _, _, newError ->
-        println("page load error : $newError")
+//        println("page load error : $newError")
         state.errorsForCurrentRequest.add(
             WebViewError(
-                engine.getCurrentUrl(),
-                newError.message.toString()
+                engine.getCurrentUrl(), newError?.message ?: ""
             )
         )
     }
     engine.setOnError { error -> println("onError : $error") }
     engine.titleProperty().addListener { observable, oldValue, newValue ->
-        println("page load titleProperty : $newValue")
+//        println("page load titleProperty : $newValue")
         state.pageTitle = newValue
     }
     engine.loadWorker.progressProperty().addListener { observable, oldValue, newValue ->
-        println("page load progressProperty : $newValue")
+//        println("page load progressProperty : $newValue")
         if (newValue.toFloat() >= 0f) {
             state.loadingState = Loading(newValue.toFloat())
 
@@ -140,10 +136,7 @@ fun addEngineListener(
     //当加载了新的界面
     engine.history.currentIndexProperty().addListener { observable, oldValue, newValue ->
         val url = engine.getCurrentUrl()
-        if (url != null &&
-            !url.startsWith("data:text/html") &&
-            state.content.getCurrentUrl() != url
-        ) {
+        if (url != null && !url.startsWith("data:text/html") && state.content.getCurrentUrl() != url) {
             state.content = state.content.withUrl(url)
         }
     }
@@ -335,17 +328,14 @@ actual data class WebViewError(
  */
 @Composable
 actual fun rememberWebViewState(
-    url: String,
-    additionalHttpHeaders: Map<String, String>,
-    urlChange: UrlChange?
+    url: String, additionalHttpHeaders: Map<String, String>, urlChange: UrlChange?
 ): WebViewState =
 // Rather than using .apply {} here we will recreate the state, this prevents
     // a recomposition loop when the webview updates the url itself.
     remember(url, additionalHttpHeaders) {
         WebViewState(
             WebContent.Url(
-                url = url,
-                additionalHttpHeaders = additionalHttpHeaders
+                url = url, additionalHttpHeaders = additionalHttpHeaders
             )
         ).apply {
             this.urlChange = urlChange
@@ -358,10 +348,9 @@ actual fun rememberWebViewState(
  * @param data The uri to load in the WebView
  */
 @Composable
-actual fun rememberWebViewStateWithHTMLData(data: String, baseUrl: String?): WebViewState =
-    remember(data) {
-        WebViewState(WebContent.Data(data))
-    }
+actual fun rememberWebViewStateWithHTMLData(data: String, baseUrl: String?): WebViewState = remember(data) {
+    WebViewState(WebContent.Data(data))
+}
 
 
 

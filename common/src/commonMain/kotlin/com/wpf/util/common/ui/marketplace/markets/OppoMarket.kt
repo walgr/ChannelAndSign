@@ -9,11 +9,9 @@ import com.google.gson.reflect.TypeToken
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.*
-import com.wpf.util.common.ui.utils.Callback
-import com.wpf.util.common.ui.utils.SuccessCallback
-import com.wpf.util.common.ui.utils.gson
-import com.wpf.util.common.ui.utils.settings
+import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.InputView
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -43,7 +41,7 @@ data class OppoMarket(
     override fun query(uploadData: UploadData, callback: Callback<MarketType>) {
         super.query(uploadData, callback)
         if (uploadData.packageName().isNullOrEmpty()) return
-        getAppInfo(uploadData.packageName()!!, { callback.onFail(it)} ) {
+        getAppInfo(uploadData.packageName()!!, { callback.onFail(it) }) {
             callback.onSuccess(MarketType.Oppo)
         }
     }
@@ -95,24 +93,75 @@ data class OppoMarket(
         }
     }
 
+    private fun getMultiAppInfo(
+        packageName: String,
+        onFail: ((String) -> Unit)? = null,
+        callback: (OppoAppInfoData) -> Unit
+    ) {
+        getMultiAppInfo(packageName, object : SuccessCallback<OppoAppInfoData> {
+            override fun onSuccess(t: OppoAppInfoData) {
+                callback.invoke(t)
+            }
+
+            override fun onFail(msg: String) {
+                super.onFail(msg)
+                onFail?.invoke(msg)
+            }
+        })
+    }
+
+    private fun getMultiAppInfo(packageName: String, callback: SuccessCallback<OppoAppInfoData>) {
+        getToken { token ->
+            Http.get("$baseUrl/resource/v1/app/multi-info", {
+                url {
+                    val parameterList = getCommonParams(token).plus(
+                        mapOf("pkg_name" to packageName)
+                    )
+                    parameterList.forEach { (t, u) ->
+                        parameters.append(t, u)
+                    }
+                    parameters.append("api_sign", hmacSHA256(getUrlParamsFromMap(parameterList), clientSecret))
+                }
+            }, callback = object : Callback<String> {
+                override fun onSuccess(t: String) {
+                    val response = gson.fromJson<OppoBaseResponse<OppoAppInfoData>>(
+                        t, object : TypeToken<OppoBaseResponse<OppoAppInfoData>>() {}.type
+                    )
+                    if (response.isSuccess() && response.data != null) {
+                        callback.onSuccess(response.data)
+                    } else {
+                        callback.onFail("")
+                    }
+                }
+
+                override fun onFail(msg: String) {
+                    callback.onFail(msg)
+                }
+
+            })
+        }
+    }
+
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.packageName().isNullOrEmpty()) return
-        uploadFiles(uploadData.apk.abiApk.map { it.filePath }, "apk", {
-            callback.onFail("${name}:${it}")
-        }) { uploadApkList ->
-            uploadFiles(uploadData.imageList, "photo", {
+        getMultiAppInfo(uploadData.packageName()!!, { callback.onFail(it) }) { appInfo ->
+            uploadFiles(uploadData.apk.abiApk.map { it.filePath }, "apk", {
                 callback.onFail("${name}:${it}")
-            }) { uploadPhotoList ->
-                upload(uploadData, uploadApkList, uploadPhotoList, {
-                    getTaskStateResult(uploadData.packageName()!!, uploadData.versionCode()!!) {
-                        if (it.task_state == "2") {
-                            callback.onSuccess(MarketType.Oppo)
-                        } else {
-                            callback.onFail("${name}:${it.err_msg}")
+            }) { uploadApkList ->
+                uploadFiles(uploadData.imageList, "photo", {
+                    callback.onFail("${name}:${it}")
+                }) { uploadPhotoList ->
+                    upload(uploadData, appInfo, uploadApkList, uploadPhotoList, {
+                        getTaskState(uploadData.packageName()!!, uploadData.versionCode()!!) {
+                            if (it.task_state == "2") {
+                                callback.onSuccess(MarketType.Oppo)
+                            } else {
+                                callback.onFail("${name}:${it.err_msg}")
+                            }
                         }
+                    }) {
+                        callback.onSuccess(MarketType.Oppo)
                     }
-                }) {
-                    callback.onSuccess(MarketType.Oppo)
                 }
             }
         }
@@ -120,12 +169,13 @@ data class OppoMarket(
 
     private fun upload(
         uploadData: UploadData,
+        appInfo: OppoAppInfoData,
         uploadApkList: List<OppoUploadFileData>,
         uploadPhotoList: List<OppoUploadFileData>,
         onFail: ((String) -> Unit)? = null,
         callback: (OppoUpdateResponse) -> Unit
     ) {
-        upload(uploadData, uploadApkList, uploadPhotoList, object : SuccessCallback<OppoUpdateResponse> {
+        upload(uploadData, appInfo, uploadApkList, uploadPhotoList, object : SuccessCallback<OppoUpdateResponse> {
             override fun onSuccess(t: OppoUpdateResponse) {
                 callback.invoke(t)
             }
@@ -141,16 +191,14 @@ data class OppoMarket(
     private val abiMap = mapOf(AbiType.Abi32 to 32, AbiType.Abi64 to 64, AbiType.Abi32_64 to 0)
     private fun upload(
         uploadData: UploadData,
+        appInfo: OppoAppInfoData,
         uploadApkList: List<OppoUploadFileData>,
         uploadPhotoList: List<OppoUploadFileData>,
         callback: SuccessCallback<OppoUpdateResponse>
     ) {
         getToken { token ->
             Http.post("$baseUrl/resource/v1/app/upd", {
-                headers {
-                    append(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded)
-                }
-                formData {
+                setBody(MultiPartFormDataContent(formData {
                     val parameterList = getCommonParams(token).plus(
                         mapOf(
                             "pkg_name" to uploadData.packageName()!!,
@@ -163,16 +211,28 @@ data class OppoMarket(
                                 )
                             }),
                             "update_desc" to uploadData.description,
+                            "online_type" to "1",
                             "pic_url" to uploadPhotoList.map {
                                 it.url
                             }.joinToString(",")
                         )
-                    )
+                    ).toMutableMap()
+                    parameterList["test_desc"] = uploadData.leaveMessage ?: ""
+                    parameterList["second_category_id"] = appInfo.second_category_id
+                    parameterList["third_category_id"] = appInfo.third_category_id
+                    parameterList["summary"] = appInfo.summary
+                    parameterList["detail_desc"] = appInfo.detail_desc
+                    parameterList["privacy_source_url"] = appInfo.privacy_source_url
+                    parameterList["icon_url"] = appInfo.icon_url
+                    parameterList["pic_url"] = appInfo.pic_url
+                    parameterList["copyright_url"] = appInfo.copyright_url
+                    parameterList["age_level"] = appInfo.age_level
+                    parameterList["adaptive_equipment"] = appInfo.adaptive_equipment
                     parameterList.forEach { (t, u) ->
                         append(t, u)
                     }
                     append("api_sign", hmacSHA256(getUrlParamsFromMap(parameterList), clientSecret))
-                }
+                }))
             }, callback = object : Callback<String> {
                 override fun onSuccess(t: String) {
                     val response = gson.fromJson<OppoBaseResponse<OppoUpdateResponse>>(
@@ -225,7 +285,7 @@ data class OppoMarket(
     private fun getTaskState(packageName: String, versionCode: String, callback: SuccessCallback<OppoTaskStateData>) {
         getToken { token ->
             Http.post("$baseUrl/resource/v1/app/task-state", {
-                formData {
+                setBody(MultiPartFormDataContent(formData {
                     val parameterList = getCommonParams(token).plus(
                         mapOf("pkg_name" to packageName, "version_code" to versionCode)
                     )
@@ -233,7 +293,7 @@ data class OppoMarket(
                         append(t, u)
                     }
                     append("api_sign", hmacSHA256(getUrlParamsFromMap(parameterList), clientSecret))
-                }
+                }))
             }, object : Callback<String> {
                 override fun onSuccess(t: String) {
                     val response = gson.fromJson<OppoBaseResponse<OppoTaskStateData>>(
@@ -286,6 +346,7 @@ data class OppoMarket(
                 uploadFile(it, type, { error -> callback.onFail(error) }) { uploadFile ->
                     successResult.add(uploadFile)
                     if (successResult.size == filePathList.size) {
+                        println("全部已上传")
                         callback.onSuccess(successResult)
                     } else {
                         println("当前:${it}上传成功， 还有${filePathList.size - successResult.size}个")
@@ -313,10 +374,49 @@ data class OppoMarket(
         })
     }
 
+    @Transient
+    private val uploadFileMap: MutableMap<String, OppoUploadFileData> = getUploadFileMap()
+
+    private fun getUploadFileMap(): MutableMap<String, OppoUploadFileData> {
+        val mapJson = settings.getString("${name}UploadFileMap", "{}")
+        if (mapJson == "{}") {
+            return mutableMapOf(
+                "D:\\企业上传\\app-arm64-v8a-release_241_jiagu_8_Market_Oppo_sign.apk" to gson.fromJson(
+                    "{\"url\":\"http://storedl1.nearme.com.cn/apk/tmp_apk/202307/28/fc88cec74d47e42c724424f4d0afb499.apk\",\"uri_path\":\"/apk/tmp_apk/202307/28/fc88cec74d47e42c724424f4d0afb499.apk\",\"md5\":\"9ce6a35c2689759179716afeadd73044\",\"file_size\":44480986,\"file_extension\":\"apk\",\"width\":0,\"height\":0,\"id\":\"3c3d3b74-b350-4050-9e6d-c67c5816a823\",\"sign\":\"972ec61849103789cd9d7145d6ee2369\"}",
+                    OppoUploadFileData::class.java
+                ),
+                "D:\\企业上传\\app-armeabi-v7a-release_241_jiagu_8_Market_Oppo_sign.apk" to gson.fromJson(
+                    "{\"url\":\"http://storedl1.nearme.com.cn/apk/tmp_apk/202307/28/7f3d690d20bef00f8a2fc73704a11a39.apk\",\"uri_path\":\"/apk/tmp_apk/202307/28/7f3d690d20bef00f8a2fc73704a11a39.apk\",\"md5\":\"eceecfb51e12fb4e861012154882d0fa\",\"file_size\":40131092,\"file_extension\":\"apk\",\"width\":0,\"height\":0,\"id\":\"9dd75da4-d138-4d64-a438-5301d94a6f70\",\"sign\":\"cd7cf538003b07e2c8df6d37b30ae748\"}\n",
+                    OppoUploadFileData::class.java
+                )
+            )
+        }
+        return gson.fromJson(
+            mapJson,
+            object : TypeToken<MutableMap<String, OppoUploadFileData>>() {}.type
+        )
+    }
+
+    private fun saveUploadFileMap() {
+        settings.putString("${name}UploadFileMap", mapGson.toJson(uploadFileMap))
+    }
+
+    private fun clearUploadFileMap() {
+        settings.putString("${name}UploadFileMap", "{}")
+    }
+
     private fun uploadFile(filePath: String, type: String, callback: SuccessCallback<OppoUploadFileData>) {
+        val successResult = uploadFileMap[filePath]
+        if (successResult != null) {
+            callback.onSuccess(successResult)
+            return
+        }
         getToken({ callback.onFail(it) }) { token ->
             getUploadUrl(filePath, { callback.onFail(it) }) {
                 Http.post("${it.upload_url}", {
+                    timeout {
+                        requestTimeoutMillis = 300000
+                    }
                     setBody(MultiPartFormDataContent(formData {
                         val parameterList = getCommonParams(token).plus(
                             mapOf("type" to type, "sign" to it.sign!!)
@@ -334,6 +434,8 @@ data class OppoMarket(
                         )
                         if (response.isSuccess() && response.data != null) {
                             response.data.filePath = filePath
+                            uploadFileMap[filePath] = response.data
+                            saveUploadFileMap()
                             callback.onSuccess(response.data)
                         } else {
                             callback.onFail("")
@@ -564,6 +666,12 @@ data class OppoMarket(
             }
         }
     }
+
+    override fun clearInitData() {
+        super.clearInitData()
+        uploadFileMap.clear()
+        saveUploadFileMap()
+    }
 }
 
 @Serializable
@@ -623,7 +731,19 @@ internal data class OppoAppInfoData(
     val type: Int? = null,
     val sign: String? = null,
     val dev_id: String? = null,
+    val app_key: String? = null,
     val app_secret: String? = null,
+
+    val second_category_id: String? = null,
+    val third_category_id: String? = null,
+    val summary: String? = null,
+    val detail_desc: String? = null,
+    val privacy_source_url: String? = null,
+    val icon_url: String? = null,
+    val pic_url: String? = null,
+    val copyright_url: String? = null,
+    val age_level: String? = null,
+    val adaptive_equipment: String? = null,
 )
 
 @Serializable

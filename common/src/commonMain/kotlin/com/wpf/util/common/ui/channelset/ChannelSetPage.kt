@@ -24,7 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wpf.util.common.ui.utils.onExternalDrag
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
@@ -33,15 +32,15 @@ import com.wpf.util.common.ui.marketplace.markets.base.upload
 import com.wpf.util.common.ui.signset.SignFile
 import com.wpf.util.common.ui.signset.SignSetViewModel
 import com.wpf.util.common.ui.uploadIcon
+import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.*
-import kotlin.math.min
 
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 fun channelPage() {
     //分组列表
-    val channelList = remember { mutableStateListOf(*ChannelSetViewModel.getChannelList().toTypedArray()) }
+    val channelList = remember { mutableStateListOf(*ChannelSetViewModel.getClientList().toTypedArray()) }
     //渠道包文件名
     val channelFileNameList = remember { mutableStateListOf("") }
     //渠道名
@@ -61,8 +60,9 @@ fun channelPage() {
 
     var isRunDealFile by remember { mutableStateOf(false) }
 
-    val marketDescription = remember { mutableStateOf("") }
-    val marketScreenShotList = remember { mutableStateListOf("") }
+    val marketDescription = autoSaveComposable("marketDescription") { remember { mutableStateOf("") } }
+    val marketLeaveMessage = autoSaveComposable("marketLeaveMessage") { remember { mutableStateOf("") } }
+    val marketScreenShotList by autoSaveListComposable("marketScreenShotList") { remember { mutableStateListOf("") } }
     //打完后的市场包列表
     val marketPlaceList =
         remember { mutableStateListOf(*ChannelSetViewModel.dealMargetPlace(pathList.map { it.path }).toTypedArray()) }
@@ -108,45 +108,37 @@ fun channelPage() {
                                     }
                                     LazyColumn {
                                         items(channelList) { group ->
-                                            Box(
-                                                modifier = Modifier.fillMaxWidth().height(44.dp)
-                                                    .padding(8.dp, 4.dp, 8.dp, 4.dp)
-                                                    .clip(shape = RoundedCornerShape(8.dp))
-                                                    .background(color = if (group.isSelectState.value) mainTextColor else Color.White)
-                                                    .combinedClickable(
-                                                        enabled = true,
-                                                        onDoubleClick = {
-                                                            groupDialogInput.value = group.name
-                                                            groupDialog.value = true
-                                                        },
-                                                        onLongClick = {
-                                                            groupDialogInput.value = group.name
-                                                            groupDialog.value = true
-                                                        },
-                                                        onClick = {
-                                                            channelList.forEach {
-                                                                it.isSelect = false
-                                                                it.isSelectState.value = false
-                                                            }
-                                                            group.isSelect = true
-                                                            group.isSelectState.value = true
-                                                            ChannelSetViewModel.saveChannelList(channelList)
-                                                            channelFileNameList.clear()
-                                                            channelNameList.clear()
-                                                            if (group.channelPath.isNotEmpty()) {
-                                                                val result =
-                                                                    ChannelSetViewModel.getChannelDataInFile(group.channelPath)
-                                                                if (result.isNotEmpty()) {
-                                                                    channelFileNameList.addAll(result.map { array -> array[0] })
-                                                                    channelNameList.addAll(result.map { array -> array[1] })
-                                                                } else {
-                                                                    channelFileNameList.add("文件解析错误，路径:(${group.channelPath})")
-                                                                    channelNameList.add("文件解析错误，路径:(${group.channelPath}")
-                                                                }
-                                                            }
+                                            Box(modifier = Modifier.fillMaxWidth().height(44.dp)
+                                                .padding(8.dp, 4.dp, 8.dp, 4.dp).clip(shape = RoundedCornerShape(8.dp))
+                                                .background(color = if (group.isSelectState.value) mainTextColor else Color.White)
+                                                .combinedClickable(enabled = true, onDoubleClick = {
+                                                    groupDialogInput.value = group.name
+                                                    groupDialog.value = true
+                                                }, onLongClick = {
+                                                    groupDialogInput.value = group.name
+                                                    groupDialog.value = true
+                                                }, onClick = {
+                                                    channelList.forEach {
+                                                        it.isSelect = false
+                                                        it.isSelectState.value = false
+                                                    }
+                                                    group.isSelect = true
+                                                    group.isSelectState.value = true
+                                                    ChannelSetViewModel.saveClientList(channelList)
+                                                    channelFileNameList.clear()
+                                                    channelNameList.clear()
+                                                    if (group.channelPath.isNotEmpty()) {
+                                                        val result =
+                                                            ChannelSetViewModel.getChannelDataInFile(group.channelPath)
+                                                        if (result.isNotEmpty()) {
+                                                            channelFileNameList.addAll(result.map { array -> array[0] })
+                                                            channelNameList.addAll(result.map { array -> array[1] })
+                                                        } else {
+                                                            channelFileNameList.add("文件解析错误，路径:(${group.channelPath})")
+                                                            channelNameList.add("文件解析错误，路径:(${group.channelPath}")
                                                         }
-                                                    ), contentAlignment = Alignment.CenterStart
-                                            ) {
+                                                    }
+                                                }), contentAlignment = Alignment.CenterStart) {
                                                 Text(
                                                     group.nameState.value,
                                                     color = if (group.isSelectState.value) Color.White else Color.Black,
@@ -171,8 +163,7 @@ fun channelPage() {
                                                 channelFileNameList.clear()
                                                 channelNameList.clear()
                                                 if (path.isNotEmpty()) {
-                                                    val result =
-                                                        ChannelSetViewModel.getChannelDataInFile(path)
+                                                    val result = ChannelSetViewModel.getChannelDataInFile(path)
                                                     if (result.isNotEmpty()) {
                                                         channelFileNameList.addAll(result.map { array -> array[0] })
                                                         channelNameList.addAll(result.map { array -> array[1] })
@@ -250,25 +241,23 @@ fun channelPage() {
                                                     Box(modifier = Modifier.padding(bottom = 8.dp)) {
                                                         Text(
                                                             "选择完apk后，渠道包默认保存在apk同级目录下或者在软件配置里配置路径",
-                                                            fontSize = 10.sp, color = Color.Gray
+                                                            fontSize = 10.sp,
+                                                            color = Color.Gray
                                                         )
                                                     }
-                                                    LazyColumn {
+                                                    LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                                         items(pathList) {
                                                             ItemView(modifier = Modifier.heightIn(min = 24.dp)
-                                                                .combinedClickable(
-                                                                    onDoubleClick = {
-                                                                        pathList.remove(it)
-                                                                        ChannelSetViewModel.savePathList(pathList)
-                                                                    }
-                                                                ) {}) {
+                                                                .combinedClickable(onDoubleClick = {
+                                                                    pathList.remove(it)
+                                                                    ChannelSetViewModel.savePathList(pathList)
+                                                                }) {}) {
                                                                 Text(
                                                                     it.path,
                                                                     fontSize = 11.sp,
                                                                     color = Color.DarkGray,
                                                                     modifier = Modifier.padding(
-                                                                        start = 8.dp,
-                                                                        end = 8.dp
+                                                                        start = 8.dp, end = 8.dp
                                                                     )
                                                                 )
                                                             }
@@ -287,8 +276,7 @@ fun channelPage() {
                                             ChannelSetViewModel.savePathList(pathList)
                                         }
                                         Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.BottomEnd
+                                            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd
                                         ) {
                                             IconButton(onClick = {
                                                 if (pathList.isEmpty()) {
@@ -335,17 +323,18 @@ fun channelPage() {
             ) {
                 Column {
                     Box(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 16.dp)
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp)
                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                     ) {
                         Column(
-                            modifier = Modifier.padding(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Title("市场包")
-                            InputView(input = marketDescription, hint = "请输入更新文案", maxLine = 5) {
+                            InputView(input = marketDescription.data, hint = "请输入更新文案", maxLine = 5) {
                                 marketDescription.value = it
+                            }
+                            InputView(input = marketLeaveMessage.data, hint = "请输入留言", maxLine = 5) {
+                                marketLeaveMessage.value = it
                             }
                             LazyRow(
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
@@ -365,11 +354,10 @@ fun channelPage() {
                         }
                     }
                     Box(
-                        modifier = Modifier.fillMaxWidth().weight(1f)
-                            .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor)
-                            .padding(8.dp),
+                        modifier = Modifier.fillMaxWidth().weight(1f).clip(shape = RoundedCornerShape(8.dp))
+                            .background(color = centerBgColor).padding(8.dp),
                     ) {
-                        LazyColumn(verticalArrangement  = Arrangement.spacedBy(4.dp)) {
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             items(marketPlaceList) {
                                 ApkItem(it)
                             }
@@ -377,16 +365,18 @@ fun channelPage() {
                     }
                 }
                 Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.BottomEnd
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd
                 ) {
                     IconButton(onClick = {
                         marketPlaceList.filter {
                             it.isSelectState.value
                         }.map { marketApk ->
-                            UploadData(marketApk, marketDescription.value, marketScreenShotList.filter { screenShot ->
-                                screenShot.isNotEmpty()
-                            })
+                            UploadData(marketApk,
+                                marketDescription.value,
+                                marketLeaveMessage.value.ifEmpty { null },
+                                marketScreenShotList.filter { screenShot ->
+                                    screenShot.isNotEmpty()
+                                })
                         }.forEach {
                             it.upload()
                         }
@@ -409,12 +399,12 @@ fun channelPage() {
                     findGroup.name = inputStr
                     findGroup.nameState.value = inputStr
                 } else {
-                    channelList.add(Channel(inputStr).apply {
+                    channelList.add(Client(inputStr).apply {
                         isSelect = true
                         isSelectState.value = true
                     })
                 }
-                ChannelSetViewModel.saveChannelList(channelList)
+                ChannelSetViewModel.saveClientList(channelList)
                 groupDialogInput.value = ""
             }
         }
@@ -425,9 +415,7 @@ fun channelPage() {
                     file.path
                 }
                 ChannelSetViewModel.dealApk(
-                    filePathList,
-                    channelList.find { channel -> channel.isSelect }?.channelPath,
-                    it
+                    filePathList, channelList.find { channel -> channel.isSelect }?.channelPath, it
                 ) {
                     isRunDealFile = false
                     marketPlaceList.clear()
@@ -498,9 +486,7 @@ private fun showSelectSignDialog(showSignSelectDialog: MutableState<Boolean>, ca
 @Preview
 @Composable
 fun showGroupAddDialog(
-    groupDialog: MutableState<Boolean>,
-    groupDialogInput: MutableState<String>,
-    callback: ((String) -> Unit)
+    groupDialog: MutableState<Boolean>, groupDialogInput: MutableState<String>, callback: ((String) -> Unit)
 ) {
     var inputStr by remember { mutableStateOf(groupDialogInput.value) }
 

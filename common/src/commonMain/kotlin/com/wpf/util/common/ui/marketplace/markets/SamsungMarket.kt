@@ -30,7 +30,6 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -182,18 +181,18 @@ data class SamsungMarket(
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.packageName().isNullOrEmpty()) return
         update(uploadData, { callback.onFail(it) }) {
-            submit(callback = object : SuccessCallback<String> {
-                override fun onSuccess(t: String) {
-                    callback.onSuccess(MarketType.三星)
-                }
-
-                override fun onFail(msg: String) {
-                    super.onFail(msg)
-                    println(msg)
-                    callback.onFail("$name:$msg")
-                }
-
-            })
+//            submit(callback = object : SuccessCallback<String> {
+//                override fun onSuccess(t: String) {
+//                    callback.onSuccess(MarketType.三星)
+//                }
+//
+//                override fun onFail(msg: String) {
+//                    super.onFail(msg)
+//                    println(msg)
+//                    callback.onFail("$name:$msg")
+//                }
+//
+//            })
         }
     }
 
@@ -249,52 +248,50 @@ data class SamsungMarket(
     }
 
     private fun update(uploadData: UploadData, callback: SuccessCallback<String>) {
-        getToken(onFail = {
-            callback.onFail(it)
-        }) { token ->
+        getToken(onFail = { callback.onFail(it) }) { token ->
             getAppInfo({ callback.onFail(it) }) {
                 binaryList = it.binaryList?.toMutableList() ?: arrayListOf()
                 screenShotList = it.screenshots?.toMutableList() ?: arrayListOf()
-                uploadScreenShotList(uploadData.imageList, { error ->
-                    callback.onFail(error)
-                }) { screensResponse ->
-                    uploadApkList(uploadData, { error ->
-                        callback.onFail(error)
-                    }) { apksResponse ->
-                        Http.submitForm("$baseUrl/seller/contentUpdate", parameters {
-                            append("contentId", contentId)
-                            append("newFeature", uploadData.description)
-                            if (screensResponse.isNotEmpty()) {
-                                append("screenshots", gson.toJson(addNewToList(screenShotList, screenShotList)))
-                            }
-                            append("binaryList", gson.toJson(addNewToList(binaryList, apksResponse.map { uploadFile ->
-                                SamsungApkBody(
-                                    filekey = uploadFile.fileKey!!,
-                                    fileName = uploadFile.apk?.fileName!!,
-                                    packageName = uploadFile.apk?.packageName!!,
-                                    versionCode = uploadFile.apk?.versionCode ?: "",
-                                    versionName = uploadFile.apk?.versionName ?: ""
-                                )
-                            })))
-                        }, {
-                            headers {
-                                append(HttpHeaders.ContentType, ContentType.Application.Json)
-                                append("service-account-id", serviceAccountId)
-                                bearerAuth(token)
-                            }
-                            formData {
+                updateState {
+                    uploadScreenShotList(uploadData.imageList, { error -> callback.onFail(error) }) { screensResponse ->
+                        uploadApkList(uploadData, { error -> callback.onFail(error) }) { apksResponse ->
+                            Http.submitForm("$baseUrl/seller/contentUpdate", parameters {
+                                append("contentId", contentId)
+                                append("newFeature", uploadData.description)
+                                if (screensResponse.isNotEmpty()) {
+                                    append("screenshots", gson.toJson(addNewToList(screenShotList, screenShotList)))
+                                }
+                                append("binaryList", gson.toJson(addNewToList(binaryList, apksResponse.map { uploadFile ->
+                                    SamsungApkBody(
+                                        filekey = uploadFile.fileKey!!,
+                                        fileName = uploadFile.apk?.fileName!!,
+                                        packageName = uploadFile.apk?.packageName!!,
+                                        versionCode = uploadFile.apk?.versionCode ?: "",
+                                        versionName = uploadFile.apk?.versionName ?: ""
+                                    )
+                                })))
+                            }, {
+                                headers {
+                                    append(HttpHeaders.ContentType, ContentType.Application.Json)
+                                    append("service-account-id", serviceAccountId)
+                                    bearerAuth(token)
+                                }
+                            }, object : Callback<String> {
+                                override fun onSuccess(t: String) {
+                                    val response = gson.fromJson(t, SamSungBaseResponse::class.java)
+                                    if (response.isSuccess()) {
+                                        callback.onSuccess("")
+                                    } else {
+                                        callback.onFail("")
+                                    }
+                                }
 
-                            }
-                        }, object : Callback<String> {
-                            override fun onSuccess(t: String) {
+                                override fun onFail(msg: String) {
+                                    callback.onFail(msg)
+                                }
 
-                            }
-
-                            override fun onFail(msg: String) {
-
-                            }
-
-                        })
+                            })
+                        }
                     }
                 }
             }
@@ -326,9 +323,7 @@ data class SamsungMarket(
         }
         val returnResponse = mutableListOf<SamsungUploadFileResponse>()
         uploadApkList.forEach { apk ->
-            uploadApk(apk, { msg ->
-                callback.onFail("$apk:$msg")
-            }) {
+            uploadApk(apk, { msg -> callback.onFail("$apk:$msg") }) {
                 returnResponse.add(it)
                 if (returnResponse.size == uploadApkList.size) {
                     callback.onSuccess(returnResponse)
@@ -534,6 +529,47 @@ data class SamsungMarket(
         }
     }
 
+    private fun updateState(onFail: ((String) -> Unit)? = null, callback: (String) -> Unit) {
+        callback.invoke("")
+//        updateState(object : SuccessCallback<String> {
+//            override fun onSuccess(t: String) {
+//                callback.invoke(t)
+//            }
+//
+//            override fun onFail(msg: String) {
+//                super.onFail(msg)
+//                onFail?.invoke(msg)
+//            }
+//        })
+    }
+
+    private fun updateState(callback: SuccessCallback<String>) {
+        getToken {
+            Http.submitForm("$baseUrl/seller/contentStatusUpdate", parameters {
+                append("contentId", contentId)
+                append("contentStatus", "FOR_SALE")
+            }, {
+                timeout {
+                    requestTimeoutMillis = 10000
+                }
+                io.ktor.http.headers {
+                    append(HttpHeaders.ContentType, ContentType.Application.Json)
+                    append("service-account-id", serviceAccountId)
+                    bearerAuth(it)
+                }
+            }, callback = object : Callback<String> {
+                override fun onSuccess(t: String) {
+                    callback.onSuccess("")
+                }
+
+                override fun onFail(msg: String) {
+                    callback.onFail(msg)
+                }
+
+            })
+        }
+    }
+
     //过期时间
     @Transient
     private val extTime = 20 * 60
@@ -725,7 +761,7 @@ data class SamsungUploadFileResponse(
     val errorCode: String? = null,
     val errorMsg: String? = null,
 
-    @Transient var apk: Apk? = null
+    @kotlinx.serialization.Transient var apk: Apk? = null
 )
 
 @Serializable

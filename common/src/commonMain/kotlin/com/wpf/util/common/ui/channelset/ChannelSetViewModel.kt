@@ -14,21 +14,20 @@ import com.wpf.util.common.ui.utils.marketType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import java.io.File
 
 object ChannelSetViewModel {
 
-    fun getChannelList(): List<Channel> {
-        settings.getStringOrNull("channelList")?.let {
+    fun getClientList(): List<Client> {
+        settings.getStringOrNull("clientList")?.let {
             return json.decodeFromString(it)
         }
         return arrayListOf()
     }
 
-    fun saveChannelList(channelList: List<Channel>) {
-        settings["channelList"] = json.encodeToString(channelList)
+    fun saveClientList(clientList: List<Client>) {
+        settings["clientList"] = json.encodeToString(clientList)
     }
 
     fun getPathList(): List<Path> {

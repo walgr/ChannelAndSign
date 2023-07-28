@@ -20,9 +20,9 @@ import kotlinx.coroutines.launch
 
 val client = HttpClient(CIO) {
     engine {
-        proxy = ProxyBuilder.http(
-            "http://127.0.0.1:8888"
-        )
+//        proxy = ProxyBuilder.http(
+//            "http://127.0.0.1:8888"
+//        )
         requestTimeout = 60000
     }
     install(HttpTimeout) {
