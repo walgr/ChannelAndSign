@@ -17,9 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.wpf.util.common.ui.centerBgColor
-import com.wpf.util.common.ui.channelset.ChannelSetViewModel
 import com.wpf.util.common.ui.itemBgColor
-import com.wpf.util.common.ui.marketplace.markets.base.Market
 import com.wpf.util.common.ui.marketplace.markets.base.MarketTypeHelper
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.widget.AddItemDialog
@@ -34,7 +32,7 @@ fun marketPlacePage() {
     val showAddMarketDialog = remember { mutableStateOf(false) }
     val marketList = remember { mutableStateListOf(*MarketPlaceViewModel.getCanApiMarketList().toTypedArray()) }
     //分组列表
-    val channelList = remember { mutableStateListOf(*MarketPlaceViewModel.getDefaultSelectChannelList().toTypedArray()) }
+    val channelList = remember { mutableStateListOf(*MarketPlaceViewModel.getDefaultSelectClientList().toTypedArray()) }
 
     val selectMarket = remember { mutableStateOf(MarketPlaceViewModel.getSelectMarket()) }
 
@@ -95,11 +93,13 @@ fun marketPlacePage() {
                                     )
                                 ) {
                                     Title("市场配置")
-                                    selectMarket.value.dispositionView(selectMarket.value)
-                                    Button(onClick = {
-                                        MarketPlaceViewModel.saveMarketList(channelList, selectMarket.value)
-                                    }, modifier = Modifier.padding(start = 8.dp)) {
-                                        Text("保存")
+                                    selectMarket.value?.let {
+                                        it.dispositionView(it)
+                                        Button(onClick = {
+                                            MarketPlaceViewModel.saveMarketList(channelList, it)
+                                        }, modifier = Modifier.padding(start = 8.dp)) {
+                                            Text("保存")
+                                        }
                                     }
                                 }
                             }

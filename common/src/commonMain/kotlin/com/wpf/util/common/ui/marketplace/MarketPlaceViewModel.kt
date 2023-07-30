@@ -9,26 +9,27 @@ import com.wpf.util.common.ui.utils.settings
 
 object MarketPlaceViewModel {
 
-    fun getDefaultSelectChannelList(): List<Client> {
+    fun getDefaultSelectClientList(): List<Client> {
         return ChannelSetViewModel.getClientList().apply {
             forEach {
                 it.changeSelect(false)
             }
-            first().changeSelect(true)
+            firstOrNull()?.changeSelect(true)
         }
     }
 
-    fun getSelectMarket(clientList: List<Client>? = null, marketList: List<Market>? = null): Market {
+    fun getSelectMarket(clientList: List<Client>? = null, marketList: List<Market>? = null): Market? {
         return getSelectMarket(
-            (clientList ?: getDefaultSelectChannelList()).find { it.isSelect }?.name ?: "",
+            (clientList ?: getDefaultSelectClientList()).find { it.isSelect }?.name ?: "",
             (marketList ?: getCanApiMarketList()).find { it.isSelect }?.name ?: ""
         )
     }
 
     private val marketMap = mutableMapOf<String, Market>()
-    fun getSelectMarket(channelName: String, marketName: String): Market {
+    fun getSelectMarket(channelName: String, marketName: String): Market? {
+        if (getCanApiMarketList().isEmpty()) return null
         val key = "Channel${channelName}Market${marketName}"
-        val market = marketMap[key]
+        val market = marketMap[key]`
         market?.initByData()
         if (market != null) {
             return market
@@ -43,6 +44,7 @@ object MarketPlaceViewModel {
 
     private var canApiMarketList : MutableList<Market>? = null
     fun getCanApiMarketList(): List<Market> {
+        if (getDefaultSelectClientList().isEmpty()) return arrayListOf()
         if (canApiMarketList == null) {
             canApiMarketList = MarketType.values().filter { marketType ->
                 marketType.canApi()

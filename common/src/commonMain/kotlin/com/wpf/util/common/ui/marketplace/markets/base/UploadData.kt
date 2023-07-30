@@ -16,7 +16,7 @@ fun UploadData.upload() {
     MarketPlaceViewModel.getSelectMarket(
         ChannelSetViewModel.getClientList().find { it.isSelect }?.name ?: "",
         MarketPlaceViewModel.getCanApiMarketList().find { it.name == apk.channelName }?.name ?: ""
-    ).push(this, object : Callback<MarketType> {
+    )?.push(this, object : Callback<MarketType> {
         override fun onSuccess(t: MarketType) {
             apk.uploadState.value = UploadState.UPLOAD_SUCCESS
             apk.changeSelect(false)
