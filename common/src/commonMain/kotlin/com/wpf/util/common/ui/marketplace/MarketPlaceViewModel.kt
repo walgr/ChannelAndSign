@@ -29,7 +29,7 @@ object MarketPlaceViewModel {
     fun getSelectMarket(channelName: String, marketName: String): Market? {
         if (getCanApiMarketList().isEmpty()) return null
         val key = "Channel${channelName}Market${marketName}"
-        val market = marketMap[key]`
+        val market = marketMap[key]
         market?.initByData()
         if (market != null) {
             return market
