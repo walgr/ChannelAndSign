@@ -1,0 +1,908 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ArtifactsWorkspaceSettings">
+    <artifacts-to-build>
+      <artifact name="打渠道包并签名:jar" />
+    </artifacts-to-build>
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="上传市场支持。">
+      <change afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/common_desktop_1_0_SNAPSHOT.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/common_desktop_1_0_SNAPSHOT.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/desktop_jvm_1_0_SNAPSHOT.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/desktop_jvm_1_0_SNAPSHOT.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/HuaweiMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/HuaweiMarket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiMarket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/Market.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/Market.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/AutoSave.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/AutoSave.kt" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+    <projectState path="$PROJECT_DIR$/WebView">
+      <ProjectState />
+    </projectState>
+    <projectState path="$PROJECT_DIR$/common/src/commonMain/kotlin/com">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$/desktop">
+          <activation />
+        </task>
+        <task path="$PROJECT_DIR$">
+          <activation />
+        </task>
+        <task path="$PROJECT_DIR$/common">
+          <activation />
+        </task>
+        <task path="$PROJECT_DIR$/AXMLEditor3">
+          <activation />
+        </task>
+        <task path="$PROJECT_DIR$/WebView">
+          <activation />
+        </task>
+        <projects_view>
+          <tree_state>
+            <expand />
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Worksheet" />
+        <option value="Class" />
+        <option value="Kotlin Object" />
+        <option value="Kotlin Enum" />
+        <option value="Kotlin Interface" />
+        <option value="Kotlin Class" />
+        <option value="Kotlin File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitToolBoxStore">
+    <option name="projectConfigVersion" value="5" />
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="master" />
+                    <option name="lastUsedInstant" value="1681963103" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
+  </component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="true" />
+  </component>
+  <component name="ProjectId" id="2OGuUZZRn262bcMn2qVEPB32SQV" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <OptionsSetting value="false" id="Update" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;corretto-17&quot;,
+    &quot;kotlin.migration.detection.enabled&quot;: &quot;false&quot;,
+    &quot;ktor.last.update.timestamp&quot;: &quot;1690420461302&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/JavaProject/ChannelAndSign/WebView/src/desktopMain/kotlin&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;模块&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.097751714&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.3579496&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\JavaProject\ChannelAndSign\WebView\src\desktopMain\kotlin" />
+      <recent name="D:\JavaProject\ChannelAndSign\WebView\src\commonMain\kotlin" />
+      <recent name="D:\JavaProject\ChannelAndSign\WebView\src\desktopMain" />
+      <recent name="D:\JavaProject\ChannelAndSign" />
+      <recent name="D:\JavaProject\ChannelAndSign\desktop" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\JavaProject\ChannelAndSign" />
+      <recent name="D:\JavaProject\ChannelAndSign\common\src\commonMain\resources\image" />
+      <recent name="D:\JavaProject\ChannelAndSign\desktop\src\commonMain\resources" />
+      <recent name="D:\JavaProject\ChannelAndSign\desktop\image" />
+      <recent name="D:\JavaProject\ChannelAndSign\desktop" />
+    </key>
+    <key name="MoveKotlinTopLevelDeclarationsDialog.RECENTS_KEY">
+      <recent name="com.wpf.util.common.ui.marketplace.markets" />
+      <recent name="com.wpf.util.common.ui.base" />
+      <recent name="com.wpf.util.common.dealfile.util" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="cn.wjdiankong.main" />
+      <recent name="cn.wjdiankong" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Kotlin.桌面端">
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="ChannelAndSign" />
+      <working_directory value="$PROJECT_DIR$" />
+      <go_parameters value="-i" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="ChannelAndSign:desktop [dependencies]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/desktop" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="dependencies" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="ChannelAndSign:desktop [packageExe]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/desktop" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="packageExe" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="ChannelAndSign:desktop [packageReleaseExe]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/desktop" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="packageReleaseExe" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="桌面端" type="JetRunConfigurationType">
+      <option name="MAIN_CLASS_NAME" value="MainKt" />
+      <module name="ChannelAndSign.desktop.jvmMain" />
+      <shortenClasspath name="NONE" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="命令行" type="JetRunConfigurationType" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="com.wpf.base.dealfile.MainKt" />
+      <module name="ChannelAndSign.base.main" />
+      <shortenClasspath name="NONE" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="桌面端" type="JetRunConfigurationType" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="MainKt" />
+      <module name="ChannelAndSign.desktop.jvmMain" />
+      <shortenClasspath name="NONE" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="桌面端" type="JetRunConfigurationType" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="MainKt" />
+      <module name="ChannelAndSign.desktop.jvmMain" />
+      <shortenClasspath name="NONE" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="桌面端" type="JetRunConfigurationType" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="MainKt" />
+      <module name="ChannelAndSign.desktop.jvmMain" />
+      <shortenClasspath name="NONE" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="ChannelAndSign.desktop.jvmTest" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="ChannelAndSign.desktop.jvmTest" />
+      <option name="filePath" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Gradle.ChannelAndSign:desktop [packageExe]" />
+        <item itemvalue="Gradle.ChannelAndSign:desktop [packageReleaseExe]" />
+        <item itemvalue="Gradle.ChannelAndSign:desktop [dependencies]" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="" />
+      <created>1681199257141</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1681199257141</updated>
+      <workItem from="1681199258065" duration="5294000" />
+      <workItem from="1681204654785" duration="3283000" />
+      <workItem from="1681207985584" duration="1594000" />
+      <workItem from="1681259433937" duration="11503000" />
+      <workItem from="1681378046222" duration="4133000" />
+      <workItem from="1681433669225" duration="397000" />
+      <workItem from="1681461265103" duration="5809000" />
+      <workItem from="1681892768893" duration="4387000" />
+      <workItem from="1681899764637" duration="4933000" />
+      <workItem from="1681961580711" duration="1512000" />
+      <workItem from="1681963124701" duration="3444000" />
+      <workItem from="1682236125392" duration="2204000" />
+      <workItem from="1682239289711" duration="20189000" />
+      <workItem from="1682318870117" duration="5719000" />
+      <workItem from="1682324662681" duration="1646000" />
+      <workItem from="1682327070633" duration="2411000" />
+      <workItem from="1682383049888" duration="49613000" />
+      <workItem from="1682558799698" duration="1434000" />
+      <workItem from="1682560374198" duration="2669000" />
+      <workItem from="1682563089344" duration="2074000" />
+      <workItem from="1682566398746" duration="7658000" />
+      <workItem from="1682580479123" duration="22652000" />
+      <workItem from="1683164738798" duration="594000" />
+      <workItem from="1683165389220" duration="9830000" />
+      <workItem from="1683181819526" duration="3312000" />
+      <workItem from="1683257211171" duration="2710000" />
+      <workItem from="1683270029036" duration="2577000" />
+      <workItem from="1683334801172" duration="803000" />
+      <workItem from="1683338641589" duration="10025000" />
+      <workItem from="1683356083444" duration="1591000" />
+      <workItem from="1686122523928" duration="1624000" />
+      <workItem from="1686126378699" duration="42000" />
+      <workItem from="1686127098458" duration="3093000" />
+      <workItem from="1686130240946" duration="15000" />
+      <workItem from="1686130545025" duration="4000" />
+      <workItem from="1686130705872" duration="2118000" />
+      <workItem from="1686188199727" duration="1163000" />
+      <workItem from="1686198144624" duration="4518000" />
+      <workItem from="1686627109319" duration="19000" />
+      <workItem from="1686708198726" duration="24149000" />
+      <workItem from="1686789396770" duration="6979000" />
+      <workItem from="1686796457247" duration="7515000" />
+      <workItem from="1686804713801" duration="1843000" />
+      <workItem from="1686883770077" duration="1216000" />
+      <workItem from="1686898097563" duration="1757000" />
+      <workItem from="1687225798418" duration="324000" />
+      <workItem from="1687251880526" duration="1309000" />
+      <workItem from="1687253454175" duration="865000" />
+      <workItem from="1687307507196" duration="43000" />
+      <workItem from="1687309010651" duration="1482000" />
+      <workItem from="1687316272585" duration="169000" />
+      <workItem from="1687316455832" duration="5000" />
+      <workItem from="1687317965701" duration="914000" />
+      <workItem from="1687318900741" duration="5361000" />
+      <workItem from="1687330855254" duration="1680000" />
+      <workItem from="1687334389252" duration="6109000" />
+      <workItem from="1687340901434" duration="695000" />
+      <workItem from="1687673446090" duration="961000" />
+      <workItem from="1687676916902" duration="213000" />
+      <workItem from="1687677148592" duration="849000" />
+      <workItem from="1687678170062" duration="2704000" />
+      <workItem from="1687748362695" duration="903000" />
+      <workItem from="1687749304206" duration="521000" />
+      <workItem from="1687749949352" duration="870000" />
+      <workItem from="1687751586777" duration="2073000" />
+      <workItem from="1687772680234" duration="2933000" />
+      <workItem from="1687847450586" duration="415000" />
+      <workItem from="1687847883481" duration="6000" />
+      <workItem from="1687848807382" duration="1269000" />
+      <workItem from="1687850128467" duration="811000" />
+      <workItem from="1687850957840" duration="2193000" />
+      <workItem from="1687853207861" duration="257000" />
+      <workItem from="1687853538984" duration="5112000" />
+      <workItem from="1687858828812" duration="250000" />
+      <workItem from="1687859091598" duration="1340000" />
+      <workItem from="1687860460343" duration="127000" />
+      <workItem from="1687912673997" duration="1546000" />
+      <workItem from="1687918391537" duration="468000" />
+      <workItem from="1687944855930" duration="397000" />
+      <workItem from="1688007856235" duration="844000" />
+      <workItem from="1688008886601" duration="1812000" />
+      <workItem from="1688019425156" duration="22529000" />
+      <workItem from="1688093057871" duration="18041000" />
+      <workItem from="1688344611249" duration="15805000" />
+      <workItem from="1688367034903" duration="5729000" />
+      <workItem from="1688372827219" duration="5252000" />
+      <workItem from="1688433619443" duration="18330000" />
+      <workItem from="1688460668951" duration="3484000" />
+      <workItem from="1688517321406" duration="7602000" />
+      <workItem from="1688525005877" duration="1354000" />
+      <workItem from="1688526529223" duration="226000" />
+      <workItem from="1688548138212" duration="1391000" />
+      <workItem from="1688549557721" duration="8374000" />
+      <workItem from="1688609323617" duration="956000" />
+      <workItem from="1688610300288" duration="12796000" />
+      <workItem from="1688631543288" duration="273000" />
+      <workItem from="1688955939594" duration="530000" />
+      <workItem from="1688959483441" duration="8389000" />
+      <workItem from="1689149628737" duration="612000" />
+      <workItem from="1689150443549" duration="6037000" />
+      <workItem from="1689156518080" duration="20000" />
+      <workItem from="1689208952910" duration="6982000" />
+      <workItem from="1689228397945" duration="7500000" />
+      <workItem from="1689294612815" duration="8859000" />
+      <workItem from="1689303596617" duration="17802000" />
+      <workItem from="1689555507930" duration="4024000" />
+      <workItem from="1689559741302" duration="3578000" />
+      <workItem from="1689563430229" duration="2080000" />
+      <workItem from="1689565536391" duration="5000" />
+      <workItem from="1689565569237" duration="10036000" />
+      <workItem from="1689581947027" duration="1533000" />
+      <workItem from="1689640599704" duration="7919000" />
+      <workItem from="1689737601915" duration="12767000" />
+      <workItem from="1689757458334" duration="2545000" />
+      <workItem from="1689760251679" duration="483000" />
+      <workItem from="1689813855288" duration="9001000" />
+      <workItem from="1689823216758" duration="43558000" />
+      <workItem from="1690158542157" duration="11535000" />
+      <workItem from="1690172532720" duration="24787000" />
+      <workItem from="1690270814859" duration="11674000" />
+      <workItem from="1690333855494" duration="19548000" />
+      <workItem from="1690360659791" duration="7829000" />
+      <workItem from="1690421954936" duration="1311000" />
+      <workItem from="1690423497894" duration="120000" />
+      <workItem from="1690423637129" duration="9459000" />
+      <workItem from="1690437799162" duration="39271000" />
+      <workItem from="1690538727440" duration="174000" />
+      <workItem from="1690763118231" duration="238000" />
+      <workItem from="1690763366537" duration="333000" />
+      <workItem from="1690763711438" duration="11694000" />
+      <workItem from="1690783405594" duration="351000" />
+    </task>
+    <task id="LOCAL-00001" summary="1.0">
+      <created>1682567148217</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1682567148217</updated>
+    </task>
+    <task id="LOCAL-00002" summary="1.0">
+      <created>1682577268261</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1682577268261</updated>
+    </task>
+    <task id="LOCAL-00003" summary="1.0">
+      <created>1682577844014</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1682577844014</updated>
+    </task>
+    <task id="LOCAL-00004" summary="优化文件拖入。">
+      <created>1682653417328</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1682653417328</updated>
+    </task>
+    <task id="LOCAL-00005" summary="美化窗口。">
+      <created>1682663152180</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1682663152180</updated>
+    </task>
+    <task id="LOCAL-00006" summary="美化窗口。">
+      <created>1682663355846</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1682663355846</updated>
+    </task>
+    <task id="LOCAL-00007" summary="项目结构优化。">
+      <created>1683172463783</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1683172463783</updated>
+    </task>
+    <task id="LOCAL-00008" summary="项目结构优化。">
+      <created>1683183000153</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1683183000153</updated>
+    </task>
+    <task id="LOCAL-00009" summary="修改报错提示。">
+      <created>1683184178544</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1683184178544</updated>
+    </task>
+    <task id="LOCAL-00010" summary="修改命令行。">
+      <created>1683357561095</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1683357561095</updated>
+    </task>
+    <task id="LOCAL-00011" summary="添加修改文件功能。">
+      <created>1686270807893</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1686270807893</updated>
+    </task>
+    <task id="LOCAL-00012" summary="多线程支持。">
+      <created>1686734189623</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1686734189623</updated>
+    </task>
+    <task id="LOCAL-00013" summary="多线程支持。">
+      <created>1686803638287</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1686803638287</updated>
+    </task>
+    <task id="LOCAL-00014" summary="多线程支持。">
+      <created>1686804110209</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1686804110209</updated>
+    </task>
+    <task id="LOCAL-00015" summary="多线程支持。">
+      <created>1686809740966</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1686809740966</updated>
+    </task>
+    <task id="LOCAL-00016" summary="多线程支持。">
+      <created>1687254274389</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1687254274389</updated>
+    </task>
+    <task id="LOCAL-00028" summary="优化代码。">
+      <option name="closed" value="true" />
+      <created>1687860202466</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1687860202466</updated>
+    </task>
+    <task id="LOCAL-00029" summary="优化代码。">
+      <option name="closed" value="true" />
+      <created>1687860513799</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1687860513799</updated>
+    </task>
+    <task id="LOCAL-00030" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688097135322</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1688097135323</updated>
+    </task>
+    <task id="LOCAL-00031" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688119557469</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1688119557469</updated>
+    </task>
+    <task id="LOCAL-00032" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688366601292</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1688366601292</updated>
+    </task>
+    <task id="LOCAL-00033" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688367165789</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1688367165789</updated>
+    </task>
+    <task id="LOCAL-00034" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688433051439</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1688433051439</updated>
+    </task>
+    <task id="LOCAL-00035" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688520404358</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1688520404358</updated>
+    </task>
+    <task id="LOCAL-00036" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688524647144</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1688524647144</updated>
+    </task>
+    <task id="LOCAL-00037" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688526049104</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1688526049104</updated>
+    </task>
+    <task id="LOCAL-00038" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688605258181</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1688605258181</updated>
+    </task>
+    <task id="LOCAL-00039" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688624139380</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1688624139380</updated>
+    </task>
+    <task id="LOCAL-00040" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688627327949</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1688627327949</updated>
+    </task>
+    <task id="LOCAL-00041" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688627638445</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1688627638445</updated>
+    </task>
+    <task id="LOCAL-00042" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1688975022619</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1688975022619</updated>
+    </task>
+    <task id="LOCAL-00043" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689235854759</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1689235854759</updated>
+    </task>
+    <task id="LOCAL-00044" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689303292329</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1689303292329</updated>
+    </task>
+    <task id="LOCAL-00045" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689325093762</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1689325093762</updated>
+    </task>
+    <task id="LOCAL-00046" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689647993055</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1689647993055</updated>
+    </task>
+    <task id="LOCAL-00047" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689749238385</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1689749238385</updated>
+    </task>
+    <task id="LOCAL-00048" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689751962713</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1689751962713</updated>
+    </task>
+    <task id="LOCAL-00049" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689758926652</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1689758926652</updated>
+    </task>
+    <task id="LOCAL-00050" summary="ui优化。">
+      <option name="closed" value="true" />
+      <created>1689822803734</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1689822803734</updated>
+    </task>
+    <task id="LOCAL-00051" summary="ui优化。">
+      <option name="closed" value="true" />
+      <created>1689823934608</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1689823934609</updated>
+    </task>
+    <task id="LOCAL-00052" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689906470121</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1689906470121</updated>
+    </task>
+    <task id="LOCAL-00053" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689926525580</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1689926525580</updated>
+    </task>
+    <task id="LOCAL-00054" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1689933331206</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1689933331206</updated>
+    </task>
+    <task id="LOCAL-00055" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1690168850070</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1690168850071</updated>
+    </task>
+    <task id="LOCAL-00056" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1690188057118</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1690188057118</updated>
+    </task>
+    <task id="LOCAL-00057" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1690188754265</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1690188754265</updated>
+    </task>
+    <task id="LOCAL-00058" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1690364883950</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1690364883950</updated>
+    </task>
+    <task id="LOCAL-00059" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1690424141546</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1690424141546</updated>
+    </task>
+    <task id="LOCAL-00060" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1690538562022</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1690538562022</updated>
+    </task>
+    <option name="localTasksCounter" value="61" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$" />
+    </ignored-roots>
+    <MESSAGE value="1.0" />
+    <MESSAGE value="优化文件拖入。" />
+    <MESSAGE value="美化窗口。" />
+    <MESSAGE value="项目结构优化。" />
+    <MESSAGE value="修改报错提示。" />
+    <MESSAGE value="修改命令行。" />
+    <MESSAGE value="添加修改文件功能。" />
+    <MESSAGE value="多线程支持。" />
+    <MESSAGE value="优化代码。" />
+    <MESSAGE value="ui优化。" />
+    <MESSAGE value="上传市场支持。" />
+    <option name="LAST_COMMIT_MESSAGE" value="上传市场支持。" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>false</integration-enabled>
+    <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="org.gradle.api.tasks.TaskExecutionException" package="org.gradle.api.tasks" />
+          <option name="timeStamp" value="18" />
+        </breakpoint>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.ExceptionInInitializerError" package="java.lang" />
+          <option name="timeStamp" value="19" />
+        </breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.openjfx/javafx-graphics/17/c5d8a26d28bb271ac5fe667e27814829d73a6124/javafx-graphics-17-sources.jar!/com/sun/javafx/application/PlatformImpl.java</url>
+          <line>598</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="io.ktor.client.call.SavedHttpResponse" memberName="headers" />
+      </pinned-members>
+    </pin-to-top-manager>
+    <watches-manager>
+      <configuration name="JetRunConfigurationType">
+        <watch expression="gson.fromJson&lt;MutableMap&lt;String, HuaweiUploadFileResponse&gt;&gt;(         settings.getString(&quot;huaweiScreenShotMap&quot;, &quot;{}&quot;),         object : TypeToken&lt;MutableMap&lt;String, HuaweiUploadFileResponse&gt;&gt;() {}.type     )" language="kotlin" />
+        <watch expression="settings.getString(&quot;huaweiScreenShotMap&quot;, &quot;{}&quot;)" language="kotlin" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

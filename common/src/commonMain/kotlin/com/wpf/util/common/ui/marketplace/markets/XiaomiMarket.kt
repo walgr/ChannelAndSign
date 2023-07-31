@@ -194,19 +194,19 @@ data class XiaomiMarket(
 //                    append("icon", xiaomiPushData.icon.readBytes())
 //                }
                 xiaomiPushData.screenshot_1?.let {
-                    append("screenshot_1", xiaomiPushData.screenshot_1.readBytes())
+                    append("screenshot_1", xiaomiPushData.screenshot_1.readBytes(), pngHeader(xiaomiPushData.screenshot_1.path))
                 }
                 xiaomiPushData.screenshot_2?.let {
-                    append("screenshot_2", xiaomiPushData.screenshot_2.readBytes())
+                    append("screenshot_2", xiaomiPushData.screenshot_2.readBytes(), pngHeader(xiaomiPushData.screenshot_2.path))
                 }
                 xiaomiPushData.screenshot_3?.let {
-                    append("screenshot_3", xiaomiPushData.screenshot_3.readBytes())
+                    append("screenshot_3", xiaomiPushData.screenshot_3.readBytes(), pngHeader(xiaomiPushData.screenshot_3.path))
                 }
                 xiaomiPushData.screenshot_4?.let {
-                    append("screenshot_4", xiaomiPushData.screenshot_4.readBytes())
+                    append("screenshot_4", xiaomiPushData.screenshot_4.readBytes(), pngHeader(xiaomiPushData.screenshot_4.path))
                 }
                 xiaomiPushData.screenshot_5?.let {
-                    append("screenshot_5", xiaomiPushData.screenshot_5.readBytes())
+                    append("screenshot_5", xiaomiPushData.screenshot_5.readBytes(), pngHeader(xiaomiPushData.screenshot_5.path))
                 }
             }))
         }, callback = object : Callback<String> {
@@ -300,7 +300,6 @@ data class XiaomiMarket(
     // 加载BC库
     init {
         Security.addProvider(BouncyCastleProvider())
-
     }
 
     override fun initByData() {

@@ -10,10 +10,7 @@ import com.wpf.util.common.ui.marketplace.markets.base.Market
 import com.wpf.util.common.ui.marketplace.markets.base.MarketType
 import com.wpf.util.common.ui.marketplace.markets.base.UploadData
 import com.wpf.util.common.ui.marketplace.markets.base.packageName
-import com.wpf.util.common.ui.utils.Callback
-import com.wpf.util.common.ui.utils.SuccessCallback
-import com.wpf.util.common.ui.utils.gson
-import com.wpf.util.common.ui.utils.settings
+import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.InputView
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
@@ -50,7 +47,7 @@ data class HuaweiMarket(
     }
 
     private fun clearToken() {
-        settings.putString("huaweiToken", "")
+        settings.remove("huaweiToken")
     }
 
     private fun getEfficientToken(): String {
@@ -114,8 +111,8 @@ data class HuaweiMarket(
 
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         updateAppLanguageInfo(uploadData.packageName()!!, uploadData.description, { callback.onFail(it) }) {
-            uploadScreenShotList(uploadData, { callback.onFail(it) }) {
-                uploadApk(uploadData.apk.abiApk.find { uploadAbi().contains(it.abi) }!!, { callback.onFail(it) }) {
+            uploadApk(uploadData.apk.abiApk.find { uploadAbi().contains(it.abi) }!!, { callback.onFail(it) }) {
+                uploadScreenShotList(uploadData, onFail = { callback.onFail(it) }) {
                     CoroutineScope(Dispatchers.Main).launch {
                         delay(10000)
                         submit(uploadData.packageName()!!, { callback.onFail(it) }) {
@@ -259,8 +256,8 @@ data class HuaweiMarket(
             updateAppFileInfo(apk.packageName, HuaweiUpdateFileInfoBody(
                 5, listOf(
                     HuaweiFileInfoBody(
-                        apk.fileName,
-                        successResult.result?.UploadFileRsp?.fileInfoList?.getOrNull(0)?.fileDestUlr ?: ""
+                        fileName = apk.fileName,
+                        fileDestUrl = successResult.result?.UploadFileRsp?.fileInfoList?.getOrNull(0)?.fileDestUlr ?: ""
                     )
                 )
             ), { callback.onFail(it) }) {
@@ -286,8 +283,9 @@ data class HuaweiMarket(
                             updateAppFileInfo(apk.packageName, HuaweiUpdateFileInfoBody(
                                 5, listOf(
                                     HuaweiFileInfoBody(
-                                        apk.fileName,
-                                        response.result.UploadFileRsp.fileInfoList?.getOrNull(0)?.fileDestUlr ?: ""
+                                        fileName = apk.fileName,
+                                        fileDestUrl = response.result.UploadFileRsp.fileInfoList?.getOrNull(0)?.fileDestUlr
+                                            ?: ""
                                     )
                                 )
                             ), { callback.onFail(it) }) {
@@ -310,7 +308,7 @@ data class HuaweiMarket(
     private fun uploadScreenShotList(
         uploadData: UploadData, onFail: ((String) -> Unit)? = null, callback: (String) -> Unit
     ) {
-        uploadScreenShotList(uploadData, object : SuccessCallback<String> {
+        uploadScreenShotList(uploadData, callback = object : SuccessCallback<String> {
             override fun onSuccess(t: String) {
                 callback.invoke(t)
             }
@@ -323,28 +321,33 @@ data class HuaweiMarket(
     }
 
     //更新截图
-    private fun uploadScreenShotList(uploadData: UploadData, callback: SuccessCallback<String>) {
+    private fun uploadScreenShotList(
+        uploadData: UploadData,
+        uploadPos: Int = 0,
+        screenShotResultList: MutableList<HuaweiUploadFileResponse>? = null,
+        callback: SuccessCallback<String>
+    ) {
         if (uploadData.imageList.isNullOrEmpty()) {
             callback.onSuccess("")
             return
         }
-        val uploadScreenShotResult = mutableMapOf<String, HuaweiUploadFileResponse>()
-        uploadData.imageList.forEach { image ->
-            uploadScreenShot(uploadData.packageName()!!, image, { callback.onFail(it) }) { uploadFile ->
-                uploadScreenShotResult[image] = uploadFile
-                if (uploadScreenShotResult.size == uploadData.imageList.size) {
-                    updateAppFileInfo(uploadData.packageName()!!,
-                        HuaweiUpdateFileInfoBody(2, uploadScreenShotResult.map { map ->
-                            HuaweiFileInfoBody(
-                                map.key, map.value.result?.UploadFileRsp?.fileInfoList?.getOrNull(0)?.fileDestUlr ?: ""
-                            )
-                        }),
-                        onFail = { callback.onFail(it) }) {
-                        callback.onSuccess("")
-                    }
-                } else {
-                    println("正在上传截图，目前已成功${uploadScreenShotResult.size}个,总共${uploadData.imageList.size}个")
+        val uploadScreenShotResult = screenShotResultList ?: mutableListOf()
+        val image = uploadData.imageList[uploadPos]
+        uploadScreenShot(uploadData.packageName()!!, image, { callback.onFail(it) }) { uploadFile ->
+            uploadScreenShotResult.add(uploadFile)
+            if (uploadScreenShotResult.size == uploadData.imageList.size) {
+                updateAppFileInfo(uploadData.packageName()!!,
+                    HuaweiUpdateFileInfoBody(2, uploadScreenShotResult.map { upload ->
+                        HuaweiFileInfoBody(
+                            upload.result?.UploadFileRsp?.fileInfoList?.getOrNull(0)?.fileDestUlr ?: ""
+                        )
+                    }),
+                    onFail = { callback.onFail(it) }) {
+                    callback.onSuccess("")
                 }
+            } else {
+                uploadScreenShotList(uploadData, uploadPos + 1, uploadScreenShotResult, callback)
+                println("正在上传截图，目前已成功${uploadScreenShotResult.size}个,总共${uploadData.imageList.size}个")
             }
         }
     }
@@ -368,7 +371,28 @@ data class HuaweiMarket(
     }
 
     @Transient
-    private val uploadScreenShotMap = mutableMapOf<String, HuaweiUploadFileResponse>()
+    private val uploadScreenShotMap: MutableMap<String, HuaweiUploadFileResponse> =
+        mutableMapOf<String, HuaweiUploadFileResponse>()
+            .plus(
+                getScreenShotMap()
+            )
+            .toMutableMap()
+
+    private fun getScreenShotMap() = mapGson.fromJson<MutableMap<String, HuaweiUploadFileResponse>>(
+        settings.getString("huaweiScreenShotMap", "{}"),
+        object : TypeToken<MutableMap<String, HuaweiUploadFileResponse>>() {}.type
+    )
+
+    private fun saveScreenShotMap() {
+        settings.putString("huaweiScreenShotMap", mapGson.toJson(uploadScreenShotMap))
+    }
+
+    private fun clearScreenShotMap() {
+        uploadUrlMap.clear()
+        uploadScreenShotMap.clear()
+        settings.remove("huaweiScreenShotMap")
+    }
+
     private fun uploadScreenShot(
         packageName: String, screenShotPath: String, callback: SuccessCallback<HuaweiUploadFileResponse>
     ) {
@@ -378,25 +402,26 @@ data class HuaweiMarket(
             return
         }
         getAppId(packageName, { callback.onFail(it) }) { appId ->
-            getUploadUrl(
-                appId.getAppId(),
+            getUploadUrl(appId.getAppId(),
                 File(screenShotPath).extension,
                 screenShotPath,
                 { callback.onFail(it) }) { uploadUrl ->
-                Http.put(uploadUrl.uploadUrl, {
+                Http.post(uploadUrl.uploadUrl, {
                     timeout {
-                        requestTimeoutMillis = 120000
+                        requestTimeoutMillis = 60000
                     }
                     setBody(MultiPartFormDataContent(formData {
                         append("authCode", uploadUrl.authCode)
                         append("fileCount", 1)
                         append("parseType", 1)
-                        append("file", File(screenShotPath).readBytes(), apkHeader(screenShotPath))
+                        append("file", File(screenShotPath).readBytes(), jpgHeader(screenShotPath))
                     }))
                 }, object : Callback<String> {
                     override fun onSuccess(t: String) {
                         val response = gson.fromJson(t, HuaweiUploadFileResponse::class.java)
                         if (response.result?.UploadFileRsp?.ifSuccess == 1) {
+                            uploadScreenShotMap[packageName + screenShotPath] = response
+                            saveScreenShotMap()
                             callback.onSuccess(response)
                         } else {
                             callback.onFail("")
@@ -436,7 +461,7 @@ data class HuaweiMarket(
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.put("$baseUrl/publish/v2/app-file-info", {
                     headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Json)
+                        append(HttpHeaders.ContentType, ContentType.Application.Json.withCharset(Charsets.UTF_8))
                         append("client_id", clientId)
                         bearerAuth(token)
                     }
@@ -451,6 +476,7 @@ data class HuaweiMarket(
                         if (response.ret?.code == 0) {
                             callback.onSuccess("")
                         } else {
+//                            clearScreenShotMap()
                             callback.onFail("")
                         }
                     }
@@ -642,6 +668,7 @@ data class HuaweiMarket(
     override fun clearInitData() {
         super.clearInitData()
         clearToken()
+        clearScreenShotMap()
     }
 }
 
@@ -684,12 +711,15 @@ internal data class HuaweiUpdateLanguageBody(
 internal data class HuaweiUpdateFileInfoBody(
     val fileType: Int,                          //2：应用介绍截图。5：软件包，如RPK、APK、AAB等。
     val files: List<HuaweiFileInfoBody>? = null,
+    val imgShowType: Int = 0,
+    val deviceType: Int = 4,
+    val lang: String = "zh-CN",
 )
 
 @Serializable
 internal data class HuaweiFileInfoBody(
-    val fileName: String,           //文件名称，包括文件的后缀名。 fileType为5时，此参数必选。
     val fileDestUrl: String,
+    val fileName: String? = null,           //文件名称，包括文件的后缀名。 fileType为5时，此参数必选。
 )
 
 @Serializable

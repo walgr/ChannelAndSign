@@ -49,42 +49,42 @@ inline fun <reified T : Any, H : MutableState<T>> autoSaveComposable(
 ) = AutoSave(key, calculation())
 
 class AutoSaveList<T : Any, H : SnapshotStateList<T>>(
-    private val key: String, var data: H
+    private val key: String, var value: H
 ) {
 
-    val size: Int = data.size
+    val size: Int = value.size
 
     fun remove(t: T) {
-        data.remove(t)
+        value.remove(t)
         saveData()
     }
 
     fun add(t: T) {
-        data.add(t)
+        value.add(t)
         saveData()
     }
 
     private fun saveData() {
-        settings.putString(key, gson.toJson(data))
+        settings.putString(key, gson.toJson(value))
     }
 
     init {
         val json = settings.getString(key, "")
-        val t = gson.fromJson(json, data.javaClass)
+        val t = gson.fromJson(json, value.javaClass)
         t?.let {
-            data = t
+            value = t
         }
     }
 }
 
 internal inline operator fun <reified T : Any, H : SnapshotStateList<T>> AutoSaveList<T, H>.getValue(
     thisObj: Any?, property: KProperty<*>
-) = data
+) = value
 
 internal inline operator fun <reified T : Any, H : SnapshotStateList<T>> AutoSaveList<T, H>.setValue(
     thisObj: Any?, property: KProperty<*>, value: H
 ) {
-    this.data = value
+    this.value = value
 }
 
 inline fun <reified T : Any, H : SnapshotStateList<T>> autoSaveList(

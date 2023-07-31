@@ -62,7 +62,7 @@ fun channelPage() {
 
     val marketDescription = autoSaveComposable("marketDescription") { remember { mutableStateOf("") } }
     val marketLeaveMessage = autoSaveComposable("marketLeaveMessage") { remember { mutableStateOf("") } }
-    val marketScreenShotList by autoSaveListComposable("marketScreenShotList") { remember { mutableStateListOf("") } }
+    val marketScreenShotList = autoSaveListComposable("marketScreenShotList") { remember { mutableStateListOf("") } }
     //打完后的市场包列表
     val marketPlaceList =
         remember { mutableStateListOf(*ChannelSetViewModel.dealMargetPlace(pathList.map { it.path }).toTypedArray()) }
@@ -339,7 +339,7 @@ fun channelPage() {
                             LazyRow(
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                             ) {
-                                items(marketScreenShotList) {
+                                items(marketScreenShotList.value) {
                                     AddImage(it) { new ->
                                         marketScreenShotList.remove(it)
                                         if (new.isNotEmpty()) {
@@ -374,7 +374,7 @@ fun channelPage() {
                             UploadData(marketApk,
                                 marketDescription.value,
                                 marketLeaveMessage.value.ifEmpty { null },
-                                marketScreenShotList.filter { screenShot ->
+                                marketScreenShotList.value.filter { screenShot ->
                                     screenShot.isNotEmpty()
                                 })
                         }.forEach {

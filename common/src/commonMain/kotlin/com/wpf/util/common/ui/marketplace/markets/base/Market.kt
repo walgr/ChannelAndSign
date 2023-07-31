@@ -45,10 +45,16 @@ interface Market : SelectInterface {
 
     fun push(uploadData: UploadData, callback: Callback<MarketType>)
 
+    fun jpgHeader(screenShotPath: String): Headers {
+        return Headers.build {
+            append(HttpHeaders.ContentType, ContentType.Image.JPEG)
+            append(HttpHeaders.ContentDisposition, "filename=\"${File(screenShotPath).name}\"")
+        }
+    }
+
     fun pngHeader(screenShotPath: String): Headers {
         return Headers.build {
             append(HttpHeaders.ContentType, ContentType.Image.PNG)
-//            append("type", ContentType.Image.PNG)
             append(HttpHeaders.ContentDisposition, "filename=\"${File(screenShotPath).name}\"")
         }
     }
@@ -56,7 +62,6 @@ interface Market : SelectInterface {
     fun apkHeader(filePath: String): Headers {
         return Headers.build {
             append(HttpHeaders.ContentType, "application/vnd.android.package-archive")
-//            append("type", "application/vnd.android.package-archive")
             append(HttpHeaders.ContentDisposition, "filename=\"${File(filePath).name}\"")
         }
     }
