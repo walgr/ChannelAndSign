@@ -276,6 +276,14 @@ data class HuaweiMarket(
                         append("fileCount", 1)
                         append("file", File(apk.filePath).readBytes(), apkHeader(apk.filePath))
                     }))
+                    var lastProcess = 0L
+                    onUpload { bytesSentTotal, contentLength ->
+                        val curProcess = bytesSentTotal * 100 / contentLength
+                        if (curProcess != lastProcess) {
+                            lastProcess = curProcess
+                            println("文件:${apk.fileName} 上传进度:${curProcess}%")
+                        }
+                    }
                 }, object : Callback<String> {
                     override fun onSuccess(t: String) {
                         val response = gson.fromJson(t, HuaweiUploadFileResponse::class.java)

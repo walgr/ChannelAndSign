@@ -10,17 +10,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="61d748da-9faf-4b59-844f-3c5a68d8c4f4" name="更改" comment="上传市场支持。">
-      <change afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/common_desktop_1_0_SNAPSHOT.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/common_desktop_1_0_SNAPSHOT.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/desktop_jvm_1_0_SNAPSHOT.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/desktop_jvm_1_0_SNAPSHOT.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ApkItem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ApkItem.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/channelset/ChannelSetPage.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/HuaweiMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/HuaweiMarket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/OppoMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/OppoMarket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/SamsungMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/SamsungMarket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/VivoMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/VivoMarket.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiMarket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/XiaomiMarket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/Market.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/Market.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/MarketApk.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/marketplace/markets/base/MarketApk.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/AutoSave.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/commonMain/kotlin/com/wpf/util/common/ui/utils/AutoSave.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -444,7 +442,7 @@
       <workItem from="1690763118231" duration="238000" />
       <workItem from="1690763366537" duration="333000" />
       <workItem from="1690763711438" duration="11694000" />
-      <workItem from="1690783405594" duration="351000" />
+      <workItem from="1690783405594" duration="9307000" />
     </task>
     <task id="LOCAL-00001" summary="1.0">
       <created>1682567148217</created>
@@ -557,14 +555,6 @@
       <option name="presentableId" value="LOCAL-00016" />
       <option name="project" value="LOCAL" />
       <updated>1687254274389</updated>
-    </task>
-    <task id="LOCAL-00028" summary="优化代码。">
-      <option name="closed" value="true" />
-      <created>1687860202466</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1687860202466</updated>
     </task>
     <task id="LOCAL-00029" summary="优化代码。">
       <option name="closed" value="true" />
@@ -822,7 +812,15 @@
       <option name="project" value="LOCAL" />
       <updated>1690538562022</updated>
     </task>
-    <option name="localTasksCounter" value="61" />
+    <task id="LOCAL-00061" summary="上传市场支持。">
+      <option name="closed" value="true" />
+      <created>1690784098919</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1690784098919</updated>
+    </task>
+    <option name="localTasksCounter" value="62" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -896,8 +894,7 @@
     </pin-to-top-manager>
     <watches-manager>
       <configuration name="JetRunConfigurationType">
-        <watch expression="gson.fromJson&lt;MutableMap&lt;String, HuaweiUploadFileResponse&gt;&gt;(         settings.getString(&quot;huaweiScreenShotMap&quot;, &quot;{}&quot;),         object : TypeToken&lt;MutableMap&lt;String, HuaweiUploadFileResponse&gt;&gt;() {}.type     )" language="kotlin" />
-        <watch expression="settings.getString(&quot;huaweiScreenShotMap&quot;, &quot;{}&quot;)" language="kotlin" />
+        <watch expression="marketDescription1" language="kotlin" />
       </configuration>
     </watches-manager>
   </component>

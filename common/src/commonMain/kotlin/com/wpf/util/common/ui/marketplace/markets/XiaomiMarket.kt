@@ -152,7 +152,7 @@ data class XiaomiMarket(
                 )
                 val requestDataJson = gson.toJson(xiaomiPushData)
                 append("RequestData", requestDataJson)
-                val SIGStr = JsonObject().apply {
+                append("SIG", encryptByPublicKey(JsonObject().apply {
                     add("sig", JsonArray().apply {
                         add(JsonObject().apply {
                             addProperty("name", "RequestData")
@@ -184,8 +184,7 @@ data class XiaomiMarket(
                         }
                     })
                     addProperty("password", password)
-                }.toString()
-                append("SIG", encryptByPublicKey(SIGStr, pubKey))
+                }.toString(), pubKey))
                 append("apk", xiaomiPushData.apk.readBytes(), apkHeader(xiaomiPushData.apk.path))
                 xiaomiPushData.secondApk?.let {
                     append("secondApk", xiaomiPushData.secondApk.readBytes(), apkHeader(xiaomiPushData.secondApk.path))
@@ -194,19 +193,39 @@ data class XiaomiMarket(
 //                    append("icon", xiaomiPushData.icon.readBytes())
 //                }
                 xiaomiPushData.screenshot_1?.let {
-                    append("screenshot_1", xiaomiPushData.screenshot_1.readBytes(), pngHeader(xiaomiPushData.screenshot_1.path))
+                    append(
+                        "screenshot_1",
+                        xiaomiPushData.screenshot_1.readBytes(),
+                        pngHeader(xiaomiPushData.screenshot_1.path)
+                    )
                 }
                 xiaomiPushData.screenshot_2?.let {
-                    append("screenshot_2", xiaomiPushData.screenshot_2.readBytes(), pngHeader(xiaomiPushData.screenshot_2.path))
+                    append(
+                        "screenshot_2",
+                        xiaomiPushData.screenshot_2.readBytes(),
+                        pngHeader(xiaomiPushData.screenshot_2.path)
+                    )
                 }
                 xiaomiPushData.screenshot_3?.let {
-                    append("screenshot_3", xiaomiPushData.screenshot_3.readBytes(), pngHeader(xiaomiPushData.screenshot_3.path))
+                    append(
+                        "screenshot_3",
+                        xiaomiPushData.screenshot_3.readBytes(),
+                        pngHeader(xiaomiPushData.screenshot_3.path)
+                    )
                 }
                 xiaomiPushData.screenshot_4?.let {
-                    append("screenshot_4", xiaomiPushData.screenshot_4.readBytes(), pngHeader(xiaomiPushData.screenshot_4.path))
+                    append(
+                        "screenshot_4",
+                        xiaomiPushData.screenshot_4.readBytes(),
+                        pngHeader(xiaomiPushData.screenshot_4.path)
+                    )
                 }
                 xiaomiPushData.screenshot_5?.let {
-                    append("screenshot_5", xiaomiPushData.screenshot_5.readBytes(), pngHeader(xiaomiPushData.screenshot_5.path))
+                    append(
+                        "screenshot_5",
+                        xiaomiPushData.screenshot_5.readBytes(),
+                        pngHeader(xiaomiPushData.screenshot_5.path)
+                    )
                 }
             }))
         }, callback = object : Callback<String> {

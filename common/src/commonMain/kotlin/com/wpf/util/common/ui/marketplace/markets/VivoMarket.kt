@@ -9,9 +9,7 @@ import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.base.Apk
 import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.*
-import com.wpf.util.common.ui.utils.Callback
-import com.wpf.util.common.ui.utils.SuccessCallback
-import com.wpf.util.common.ui.utils.gson
+import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.InputView
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
@@ -57,16 +55,6 @@ data class VivoMarket(
                 callback.onFail(msg)
             }
         })
-//        push(uploadData, object : Callback<MarketType> {
-//            override fun onSuccess(t: MarketType) {
-//                println("Vivo上传成功")
-//            }
-//
-//            override fun onFail(msg: String) {
-//                println("Vivo上传失败")
-//            }
-//
-//        })
     }
 
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
@@ -170,7 +158,7 @@ data class VivoMarket(
         onFail: ((String) -> Unit)? = null,
         callback: (List<VivoUploadFileResponse>) -> Unit
     ) {
-        uploadScreenShotList(packageName, screenShotPathList, object : SuccessCallback<List<VivoUploadFileResponse>> {
+        uploadScreenShotList(packageName, screenShotPathList, callback = object : SuccessCallback<List<VivoUploadFileResponse>> {
             override fun onSuccess(t: List<VivoUploadFileResponse>) {
                 callback.invoke(t)
             }
@@ -183,22 +171,25 @@ data class VivoMarket(
     }
 
     private fun uploadScreenShotList(
-        packageName: String, screenShotPathList: List<String>?, callback: SuccessCallback<List<VivoUploadFileResponse>>
+        packageName: String,
+        screenShotPathList: List<String>?,
+        uploadResultList: MutableList<VivoUploadFileResponse>? = null,
+        callback: SuccessCallback<List<VivoUploadFileResponse>>
     ) {
         if (screenShotPathList.isNullOrEmpty()) {
             callback.onSuccess(arrayListOf())
             return
         }
         println("需要上传${screenShotPathList.size}个")
-        val uploadResultList = arrayListOf<VivoUploadFileResponse>()
-        screenShotPathList.map {
-            uploadScreenShot(packageName, it, { error -> callback.onFail(error) }) { uploadFile ->
-                uploadResultList.add(uploadFile)
-                if (uploadResultList.size == screenShotPathList.size) {
-                    callback.onSuccess(uploadResultList)
-                } else {
-                    println("当前:${it}上传成功， 还有${screenShotPathList.size - uploadResultList.size}个")
-                }
+        val curUploadResultList = uploadResultList ?: arrayListOf()
+        val screenshot = screenShotPathList[curUploadResultList.size]
+        uploadScreenShot(packageName, screenshot, { error -> callback.onFail(error) }) { uploadFile ->
+            curUploadResultList.add(uploadFile)
+            if (curUploadResultList.size == screenShotPathList.size) {
+                callback.onSuccess(curUploadResultList)
+            } else {
+                uploadScreenShotList(packageName, screenShotPathList, curUploadResultList, callback)
+                println("当前:${screenshot}上传成功，还有${screenShotPathList.size - curUploadResultList.size}个")
             }
         }
     }
@@ -221,7 +212,8 @@ data class VivoMarket(
         })
     }
 
-    private val uploadScreenShotMap = mutableMapOf<String, VivoUploadFileResponse>()
+    @delegate:Transient
+    private val uploadScreenShotMap by autoSave("VivoUploadScreenShotMap") { mutableMapOf<String, VivoUploadFileResponse>() }
     private fun uploadScreenShot(
         packageName: String, screenShotPath: String, callback: SuccessCallback<VivoUploadFileResponse>
     ) {
@@ -307,8 +299,8 @@ data class VivoMarket(
         })
     }
 
-    @Transient
-    private val uploadApkMap = mutableMapOf<Apk, VivoUploadFileResponse>()
+    @delegate:Transient
+    private val uploadApkMap by autoSave("VivoUploadApkMap") { mutableMapOf<Apk, VivoUploadFileResponse>() }
     private fun uploadApk(apk: Apk, callback: SuccessCallback<VivoUploadFileResponse>) {
         val successResult = uploadApkMap[apk]
         if (successResult != null) {

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
+import com.wpf.util.common.ui.marketplace.markets.VivoBaseResponse
 import com.wpf.util.common.ui.marketplace.markets.base.UploadData
 import com.wpf.util.common.ui.marketplace.markets.base.upload
 import com.wpf.util.common.ui.signset.SignFile
@@ -330,11 +331,11 @@ fun channelPage() {
                             modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Title("市场包")
-                            InputView(input = marketDescription.data, hint = "请输入更新文案", maxLine = 5) {
-                                marketDescription.value = it
+                            InputView(input = marketDescription.value, hint = "请输入更新文案", maxLine = 5) {
+                                marketDescription.stateValue = it
                             }
-                            InputView(input = marketLeaveMessage.data, hint = "请输入留言", maxLine = 5) {
-                                marketLeaveMessage.value = it
+                            InputView(input = marketLeaveMessage.value, hint = "请输入留言", maxLine = 5) {
+                                marketLeaveMessage.stateValue = it
                             }
                             LazyRow(
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
@@ -372,8 +373,8 @@ fun channelPage() {
                             it.isSelectState.value
                         }.map { marketApk ->
                             UploadData(marketApk,
-                                marketDescription.value,
-                                marketLeaveMessage.value.ifEmpty { null },
+                                marketDescription.stateValue,
+                                marketLeaveMessage.stateValue.ifEmpty { null },
                                 marketScreenShotList.value.filter { screenShot ->
                                     screenShot.isNotEmpty()
                                 })

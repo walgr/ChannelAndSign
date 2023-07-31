@@ -181,18 +181,18 @@ data class SamsungMarket(
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.packageName().isNullOrEmpty()) return
         update(uploadData, { callback.onFail(it) }) {
-//            submit(callback = object : SuccessCallback<String> {
-//                override fun onSuccess(t: String) {
-//                    callback.onSuccess(MarketType.三星)
-//                }
-//
-//                override fun onFail(msg: String) {
-//                    super.onFail(msg)
-//                    println(msg)
-//                    callback.onFail("$name:$msg")
-//                }
-//
-//            })
+            submit(callback = object : SuccessCallback<String> {
+                override fun onSuccess(t: String) {
+                    callback.onSuccess(MarketType.三星)
+                }
+
+                override fun onFail(msg: String) {
+                    super.onFail(msg)
+                    println(msg)
+                    callback.onFail("$name:$msg")
+                }
+
+            })
         }
     }
 
@@ -221,7 +221,9 @@ data class SamsungMarket(
         }
     }
 
+    @Transient
     private var binaryList = mutableListOf<SamsungApkBody>()
+    @Transient
     private var screenShotList = mutableListOf<SamsungScreenShotBody>()
     private fun <T> addNewToList(list: MutableList<T>, samsungApkBodyList: List<T>): List<T> {
         if (samsungApkBodyList.isEmpty()) return list
@@ -261,15 +263,18 @@ data class SamsungMarket(
                                 if (screensResponse.isNotEmpty()) {
                                     append("screenshots", gson.toJson(addNewToList(screenShotList, screenShotList)))
                                 }
-                                append("binaryList", gson.toJson(addNewToList(binaryList, apksResponse.map { uploadFile ->
-                                    SamsungApkBody(
-                                        filekey = uploadFile.fileKey!!,
-                                        fileName = uploadFile.apk?.fileName!!,
-                                        packageName = uploadFile.apk?.packageName!!,
-                                        versionCode = uploadFile.apk?.versionCode ?: "",
-                                        versionName = uploadFile.apk?.versionName ?: ""
-                                    )
-                                })))
+                                append(
+                                    "binaryList",
+                                    gson.toJson(addNewToList(binaryList, apksResponse.map { uploadFile ->
+                                        SamsungApkBody(
+                                            filekey = uploadFile.fileKey!!,
+                                            fileName = uploadFile.apk?.fileName!!,
+                                            packageName = uploadFile.apk?.packageName!!,
+                                            versionCode = uploadFile.apk?.versionCode ?: "",
+                                            versionName = uploadFile.apk?.versionName ?: ""
+                                        )
+                                    }))
+                                )
                             }, {
                                 headers {
                                     append(HttpHeaders.ContentType, ContentType.Application.Json)
@@ -367,6 +372,14 @@ data class SamsungMarket(
                         append("sessionId", fileId.sessionId!!)
                         append("file", File(apk.filePath).readBytes(), apkHeader(apk.filePath))
                     }))
+                    var lastProcess = 0L
+                    onUpload { bytesSentTotal, contentLength ->
+                        val curProcess = bytesSentTotal * 100 / contentLength
+                        if (curProcess != lastProcess) {
+                            lastProcess = curProcess
+                            println("文件:${apk.fileName} 上传进度:${curProcess}%")
+                        }
+                    }
                 }, object : Callback<String> {
                     override fun onSuccess(t: String) {
                         val response = gson.fromJson(t, SamsungUploadFileResponse::class.java)
@@ -493,8 +506,9 @@ data class SamsungMarket(
         })
     }
 
-    @Transient
-    private val uploadFileIdMap = mutableMapOf<Any, SamsungCreateFileIdResponse>()
+    @delegate:Transient
+    private val uploadFileIdMap by autoSave("SamsungUploadFileIdMap") { mutableMapOf<Any, SamsungCreateFileIdResponse>() }
+
     private fun createUploadFileId(key: Any, callback: SuccessCallback<SamsungCreateFileIdResponse>) {
         val successResult = uploadFileIdMap[key]
         if (successResult != null) {

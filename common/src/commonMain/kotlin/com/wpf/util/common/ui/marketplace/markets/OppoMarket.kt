@@ -427,6 +427,14 @@ data class OppoMarket(
                         append("file", File(filePath).readBytes(), fileHeader(filePath))
                         append("api_sign", hmacSHA256(getUrlParamsFromMap(parameterList), clientSecret))
                     }))
+                    var lastProcess = 0L
+                    onUpload { bytesSentTotal, contentLength ->
+                        val curProcess = bytesSentTotal * 100 / contentLength
+                        if (curProcess != lastProcess) {
+                            lastProcess = curProcess
+                            println("文件:${filePath} 上传进度:${curProcess}%")
+                        }
+                    }
                 }, callback = object : Callback<String> {
                     override fun onSuccess(t: String) {
                         val response = gson.fromJson<OppoBaseResponse<OppoUploadFileData>>(

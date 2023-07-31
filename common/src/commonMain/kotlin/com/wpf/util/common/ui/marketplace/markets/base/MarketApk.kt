@@ -13,4 +13,9 @@ data class MarketApk(
 
     val uploadState = mutableStateOf(UploadState.UPLOAD_WAIT)               //上传状态
 
+    fun packageName() = abiApk[0].packageName
+
+    fun versionCode() = abiApk[0].versionCode
+
+    fun versionName() = abiApk[0].versionName
 }

@@ -46,7 +46,10 @@ fun ApkItem(marketApk: MarketApk) {
         ) {
             Checkbox(isSelect.value, null)
             Column(verticalArrangement = Arrangement.Center, modifier = Modifier.offset(x = 8.dp)) {
-                Text(text = marketApk.marketType.name, fontSize = 14.sp)
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(text = marketApk.marketType.name, fontSize = 14.sp)
+                    Text(text = marketApk.versionName(), fontSize = 8.sp, modifier = Modifier.offset(x = 4.dp))
+                }
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.offset(y = 4.dp)) {
                     if (marketApk.abiApk.find { it.abi == AbiType.Abi32 } != null) {
                         ShapeText("32", fontSize = 8.sp, bgColor = if (MarketPlaceViewModel.getCanApiMarketList().find {
@@ -73,9 +76,6 @@ fun ApkItem(marketApk: MarketApk) {
                 modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd
             ) {
                 Row {
-                    if (marketApk.marketType.canApi()) {
-                        apiIcon()
-                    }
                     Box(modifier = Modifier.size(if (uploadState.value != UPLOAD_WAIT) 24.dp else 0.dp).offset(4.dp)) {
                         when (uploadState.value) {
                             UPLOADING -> {
@@ -91,6 +91,9 @@ fun ApkItem(marketApk: MarketApk) {
 
                             }
                         }
+                    }
+                    if (marketApk.marketType.canApi()) {
+                        apiIcon()
                     }
                 }
             }
