@@ -37,14 +37,15 @@ internal inline operator fun <reified T : @Serializable Any> AutoSave<T>.getValu
     thisObj: Any?, property: KProperty<*>
 ) = value
 
-internal inline operator fun <reified T : Any> AutoSave<T>.setValue(
+internal inline operator fun <reified T : @Serializable Any> AutoSave<T>.setValue(
     thisObj: Any?, property: KProperty<*>, value: T
 ) {
     this.value = value
 }
 
 class AutoSaveState<T : @Serializable Any, H : MutableState<T>>(
-    private var key: String, value: H) {
+    private var key: String, value: H
+) {
     private var data: H = value
 
     var value = data
@@ -80,53 +81,3 @@ internal inline operator fun <reified T : @Serializable Any, H : MutableState<T>
 ) {
     stateValue = value
 }
-
-class AutoSaveList<T :@Serializable Any, H : SnapshotStateList<T>>(
-    private val key: String, var value: H
-) {
-
-    val size: Int = value.size
-
-    fun remove(t: T) {
-        value.remove(t)
-        saveData()
-    }
-
-    fun add(t: T) {
-        value.add(t)
-        saveData()
-    }
-
-    private fun saveData() {
-        settings.putString(key, gson.toJson(value))
-    }
-
-    init {
-        val json = settings.getString(key, "")
-        val t = gson.fromJson(json, value.javaClass)
-        t?.let {
-            value = t
-        }
-    }
-}
-
-internal inline operator fun <reified T :@Serializable Any, H : SnapshotStateList<T>> AutoSaveList<T, H>.getValue(
-    thisObj: Any?, property: KProperty<*>
-) = value
-
-internal inline operator fun <reified T :@Serializable Any, H : SnapshotStateList<T>> AutoSaveList<T, H>.setValue(
-    thisObj: Any?, property: KProperty<*>, value: H
-) {
-    this.value = value
-}
-
-inline fun <reified T :@Serializable Any, H : SnapshotStateList<T>> autoSaveList(
-    key: String, crossinline calculation: () -> H
-) = AutoSaveList(key, calculation())
-
-@Composable
-inline fun <reified T :@Serializable Any, H : SnapshotStateList<T>> autoSaveListComposable(
-    key: String, crossinline calculation: @Composable () -> H
-) = AutoSaveList(key, calculation())
-
-

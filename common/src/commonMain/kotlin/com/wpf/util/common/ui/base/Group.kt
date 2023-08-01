@@ -7,11 +7,11 @@ import kotlinx.serialization.Transient
 
 @Serializable
 open class Group(
-    @Transient open var name: String = "",
-    @Transient override var isSelect: Boolean = false,
+    @kotlin.jvm.Transient @Transient open var name: String = "",
+    @kotlin.jvm.Transient @Transient override var isSelect: Boolean = false,
 ): SelectItem(isSelect) {
 
-    @Transient
+    @kotlin.jvm.Transient @Transient
     open var nameState: MutableState<String> = mutableStateOf(name)
         get() {
             field.value = name

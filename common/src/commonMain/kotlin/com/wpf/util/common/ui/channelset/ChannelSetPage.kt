@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
-import com.wpf.util.common.ui.marketplace.markets.VivoBaseResponse
 import com.wpf.util.common.ui.marketplace.markets.base.UploadData
 import com.wpf.util.common.ui.marketplace.markets.base.upload
 import com.wpf.util.common.ui.signset.SignFile
@@ -41,7 +40,7 @@ import com.wpf.util.common.ui.widget.common.*
 @Composable
 fun channelPage() {
     //分组列表
-    val channelList = remember { mutableStateListOf(*ChannelSetViewModel.getClientList().toTypedArray()) }
+    val clientList by autoSaveListComposable<Client>("clientList") { remember { mutableStateListOf() } }
     //渠道包文件名
     val channelFileNameList = remember { mutableStateListOf("") }
     //渠道名
@@ -68,7 +67,7 @@ fun channelPage() {
     val marketPlaceList =
         remember { mutableStateListOf(*ChannelSetViewModel.dealMargetPlace(pathList.map { it.path }).toTypedArray()) }
 
-    channelList.find { channel -> channel.isSelect }?.channelPath?.let {
+    clientList.find { client -> client.isSelect }?.channelPath?.let {
         if (it.isNotEmpty()) {
             val result = ChannelSetViewModel.getChannelDataInFile(it)
             result.isNotEmpty().let {
@@ -108,38 +107,41 @@ fun channelPage() {
                                         groupDialog.value = true
                                     }
                                     LazyColumn {
-                                        items(channelList) { group ->
-                                            Box(modifier = Modifier.fillMaxWidth().height(44.dp)
-                                                .padding(8.dp, 4.dp, 8.dp, 4.dp).clip(shape = RoundedCornerShape(8.dp))
-                                                .background(color = if (group.isSelectState.value) mainTextColor else Color.White)
-                                                .combinedClickable(enabled = true, onDoubleClick = {
-                                                    groupDialogInput.value = group.name
-                                                    groupDialog.value = true
-                                                }, onLongClick = {
-                                                    groupDialogInput.value = group.name
-                                                    groupDialog.value = true
-                                                }, onClick = {
-                                                    channelList.forEach {
-                                                        it.isSelect = false
-                                                        it.isSelectState.value = false
-                                                    }
-                                                    group.isSelect = true
-                                                    group.isSelectState.value = true
-                                                    ChannelSetViewModel.saveClientList(channelList)
-                                                    channelFileNameList.clear()
-                                                    channelNameList.clear()
-                                                    if (group.channelPath.isNotEmpty()) {
-                                                        val result =
-                                                            ChannelSetViewModel.getChannelDataInFile(group.channelPath)
-                                                        if (result.isNotEmpty()) {
-                                                            channelFileNameList.addAll(result.map { array -> array[0] })
-                                                            channelNameList.addAll(result.map { array -> array[1] })
-                                                        } else {
-                                                            channelFileNameList.add("文件解析错误，路径:(${group.channelPath})")
-                                                            channelNameList.add("文件解析错误，路径:(${group.channelPath}")
+                                        items(clientList) { group ->
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().height(44.dp)
+                                                    .padding(8.dp, 4.dp, 8.dp, 4.dp)
+                                                    .clip(shape = RoundedCornerShape(8.dp))
+                                                    .background(color = if (group.isSelectState.value) mainTextColor else Color.White)
+                                                    .combinedClickable(enabled = true, onDoubleClick = {
+                                                        groupDialogInput.value = group.name
+                                                        groupDialog.value = true
+                                                    }, onLongClick = {
+                                                        groupDialogInput.value = group.name
+                                                        groupDialog.value = true
+                                                    }, onClick = {
+                                                        clientList.forEach {
+                                                            it.isSelect = false
+                                                            it.isSelectState.value = false
                                                         }
-                                                    }
-                                                }), contentAlignment = Alignment.CenterStart) {
+                                                        group.isSelect = true
+                                                        group.isSelectState.value = true
+                                                        ChannelSetViewModel.saveClientList(clientList)
+                                                        channelFileNameList.clear()
+                                                        channelNameList.clear()
+                                                        if (group.channelPath.isNotEmpty()) {
+                                                            val result =
+                                                                ChannelSetViewModel.getChannelDataInFile(group.channelPath)
+                                                            if (result.isNotEmpty()) {
+                                                                channelFileNameList.addAll(result.map { array -> array[0] })
+                                                                channelNameList.addAll(result.map { array -> array[1] })
+                                                            } else {
+                                                                channelFileNameList.add("文件解析错误，路径:(${group.channelPath})")
+                                                                channelNameList.add("文件解析错误，路径:(${group.channelPath}")
+                                                            }
+                                                        }
+                                                    }), contentAlignment = Alignment.CenterStart
+                                            ) {
                                                 Text(
                                                     group.nameState.value,
                                                     color = if (group.isSelectState.value) Color.White else Color.Black,
@@ -160,7 +162,7 @@ fun channelPage() {
                                     ) {
                                         Column {
                                             FileAddTitle("渠道列表", arrayOf("txt")) { path ->
-                                                channelList.find { it.isSelect }?.channelPath = path
+                                                clientList.find { it.isSelect }?.channelPath = path
                                                 channelFileNameList.clear()
                                                 channelNameList.clear()
                                                 if (path.isNotEmpty()) {
@@ -213,7 +215,7 @@ fun channelPage() {
                                         }
                                         onExternalDrag(modifier = Modifier.fillMaxSize()) {
                                             if (it.size != 1 || !it[0].contains(".txt")) return@onExternalDrag
-                                            channelList.find { channel -> channel.isSelect }?.channelPath = it[0]
+                                            clientList.find { channel -> channel.isSelect }?.channelPath = it[0]
                                             channelFileNameList.clear()
                                             channelNameList.clear()
                                             if (it[0].isNotEmpty()) {
@@ -290,7 +292,7 @@ fun channelPage() {
                                                         }
                                                         ChannelSetViewModel.dealApk(
                                                             filePathList,
-                                                            channelList.find { it.isSelect }?.channelPath,
+                                                            clientList.find { it.isSelect }?.channelPath,
                                                             signList[0]
                                                         ) {
                                                             isRunDealFile = false
@@ -389,23 +391,23 @@ fun channelPage() {
         }
         if (groupDialog.value) {
             showGroupAddDialog(groupDialog, groupDialogInput) { inputStr ->
-                channelList.forEach {
+                clientList.forEach {
                     it.isSelect = false
                     it.isSelectState.value = false
                 }
-                val findGroup = channelList.find {
+                val findGroup = clientList.find {
                     it.name == groupDialogInput.value
                 }
                 if (findGroup != null) {
                     findGroup.name = inputStr
                     findGroup.nameState.value = inputStr
                 } else {
-                    channelList.add(Client(inputStr).apply {
+                    clientList.add(Client(inputStr).apply {
                         isSelect = true
                         isSelectState.value = true
                     })
                 }
-                ChannelSetViewModel.saveClientList(channelList)
+                ChannelSetViewModel.saveClientList(clientList)
                 groupDialogInput.value = ""
             }
         }
@@ -416,7 +418,7 @@ fun channelPage() {
                     file.path
                 }
                 ChannelSetViewModel.dealApk(
-                    filePathList, channelList.find { channel -> channel.isSelect }?.channelPath, it
+                    filePathList, clientList.find { channel -> channel.isSelect }?.channelPath, it
                 ) {
                     isRunDealFile = false
                     marketPlaceList.clear()

@@ -6,9 +6,9 @@ import kotlinx.serialization.Transient
 
 @Serializable
 open class SelectItem(
-    @Transient open var isSelect: Boolean = false
+    @kotlin.jvm.Transient @Transient open var isSelect: Boolean = false
 ) {
-    @Transient
+    @kotlin.jvm.Transient @Transient
     open var isSelectState = mutableStateOf(isSelect)
         get() {
             field.value = isSelect
