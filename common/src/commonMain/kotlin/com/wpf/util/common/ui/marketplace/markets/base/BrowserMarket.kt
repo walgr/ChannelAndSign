@@ -5,7 +5,6 @@ import javafx.scene.web.WebView
 
 interface BrowserMarket : Market {
 
-
     override val baseUrl: String
         get() = ""
 

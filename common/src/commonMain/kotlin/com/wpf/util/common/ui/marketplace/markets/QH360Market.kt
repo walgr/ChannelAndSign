@@ -97,8 +97,7 @@ data class QH360Market(
         isUploadUrl = false
         if (url == browserUrl) {
             //初始打开
-            val realUrl = webView.querySelector(" minimalize-styl-2", "href")
-            if (realUrl.isNullOrEmpty() || realUrl == "undefined") {
+            if (webView.findElements("userName")) {
                 CoroutineScope(Dispatchers.Main).launch {
                     delay(1000)
                     webView.setElementValue("userName", account)
@@ -129,11 +128,12 @@ data class QH360Market(
                 saveCookies()
             }
             webView.load(pushUrl + appId)
-        } else if (url.startsWith(pushUrl)) {
+        } else if (url.startsWith(pushUrl + appId)) {
             //上传页面
             isUploadUrl = true
 
             webView?.setElementValue("edition_brief", "testdaweawe")
+            webView?.setElementValue("apk_desc", "testdaweawe")
         }
     }
 

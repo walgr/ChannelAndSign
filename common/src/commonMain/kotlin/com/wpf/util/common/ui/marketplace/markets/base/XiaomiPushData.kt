@@ -9,11 +9,11 @@ data class XiaomiPushData(
     @Transient val apk: File,                          //应用包实体
     @Transient val secondApk: File?,                   //应用包实体
     @Transient val icon: File? = null,                 //应用包Icon
-    @Transient val screenshot_1: File?= null,          //应用的第1 幅截图，synchroType=0 时必选
-    @Transient val screenshot_2: File?= null,          //应用的第2 幅截图，synchroType=0 时必选
-    @Transient val screenshot_3: File?= null,          //应用的第3 幅截图，synchroType=0 时必选
-    @Transient val screenshot_4: File?= null,          //应用的第4 幅截图，synchroType=0 时必选
-    @Transient val screenshot_5: File?= null,          //应用的第5 幅截图，synchroType=0 时必选
+    @Transient val screenShot1: File?= null,          //应用的第1 幅截图，synchroType=0 时必选
+    @Transient val screenShot2: File?= null,          //应用的第2 幅截图，synchroType=0 时必选
+    @Transient val screenShot3: File?= null,          //应用的第3 幅截图，synchroType=0 时必选
+    @Transient val screenShot4: File?= null,          //应用的第4 幅截图，synchroType=0 时必选
+    @Transient val screenShot5: File?= null,          //应用的第5 幅截图，synchroType=0 时必选
 )
 
 

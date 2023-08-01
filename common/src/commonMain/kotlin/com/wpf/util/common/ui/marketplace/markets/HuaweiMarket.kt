@@ -38,22 +38,12 @@ data class HuaweiMarket(
     override val baseUrl: String = "https://connect-api.cloud.huawei.com/api"
 
     @Transient
-    private var token = gson.fromJson<MutableMap<Long, String>>(
-        settings.getString("huaweiToken", "{}"), object : TypeToken<MutableMap<Long, String>>() {}.type
-    ) ?: mutableMapOf()
+    private var token = autoSaveMap("huaweiToken") { mutableMapOf<String, MutableMap<Long, String>>() }
 
-    private fun saveToken() {
-        settings.putString("huaweiToken", gson.toJson(token))
-    }
-
-    private fun clearToken() {
-        settings.remove("huaweiToken")
-    }
-
-    private fun getEfficientToken(): String {
+    private fun getEfficientToken(packageName: String): String {
         var efficientToken = ""
         val noEfficientToken = mutableListOf<Long>()
-        token.forEach { (t, u) ->
+        token[packageName].forEach { (t, u) ->
             if ((System.currentTimeMillis() / 1000) - t < 172800) {
                 efficientToken = u
             } else {
@@ -61,9 +51,8 @@ data class HuaweiMarket(
             }
         }
         noEfficientToken.forEach {
-            token.remove(it)
+            token[packageName].remove(it)
         }
-        saveToken()
         return efficientToken
     }
 
@@ -89,7 +78,7 @@ data class HuaweiMarket(
             Http.get("$baseUrl/publish/v2/app-info", request = {
                 headers {
                     append("client_id", clientId)
-                    bearerAuth(getEfficientToken())
+                    bearerAuth(getEfficientToken(packageName))
                 }
                 url {
                     parameters.append("client_id", clientId)
@@ -107,7 +96,6 @@ data class HuaweiMarket(
             })
         }
     }
-
 
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         updateAppLanguageInfo(uploadData.packageName()!!, uploadData.description, { callback.onFail(it) }) {
@@ -141,7 +129,7 @@ data class HuaweiMarket(
 
     //提交审核
     private fun submit(packageName: String, callback: SuccessCallback<String>) {
-        getToken({ callback.onFail(it) }) { token ->
+        getToken(packageName, { callback.onFail(it) }) { token ->
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.post("$baseUrl/publish/v2/app-submit", {
                     headers {
@@ -188,15 +176,15 @@ data class HuaweiMarket(
     }
 
     @Transient
-    private val updateLanguageInfoSuccessMap = mutableMapOf<String, String>()
+    private val updateLanguageInfoSuccessMap = autoSaveMap("huaweiLanInfo") { mutableMapOf<String, MutableMap<String, String>>() }
 
     //在这里填写更新文案
     private fun updateAppLanguageInfo(packageName: String, description: String, callback: SuccessCallback<String>) {
-        if (updateLanguageInfoSuccessMap.containsKey(packageName + description)) {
-            callback.onSuccess(updateLanguageInfoSuccessMap[packageName + description] ?: "")
+        if (updateLanguageInfoSuccessMap[packageName].containsKey(packageName + description)) {
+            callback.onSuccess(updateLanguageInfoSuccessMap[packageName][description] ?: "")
             return
         }
-        getToken({ callback.onFail(it) }) { token ->
+        getToken(packageName, { callback.onFail(it) }) { token ->
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.put("$baseUrl/publish/v2/app-language-info", {
                     timeout {
@@ -215,7 +203,7 @@ data class HuaweiMarket(
                     override fun onSuccess(t: String) {
                         val response = gson.fromJson(t, HuaweiBaseResponse::class.java)
                         if (response.ret?.code == 0) {
-                            updateLanguageInfoSuccessMap[packageName + description] = ""
+                            updateLanguageInfoSuccessMap[packageName][description] = ""
                             callback.onSuccess("")
                         } else {
                             callback.onFail("")
@@ -247,11 +235,11 @@ data class HuaweiMarket(
     }
 
     @Transient
-    private val uploadApkMap = mutableMapOf<Apk, HuaweiUploadFileResponse>()
+    private val uploadApkMap = autoSaveMap("huaweiUploadApk") { mutableMapOf<String, HuaweiUploadFileResponse>() }
 
     //更新apk
     private fun uploadApk(apk: Apk, callback: SuccessCallback<HuaweiUploadFileResponse>) {
-        val successResult = uploadApkMap[apk]
+        val successResult = uploadApkMap[apk.packageName]
         if (successResult != null) {
             updateAppFileInfo(apk.packageName, HuaweiUpdateFileInfoBody(
                 5, listOf(
@@ -266,7 +254,7 @@ data class HuaweiMarket(
             return
         }
         getAppId(apk.packageName, { callback.onFail(it) }) { appId ->
-            getUploadUrl(appId.getAppId(), "apk", apk, { callback.onFail(it) }) { uploadUrl ->
+            getUploadUrl(apk.packageName, appId.getAppId(), "apk", apk, { callback.onFail(it) }) { uploadUrl ->
                 Http.post(uploadUrl.uploadUrl, {
                     timeout {
                         requestTimeoutMillis = 120000
@@ -297,7 +285,7 @@ data class HuaweiMarket(
                                     )
                                 )
                             ), { callback.onFail(it) }) {
-                                uploadApkMap[apk] = response
+                                uploadApkMap[apk.packageName] = response
                                 callback.onSuccess(response)
                             }
                         } else {
@@ -410,7 +398,7 @@ data class HuaweiMarket(
             return
         }
         getAppId(packageName, { callback.onFail(it) }) { appId ->
-            getUploadUrl(appId.getAppId(),
+            getUploadUrl(packageName, appId.getAppId(),
                 File(screenShotPath).extension,
                 screenShotPath,
                 { callback.onFail(it) }) { uploadUrl ->
@@ -465,7 +453,7 @@ data class HuaweiMarket(
     private fun updateAppFileInfo(
         packageName: String, infoBody: HuaweiUpdateFileInfoBody, callback: SuccessCallback<String>
     ) {
-        getToken({ callback.onFail(it) }) { token ->
+        getToken(packageName, { callback.onFail(it) }) { token ->
             getAppId(packageName, { callback.onFail(it) }) { appId ->
                 Http.put("$baseUrl/publish/v2/app-file-info", {
                     headers {
@@ -499,13 +487,14 @@ data class HuaweiMarket(
     }
 
     private fun getUploadUrl(
+        packageName: String,
         appId: String,
         suffix: String = "apk",
         key: Any,
         onFail: ((String) -> Unit)? = null,
         callback: (HuaweiUploadUrlResponse) -> Unit
     ) {
-        getUploadUrl(appId, suffix, key, callback = object : SuccessCallback<HuaweiUploadUrlResponse> {
+        getUploadUrl(packageName, appId, suffix, key, callback = object : SuccessCallback<HuaweiUploadUrlResponse> {
             override fun onSuccess(t: HuaweiUploadUrlResponse) {
                 callback.invoke(t)
             }
@@ -520,6 +509,7 @@ data class HuaweiMarket(
     @Transient
     private val uploadUrlMap = mutableMapOf<Any, HuaweiUploadUrlResponse>()
     private fun getUploadUrl(
+        packageName: String,
         appId: String, suffix: String = "apk", key: Any, callback: SuccessCallback<HuaweiUploadUrlResponse>
     ) {
         val successResult = uploadUrlMap[key]
@@ -527,7 +517,7 @@ data class HuaweiMarket(
             callback.onSuccess(successResult)
             return
         }
-        getToken({ callback.onFail(it) }) { token ->
+        getToken(packageName, { callback.onFail(it) }) { token ->
             Http.get("$baseUrl/publish/v2/upload-url", {
                 headers {
                     append("client_id", clientId)
@@ -580,7 +570,7 @@ data class HuaweiMarket(
             callback.onSuccess(appId)
             return
         }
-        getToken({ callback.onFail(it) }) {
+        getToken(packageName, { callback.onFail(it) }) {
             Http.get("$baseUrl/publish/v2/appid-list", request = {
                 headers {
                     append("client_id", clientId)
@@ -608,8 +598,8 @@ data class HuaweiMarket(
         }
     }
 
-    private fun getToken(onFail: ((String) -> Unit)? = null, callback: (String) -> Unit) {
-        getToken(object : SuccessCallback<String> {
+    private fun getToken(packageName: String, onFail: ((String) -> Unit)? = null, callback: (String) -> Unit) {
+        getToken(packageName, object : SuccessCallback<String> {
             override fun onSuccess(t: String) {
                 callback.invoke(t)
             }
@@ -621,8 +611,8 @@ data class HuaweiMarket(
         })
     }
 
-    private fun getToken(callback: SuccessCallback<String>) {
-        val efficientToken = getEfficientToken()
+    private fun getToken(packageName: String, callback: SuccessCallback<String>) {
+        val efficientToken = getEfficientToken(packageName)
         if (efficientToken.isNotEmpty()) {
             callback.onSuccess(efficientToken)
             return
@@ -638,8 +628,8 @@ data class HuaweiMarket(
             override fun onSuccess(t: String) {
                 val response = gson.fromJson(t, HuaweiTokenResponse::class.java)
                 if (response?.access_token?.isNotEmpty() == true) {
-                    token[System.currentTimeMillis() / 1000] = response.access_token
-                    saveToken()
+                    token[packageName][System.currentTimeMillis() / 1000] = response.access_token
+                    token.saveData()
                     callback.onSuccess(response.access_token)
                 } else {
                     callback.onFail("")
@@ -675,7 +665,7 @@ data class HuaweiMarket(
 
     override fun clearInitData() {
         super.clearInitData()
-        clearToken()
+        token.clear()
         clearScreenShotMap()
     }
 }

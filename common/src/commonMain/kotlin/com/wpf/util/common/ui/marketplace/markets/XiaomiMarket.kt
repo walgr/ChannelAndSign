@@ -17,6 +17,7 @@ import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.*
 import com.wpf.util.common.ui.utils.Callback
 import com.wpf.util.common.ui.utils.FileSelector
+import com.wpf.util.common.ui.utils.asFile
 import com.wpf.util.common.ui.utils.gson
 import com.wpf.util.common.ui.widget.common.InputView
 import io.ktor.client.plugins.*
@@ -144,11 +145,12 @@ data class XiaomiMarket(
                         updateDesc = uploadData.description,
                     ),
                     apk = File(uploadData.apk.abiApk.getOrNull(0)?.filePath ?: ""),
-                    secondApk = if (uploadData.apk.abiApk.getOrNull(1) == null) null else File(
-                        uploadData.apk.abiApk.getOrNull(
-                            1
-                        )?.filePath ?: ""
-                    ),
+                    secondApk = uploadData.apk.abiApk.getOrNull(1)?.filePath?.asFile(),
+                    screenShot1 = uploadData.imageList?.getOrNull(0)?.asFile(),
+                    screenShot2 = uploadData.imageList?.getOrNull(1)?.asFile(),
+                    screenShot3 = uploadData.imageList?.getOrNull(2)?.asFile(),
+                    screenShot4 = uploadData.imageList?.getOrNull(3)?.asFile(),
+                    screenShot5 = uploadData.imageList?.getOrNull(4)?.asFile(),
                 )
                 val requestDataJson = gson.toJson(xiaomiPushData)
                 append("RequestData", requestDataJson)
@@ -192,39 +194,39 @@ data class XiaomiMarket(
 //                xiaomiPushData.icon?.let {
 //                    append("icon", xiaomiPushData.icon.readBytes())
 //                }
-                xiaomiPushData.screenshot_1?.let {
+                xiaomiPushData.screenShot1?.let {
                     append(
                         "screenshot_1",
-                        xiaomiPushData.screenshot_1.readBytes(),
-                        pngHeader(xiaomiPushData.screenshot_1.path)
+                        xiaomiPushData.screenShot1.readBytes(),
+                        pngHeader(xiaomiPushData.screenShot1.path)
                     )
                 }
-                xiaomiPushData.screenshot_2?.let {
+                xiaomiPushData.screenShot2?.let {
                     append(
                         "screenshot_2",
-                        xiaomiPushData.screenshot_2.readBytes(),
-                        pngHeader(xiaomiPushData.screenshot_2.path)
+                        xiaomiPushData.screenShot2.readBytes(),
+                        pngHeader(xiaomiPushData.screenShot2.path)
                     )
                 }
-                xiaomiPushData.screenshot_3?.let {
+                xiaomiPushData.screenShot3?.let {
                     append(
                         "screenshot_3",
-                        xiaomiPushData.screenshot_3.readBytes(),
-                        pngHeader(xiaomiPushData.screenshot_3.path)
+                        xiaomiPushData.screenShot3.readBytes(),
+                        pngHeader(xiaomiPushData.screenShot3.path)
                     )
                 }
-                xiaomiPushData.screenshot_4?.let {
+                xiaomiPushData.screenShot4?.let {
                     append(
                         "screenshot_4",
-                        xiaomiPushData.screenshot_4.readBytes(),
-                        pngHeader(xiaomiPushData.screenshot_4.path)
+                        xiaomiPushData.screenShot4.readBytes(),
+                        pngHeader(xiaomiPushData.screenShot4.path)
                     )
                 }
-                xiaomiPushData.screenshot_5?.let {
+                xiaomiPushData.screenShot5?.let {
                     append(
                         "screenshot_5",
-                        xiaomiPushData.screenshot_5.readBytes(),
-                        pngHeader(xiaomiPushData.screenshot_5.path)
+                        xiaomiPushData.screenShot5.readBytes(),
+                        pngHeader(xiaomiPushData.screenShot5.path)
                     )
                 }
             }))

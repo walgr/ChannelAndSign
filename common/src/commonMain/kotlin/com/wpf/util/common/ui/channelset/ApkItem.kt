@@ -76,23 +76,26 @@ fun ApkItem(marketApk: MarketApk) {
                 modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd
             ) {
                 Row {
-                    Box(modifier = Modifier.size(if (uploadState.value != UPLOAD_WAIT) 24.dp else 0.dp).offset(4.dp)) {
-                        when (uploadState.value) {
-                            UPLOADING -> {
-                                CircularProgressIndicator()
-                            }
-                            UPLOAD_SUCCESS -> {
-                                Icon(Icons.Outlined.CheckCircle, "成功")
-                            }
-                            UPLOAD_FAIL -> {
-                                Icon(Icons.Default.Close, "失败")
-                            }
-                            UPLOAD_WAIT -> {
+                    if (uploadState.value != UPLOAD_WAIT) {
+                        Box(modifier = Modifier.size(24.dp)) {
+                            when (uploadState.value) {
+                                UPLOADING -> {
+                                    CircularProgressIndicator()
+                                }
+                                UPLOAD_SUCCESS -> {
+                                    Icon(Icons.Outlined.CheckCircle, "成功")
+                                }
+                                UPLOAD_FAIL -> {
+                                    Icon(Icons.Default.Close, "失败")
+                                }
+                                UPLOAD_WAIT -> {
 
+                                }
                             }
                         }
                     }
                     if (marketApk.marketType.canApi()) {
+                        Box(modifier = Modifier.size(4.dp))
                         apiIcon()
                     }
                 }
