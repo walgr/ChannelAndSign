@@ -76,7 +76,6 @@ fun configPage() {
                             ) {
                                 InputView(input = inputChannelSaveFilePath, hint = "请输入渠道保存位置,默认当前目录") {
                                     inputChannelSaveFilePath.value = it
-                                    ConfigPageViewModel.saveChannelSaveFilePath(it)
                                     channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
                                 }
                             }
@@ -85,13 +84,11 @@ fun configPage() {
                             ) {
                                 InputView(input = inputZipalignFilePath, hint = "请输入Apk对齐工具Zipalign位置") {
                                     inputZipalignFilePath.value = it
-                                    ConfigPageViewModel.saveZipalignFilePath(it)
                                     zipalignFile = ConfigPageViewModel.getZipalignFilePath()
                                 }
                                 Button(onClick = {
                                     FileSelector.showFileSelector(arrayOf("exe")) {
                                         inputZipalignFilePath.value = it
-                                        ConfigPageViewModel.saveZipalignFilePath(it)
                                         zipalignFile = ConfigPageViewModel.getZipalignFilePath()
                                     }
                                 }, modifier = Modifier.padding(start = 8.dp)) {
