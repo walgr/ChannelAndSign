@@ -77,6 +77,10 @@ interface Market : SelectInterface {
     }
 
     fun clearInitData() {
+        clearCache()
+    }
+
+    fun clearCache() {
 
     }
 }

@@ -124,7 +124,7 @@ data class SamsungMarket(
     override fun query(uploadData: UploadData, callback: Callback<MarketType>) {
         super.query(uploadData, callback)
         if (uploadData.packageName().isNullOrEmpty()) return
-        getAppInfo(object : SuccessCallback<SamsungAppInfo> {
+        getAppInfo(uploadData.packageName()!!, object : SuccessCallback<SamsungAppInfo> {
             override fun onSuccess(t: SamsungAppInfo) {
                 callback.onSuccess(MarketType.三星)
             }
@@ -137,9 +137,10 @@ data class SamsungMarket(
     }
 
     private fun getAppInfo(
+        packageName: String,
         onFail: ((String) -> Unit)? = null, callback: (SamsungAppInfo) -> Unit
     ) {
-        getAppInfo(object : SuccessCallback<SamsungAppInfo> {
+        getAppInfo(packageName, object : SuccessCallback<SamsungAppInfo> {
             override fun onSuccess(t: SamsungAppInfo) {
                 callback.invoke(t)
             }
@@ -151,8 +152,8 @@ data class SamsungMarket(
         })
     }
 
-    private fun getAppInfo(callback: SuccessCallback<SamsungAppInfo>) {
-        getToken {
+    private fun getAppInfo(packageName: String, callback: SuccessCallback<SamsungAppInfo>) {
+        getToken(packageName) {
             Http.get("$baseUrl/seller/contentInfo?contentId=${contentId}", {
                 headers {
                     append(HttpHeaders.ContentType, ContentType.Application.Json)
@@ -181,7 +182,7 @@ data class SamsungMarket(
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
         if (uploadData.packageName().isNullOrEmpty()) return
         update(uploadData, { callback.onFail(it) }) {
-            submit(callback = object : SuccessCallback<String> {
+            submit(uploadData.packageName()!!, callback = object : SuccessCallback<String> {
                 override fun onSuccess(t: String) {
                     callback.onSuccess(MarketType.三星)
                 }
@@ -196,8 +197,8 @@ data class SamsungMarket(
         }
     }
 
-    private fun submit(callback: SuccessCallback<String>) {
-        getToken({ callback.onFail(it) }) { token ->
+    private fun submit(packageName: String, callback: SuccessCallback<String>) {
+        getToken(packageName, { callback.onFail(it) }) { token ->
             Http.post("$baseUrl/seller/contentSubmit", {
                 timeout {
                     requestTimeoutMillis = 10000
@@ -223,6 +224,7 @@ data class SamsungMarket(
 
     @Transient
     private var binaryList = mutableListOf<SamsungApkBody>()
+
     @Transient
     private var screenShotList = mutableListOf<SamsungScreenShotBody>()
     private fun <T> addNewToList(list: MutableList<T>, samsungApkBodyList: List<T>): List<T> {
@@ -250,12 +252,15 @@ data class SamsungMarket(
     }
 
     private fun update(uploadData: UploadData, callback: SuccessCallback<String>) {
-        getToken(onFail = { callback.onFail(it) }) { token ->
-            getAppInfo({ callback.onFail(it) }) {
+        getToken(uploadData.packageName()!!, onFail = { callback.onFail(it) }) { token ->
+            getAppInfo(uploadData.packageName()!!, { callback.onFail(it) }) {
                 binaryList = it.binaryList?.toMutableList() ?: arrayListOf()
                 screenShotList = it.screenshots?.toMutableList() ?: arrayListOf()
-                updateState {
-                    uploadScreenShotList(uploadData.imageList, { error -> callback.onFail(error) }) { screensResponse ->
+                updateState(uploadData.packageName()!!) {
+                    uploadScreenShotList(
+                        uploadData.packageName()!!,
+                        uploadData.imageList,
+                        { error -> callback.onFail(error) }) { screensResponse ->
                         uploadApkList(uploadData, { error -> callback.onFail(error) }) { apksResponse ->
                             Http.submitForm("$baseUrl/seller/contentUpdate", parameters {
                                 append("contentId", contentId)
@@ -353,10 +358,10 @@ data class SamsungMarket(
     }
 
     private fun uploadApk(apk: Apk, callback: SuccessCallback<SamsungUploadFileResponse>) {
-        createUploadFileId(apk.filePath, onFail = {
+        createUploadFileId(apk.packageName, apk.filePath, onFail = {
             callback.onFail(it)
         }) { fileId ->
-            getToken(onFail = {
+            getToken(apk.packageName, onFail = {
                 callback.onFail(it)
             }) {
                 Http.post(fileId.url!!, {
@@ -401,46 +406,53 @@ data class SamsungMarket(
     }
 
     private fun uploadScreenShotList(
+        packageName: String,
         screenShotPathList: List<String>? = null,
         onFail: ((String) -> Unit)? = null,
         callback: (List<SamsungUploadFileResponse>) -> Unit
     ) {
-        uploadScreenShotList(screenShotPathList, object : SuccessCallback<List<SamsungUploadFileResponse>> {
-            override fun onSuccess(t: List<SamsungUploadFileResponse>) {
-                callback.invoke(t)
-            }
+        uploadScreenShotList(
+            packageName,
+            screenShotPathList,
+            callback = object : SuccessCallback<List<SamsungUploadFileResponse>> {
+                override fun onSuccess(t: List<SamsungUploadFileResponse>) {
+                    callback.invoke(t)
+                }
 
-            override fun onFail(msg: String) {
-                super.onFail(msg)
-                onFail?.invoke(msg)
-            }
-        })
+                override fun onFail(msg: String) {
+                    super.onFail(msg)
+                    onFail?.invoke(msg)
+                }
+            })
     }
 
     private fun uploadScreenShotList(
-        screenShotPathList: List<String>? = null, callback: SuccessCallback<List<SamsungUploadFileResponse>>
+        packageName: String,
+        screenShotPathList: List<String>? = null,
+        returnResponseList: MutableList<SamsungUploadFileResponse>? = null,
+        callback: SuccessCallback<List<SamsungUploadFileResponse>>
     ) {
         if (screenShotPathList.isNullOrEmpty()) {
             callback.onSuccess(arrayListOf())
             return
         }
-        val returnResponse = mutableListOf<SamsungUploadFileResponse>()
-        screenShotPathList.forEach { screenShotPath ->
-            uploadScreenShot(screenShotPath, { msg ->
-                callback.onFail("$screenShotPath:$msg")
-            }) {
-                returnResponse.add(it)
-                if (returnResponse.size == screenShotPathList.size) {
-                    callback.onSuccess(returnResponse)
-                }
+        val returnResponse = returnResponseList ?: mutableListOf()
+        val screenShotPath = screenShotPathList[returnResponse.size]
+        uploadScreenShot(packageName, screenShotPath, { msg -> callback.onFail("$screenShotPath:$msg") }) {
+            returnResponse.add(it)
+            if (returnResponse.size == screenShotPathList.size) {
+                callback.onSuccess(returnResponse)
+            } else {
+                uploadScreenShotList(packageName, screenShotPathList, returnResponse, callback)
             }
         }
     }
 
     private fun uploadScreenShot(
+        packageName: String,
         screenShotPath: String, onFail: ((String) -> Unit)? = null, callback: (SamsungUploadFileResponse) -> Unit
     ) {
-        uploadScreenShot(screenShotPath, object : SuccessCallback<SamsungUploadFileResponse> {
+        uploadScreenShot(packageName, screenShotPath, object : SuccessCallback<SamsungUploadFileResponse> {
             override fun onSuccess(t: SamsungUploadFileResponse) {
                 callback.invoke(t)
             }
@@ -452,13 +464,13 @@ data class SamsungMarket(
         })
     }
 
-    private fun uploadScreenShot(screenShotPath: String, callback: SuccessCallback<SamsungUploadFileResponse>) {
-        createUploadFileId(screenShotPath, onFail = {
-            callback.onFail(it)
-        }) { fileId ->
-            getToken(onFail = {
-                callback.onFail(it)
-            }) {
+    private fun uploadScreenShot(
+        packageName: String,
+        screenShotPath: String,
+        callback: SuccessCallback<SamsungUploadFileResponse>
+    ) {
+        createUploadFileId(packageName, screenShotPath, onFail = { callback.onFail(it) }) { fileId ->
+            getToken(packageName, onFail = { callback.onFail(it) }) {
                 Http.post(fileId.url!!, {
                     timeout {
                         requestTimeoutMillis = 120000
@@ -492,9 +504,12 @@ data class SamsungMarket(
     }
 
     private fun createUploadFileId(
-        key: Any, onFail: ((String) -> Unit)? = null, callback: (SamsungCreateFileIdResponse) -> Unit
+        packageName: String,
+        key: String,
+        onFail: ((String) -> Unit)? = null,
+        callback: (SamsungCreateFileIdResponse) -> Unit
     ) {
-        createUploadFileId(key, object : SuccessCallback<SamsungCreateFileIdResponse> {
+        createUploadFileId(packageName, key, object : SuccessCallback<SamsungCreateFileIdResponse> {
             override fun onSuccess(t: SamsungCreateFileIdResponse) {
                 callback.invoke(t)
             }
@@ -507,15 +522,19 @@ data class SamsungMarket(
     }
 
     @delegate:Transient
-    private val uploadFileIdMap by autoSave("SamsungUploadFileIdMap") { mutableMapOf<Any, SamsungCreateFileIdResponse>() }
+    private val uploadFileIdMap by autoSave("SamsungUploadFileIdMap") { mutableMapOf<String, SamsungCreateFileIdResponse>() }
 
-    private fun createUploadFileId(key: Any, callback: SuccessCallback<SamsungCreateFileIdResponse>) {
+    private fun createUploadFileId(
+        packageName: String,
+        key: String,
+        callback: SuccessCallback<SamsungCreateFileIdResponse>
+    ) {
         val successResult = uploadFileIdMap[key]
         if (successResult != null) {
             callback.onSuccess(successResult)
             return
         }
-        getToken {
+        getToken(packageName) {
             Http.post("$baseUrl/seller/createUploadSessionId", {
                 timeout {
                     requestTimeoutMillis = 30000
@@ -543,9 +562,9 @@ data class SamsungMarket(
         }
     }
 
-    private fun updateState(onFail: ((String) -> Unit)? = null, callback: (String) -> Unit) {
+    private fun updateState(packageName: String, onFail: ((String) -> Unit)? = null, callback: (String) -> Unit) {
         callback.invoke("")
-//        updateState(object : SuccessCallback<String> {
+//        updateState(packageName, object : SuccessCallback<String> {
 //            override fun onSuccess(t: String) {
 //                callback.invoke(t)
 //            }
@@ -557,8 +576,8 @@ data class SamsungMarket(
 //        })
     }
 
-    private fun updateState(callback: SuccessCallback<String>) {
-        getToken {
+    private fun updateState(packageName: String, callback: SuccessCallback<String>) {
+        getToken(packageName) {
             Http.submitForm("$baseUrl/seller/contentStatusUpdate", parameters {
                 append("contentId", contentId)
                 append("contentStatus", "FOR_SALE")
@@ -589,14 +608,12 @@ data class SamsungMarket(
     private val extTime = 20 * 60
 
     @Transient
-    private var token = gson.fromJson<MutableMap<Long, String>>(
-        settings.getString("samsungToken", "{}"), object : TypeToken<MutableMap<Long, String>>() {}.type
-    ) ?: mutableMapOf()
+    private var token = autoSaveMap("samsungToken") { mutableMapOf<String, MutableMap<Long, String>>() }
 
-    private fun getEfficientToken(): String {
+    private fun getEfficientToken(packageName: String): String {
         var efficientToken = ""
         val noEfficientToken = mutableListOf<Long>()
-        token.forEach { (t, u) ->
+        token[packageName].forEach { (t, u) ->
             if ((System.currentTimeMillis() / 1000) - t < extTime) {
                 efficientToken = u
             } else {
@@ -604,22 +621,13 @@ data class SamsungMarket(
             }
         }
         noEfficientToken.forEach {
-            token.remove(it)
+            token[packageName].remove(it)
         }
-        saveToken()
         return efficientToken
     }
 
-    private fun saveToken() {
-        settings.putString("samsungToken", gson.toJson(token))
-    }
-
-    private fun clearToken() {
-        settings.putString("samsungToken", "")
-    }
-
-    private fun getToken(onFail: ((String) -> Unit)? = null, callback: (String) -> Unit) {
-        getToken(object : SuccessCallback<String> {
+    private fun getToken(packageName: String, onFail: ((String) -> Unit)? = null, callback: (String) -> Unit) {
+        getToken(packageName, object : SuccessCallback<String> {
             override fun onSuccess(t: String) {
                 callback.invoke(t)
             }
@@ -631,8 +639,8 @@ data class SamsungMarket(
         })
     }
 
-    private fun getToken(callback: SuccessCallback<String>) {
-        val efficientToken = getEfficientToken()
+    private fun getToken(packageName: String, callback: SuccessCallback<String>) {
+        val efficientToken = getEfficientToken(packageName)
         if (efficientToken.isNotEmpty()) {
             callback.onSuccess(efficientToken)
             return
@@ -646,8 +654,7 @@ data class SamsungMarket(
             override fun onSuccess(t: String) {
                 val response = gson.fromJson(t, SamSungTokenResponse::class.java)
                 if (response.isSuccess() && !response.createdItem?.accessToken.isNullOrEmpty()) {
-                    token[System.currentTimeMillis() / 1000] = response.createdItem?.accessToken!!
-                    saveToken()
+                    token[packageName][System.currentTimeMillis() / 1000] = response.createdItem?.accessToken!!
                     callback.onSuccess(response.createdItem.accessToken)
                 } else {
                     callback.onFail("")
@@ -661,8 +668,8 @@ data class SamsungMarket(
         })
     }
 
-    private fun revokeToken(callback: SuccessCallback<Unit>) {
-        val efficientToken = getEfficientToken()
+    private fun revokeToken(packageName: String, callback: SuccessCallback<Unit>) {
+        val efficientToken = getEfficientToken(packageName)
         if (efficientToken.isEmpty()) {
             callback.onSuccess(Unit)
             return
@@ -677,13 +684,12 @@ data class SamsungMarket(
                 val response = gson.fromJson(t, SamSungBaseResponse::class.java)
                 if (response.isSuccess()) {
                     var findKey = 0L
-                    token.forEach { (t, u) ->
+                    token[packageName].forEach { (t, u) ->
                         if (u == efficientToken) {
                             findKey = t
                         }
                     }
-                    token.remove(findKey)
-                    saveToken()
+                    token[packageName].remove(findKey)
                     callback.onSuccess(Unit)
                 } else {
                     callback.onFail("")
@@ -741,9 +747,9 @@ data class SamsungMarket(
         return null
     }
 
-    override fun clearInitData() {
-        super.clearInitData()
-        clearToken()
+    override fun clearCache() {
+        super.clearCache()
+        token.clear()
     }
 }
 

@@ -37,23 +37,24 @@ data class HuaweiMarket(
     @Transient
     override val baseUrl: String = "https://connect-api.cloud.huawei.com/api"
 
-    @Transient
-    private var token = autoSaveMap("huaweiToken") { mutableMapOf<String, MutableMap<Long, String>>() }
-
-    private fun getEfficientToken(packageName: String): String {
-        var efficientToken = ""
-        val noEfficientToken = mutableListOf<Long>()
-        token[packageName].forEach { (t, u) ->
-            if ((System.currentTimeMillis() / 1000) - t < 172800) {
-                efficientToken = u
-            } else {
-                noEfficientToken.add(t)
+    @Composable
+    override fun dispositionViewInBox(market: Market) {
+        super.dispositionViewInBox(market)
+        if (market !is HuaweiMarket) return
+        val clientId = remember { mutableStateOf(market.clientId) }
+        clientId.value = market.clientId
+        val clientSecret = remember { mutableStateOf(market.clientSecret) }
+        clientSecret.value = market.clientSecret
+        Column {
+            InputView(input = clientId, hint = "请配置ClientId") {
+                clientId.value = it
+                market.clientId = it
+            }
+            InputView(input = clientSecret, hint = "请配置ClientSecret") {
+                clientSecret.value = it
+                market.clientSecret = it
             }
         }
-        noEfficientToken.forEach {
-            token[packageName].remove(it)
-        }
-        return efficientToken
     }
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32_64)
@@ -254,7 +255,7 @@ data class HuaweiMarket(
             return
         }
         getAppId(apk.packageName, { callback.onFail(it) }) { appId ->
-            getUploadUrl(apk.packageName, appId.getAppId(), "apk", apk, { callback.onFail(it) }) { uploadUrl ->
+            getUploadUrl(apk.packageName, appId.getAppId(), "apk", apk.filePath, { callback.onFail(it) }) { uploadUrl ->
                 Http.post(uploadUrl.uploadUrl, {
                     timeout {
                         requestTimeoutMillis = 120000
@@ -367,27 +368,7 @@ data class HuaweiMarket(
     }
 
     @Transient
-    private val uploadScreenShotMap: MutableMap<String, HuaweiUploadFileResponse> =
-        mutableMapOf<String, HuaweiUploadFileResponse>()
-            .plus(
-                getScreenShotMap()
-            )
-            .toMutableMap()
-
-    private fun getScreenShotMap() = mapGson.fromJson<MutableMap<String, HuaweiUploadFileResponse>>(
-        settings.getString("huaweiScreenShotMap", "{}"),
-        object : TypeToken<MutableMap<String, HuaweiUploadFileResponse>>() {}.type
-    )
-
-    private fun saveScreenShotMap() {
-        settings.putString("huaweiScreenShotMap", mapGson.toJson(uploadScreenShotMap))
-    }
-
-    private fun clearScreenShotMap() {
-        uploadUrlMap.clear()
-        uploadScreenShotMap.clear()
-        settings.remove("huaweiScreenShotMap")
-    }
+    private val uploadScreenShotMap = autoSaveMap("huaweiScreenShotMap") { (mutableMapOf<String, HuaweiUploadFileResponse>()) }
 
     private fun uploadScreenShot(
         packageName: String, screenShotPath: String, callback: SuccessCallback<HuaweiUploadFileResponse>
@@ -417,7 +398,6 @@ data class HuaweiMarket(
                         val response = gson.fromJson(t, HuaweiUploadFileResponse::class.java)
                         if (response.result?.UploadFileRsp?.ifSuccess == 1) {
                             uploadScreenShotMap[packageName + screenShotPath] = response
-                            saveScreenShotMap()
                             callback.onSuccess(response)
                         } else {
                             callback.onFail("")
@@ -490,7 +470,7 @@ data class HuaweiMarket(
         packageName: String,
         appId: String,
         suffix: String = "apk",
-        key: Any,
+        key: String,
         onFail: ((String) -> Unit)? = null,
         callback: (HuaweiUploadUrlResponse) -> Unit
     ) {
@@ -507,10 +487,10 @@ data class HuaweiMarket(
     }
 
     @Transient
-    private val uploadUrlMap = mutableMapOf<Any, HuaweiUploadUrlResponse>()
+    private val uploadUrlMap = autoSaveMap("huaweiUploadUrl") { mutableMapOf<String, HuaweiUploadUrlResponse>() }
     private fun getUploadUrl(
         packageName: String,
-        appId: String, suffix: String = "apk", key: Any, callback: SuccessCallback<HuaweiUploadUrlResponse>
+        appId: String, suffix: String = "apk", key: String, callback: SuccessCallback<HuaweiUploadUrlResponse>
     ) {
         val successResult = uploadUrlMap[key]
         if (successResult != null) {
@@ -563,7 +543,7 @@ data class HuaweiMarket(
     }
 
     @Transient
-    private val appIdMap = mutableMapOf<String, HuaweiAppIdResponse>()
+    private val appIdMap = autoSaveMap("huaweiAppId") { mutableMapOf<String, HuaweiAppIdResponse>() }
     private fun getAppId(packageName: String, callback: SuccessCallback<HuaweiAppIdResponse>) {
         val appId = appIdMap[packageName]
         if (appId != null) {
@@ -611,6 +591,25 @@ data class HuaweiMarket(
         })
     }
 
+    @Transient
+    private var token = autoSaveMap("huaweiToken") { mutableMapOf<String, MutableMap<Long, String>>() }
+
+    private fun getEfficientToken(packageName: String): String {
+        var efficientToken = ""
+        val noEfficientToken = mutableListOf<Long>()
+        token[packageName].forEach { (t, u) ->
+            if ((System.currentTimeMillis() / 1000) - t < 172800) {
+                efficientToken = u
+            } else {
+                noEfficientToken.add(t)
+            }
+        }
+        noEfficientToken.forEach {
+            token[packageName].remove(it)
+        }
+        return efficientToken
+    }
+
     private fun getToken(packageName: String, callback: SuccessCallback<String>) {
         val efficientToken = getEfficientToken(packageName)
         if (efficientToken.isNotEmpty()) {
@@ -643,30 +642,14 @@ data class HuaweiMarket(
         })
     }
 
-    @Composable
-    override fun dispositionViewInBox(market: Market) {
-        super.dispositionViewInBox(market)
-        if (market !is HuaweiMarket) return
-        val clientId = remember { mutableStateOf(market.clientId) }
-        clientId.value = market.clientId
-        val clientSecret = remember { mutableStateOf(market.clientSecret) }
-        clientSecret.value = market.clientSecret
-        Column {
-            InputView(input = clientId, hint = "请配置ClientId") {
-                clientId.value = it
-                market.clientId = it
-            }
-            InputView(input = clientSecret, hint = "请配置ClientSecret") {
-                clientSecret.value = it
-                market.clientSecret = it
-            }
-        }
-    }
-
-    override fun clearInitData() {
-        super.clearInitData()
+    override fun clearCache() {
+        super.clearCache()
         token.clear()
-        clearScreenShotMap()
+        appIdMap.clear()
+        uploadUrlMap.clear()
+        uploadScreenShotMap.clear()
+        uploadApkMap.clear()
+        updateLanguageInfoSuccessMap.clear()
     }
 }
 

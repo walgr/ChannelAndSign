@@ -43,6 +43,26 @@ data class VivoMarket(
     override val baseUrl: String = "https://developer-api.vivo.com.cn/router/rest"
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32, AbiType.Abi64)
+    
+    @Composable
+    override fun dispositionViewInBox(market: Market) {
+        super.dispositionViewInBox(market)
+        if (market !is VivoMarket) return
+        val accessKey = remember { mutableStateOf(market.accessKey) }
+        accessKey.value = market.accessKey
+        val accessSecret = remember { mutableStateOf(market.accessSecret) }
+        accessSecret.value = market.accessSecret
+        Column {
+            InputView(input = accessKey, hint = "请配置ACCESS_KEY") {
+                accessKey.value = it
+                market.accessKey = it
+            }
+            InputView(input = accessSecret, hint = "请配置ACCESS_SECRET") {
+                accessSecret.value = it
+                market.accessSecret = it
+            }
+        }
+    }
 
     override fun query(uploadData: UploadData, callback: Callback<MarketType>) {
         super.query(uploadData, callback)
@@ -515,26 +535,6 @@ data class VivoMarket(
             sb.append(if (strHex.length == 1) "0$strHex" else strHex)
         }
         return sb.toString()
-    }
-
-    @Composable
-    override fun dispositionViewInBox(market: Market) {
-        super.dispositionViewInBox(market)
-        if (market !is VivoMarket) return
-        val accessKey = remember { mutableStateOf(market.accessKey) }
-        accessKey.value = market.accessKey
-        val accessSecret = remember { mutableStateOf(market.accessSecret) }
-        accessSecret.value = market.accessSecret
-        Column {
-            InputView(input = accessKey, hint = "请配置ACCESS_KEY") {
-                accessKey.value = it
-                market.accessKey = it
-            }
-            InputView(input = accessSecret, hint = "请配置ACCESS_SECRET") {
-                accessSecret.value = it
-                market.accessSecret = it
-            }
-        }
     }
 }
 

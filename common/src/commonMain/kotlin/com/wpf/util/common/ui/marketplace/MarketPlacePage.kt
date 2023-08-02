@@ -62,7 +62,8 @@ fun marketPlacePage() {
                                                         market.changeSelect(false)
                                                     }
                                                     it.changeSelect(true)
-                                                    selectMarket.value = MarketPlaceViewModel.getSelectMarket(channelList, marketList)
+                                                    selectMarket.value =
+                                                        MarketPlaceViewModel.getSelectMarket(channelList, marketList)
                                                 }, isSelectState = it.isSelectState)
                                             }
                                         }
@@ -73,7 +74,8 @@ fun marketPlacePage() {
                                                         market.changeSelect(false)
                                                     }
                                                     it.changeSelect(true)
-                                                    selectMarket.value = MarketPlaceViewModel.getSelectMarket(channelList, marketList)
+                                                    selectMarket.value =
+                                                        MarketPlaceViewModel.getSelectMarket(channelList, marketList)
                                                 }, isSelectState = it.isSelectState)
                                             }
                                         }
@@ -86,20 +88,25 @@ fun marketPlacePage() {
                             ) {
                                 Column(
                                     modifier = Modifier.padding(
-                                        start = 8.dp,
-                                        top = 4.dp,
-                                        end = 8.dp,
-                                        bottom = 4.dp
+                                        start = 8.dp, top = 4.dp, end = 8.dp, bottom = 4.dp
                                     )
                                 ) {
                                     Title("市场配置")
                                     selectMarket.value?.let {
                                         it.dispositionView(it)
-                                        Button(onClick = {
-                                            MarketPlaceViewModel.saveMarketList(channelList, it)
-                                        }, modifier = Modifier.padding(start = 8.dp)) {
-                                            Text("保存")
+                                        Row {
+                                            Button(onClick = {
+                                                it.clearCache()
+                                            }) {
+                                                Text("清空缓存")
+                                            }
+                                            Button(onClick = {
+                                                MarketPlaceViewModel.saveMarketList(channelList, it)
+                                            }, modifier = Modifier.padding(start = 8.dp)) {
+                                                Text("保存")
+                                            }
                                         }
+
                                     }
                                 }
                             }
