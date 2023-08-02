@@ -1,10 +1,16 @@
 package com.wpf.util.common.ui.utils
 
 import androidx.compose.ui.awt.ComposeWindow
+import com.wpf.base.dealfile.util.FileUtil
+import javafx.stage.FileChooser
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileWriter
 import javax.swing.JFileChooser
 import javax.swing.SwingUtilities
 import javax.swing.UIManager
 import javax.swing.filechooser.FileNameExtensionFilter
+
 
 object FileSelector {
 
@@ -31,6 +37,28 @@ object FileSelector {
             if (result == JFileChooser.APPROVE_OPTION) {
                 val file = this.selectedFile
                 onFileSelected(file.absolutePath)
+            }
+        }
+    }
+
+    fun saveFile(currentDirectoryPath: String = File("").absolutePath, extension: String, info: String) {
+        JFileChooser(currentDirectoryPath).apply {
+            //设置页面风格
+            runCatching {
+                val lookAndFeel = UIManager.getSystemLookAndFeelClassName()
+                UIManager.setLookAndFeel(lookAndFeel)
+                SwingUtilities.updateComponentTreeUI(this)
+            }
+            dialogTitle = "保存"
+            fileFilter = FileNameExtensionFilter(".$extension", extension)
+
+            val result = showSaveDialog(ComposeWindow())
+            if (result == JFileChooser.APPROVE_OPTION) {
+                var outFile = selectedFile
+                if (outFile.extension.isEmpty()) {
+                    outFile = File(selectedFile.absolutePath + "." + extension)
+                }
+                FileUtil.save2File(info.byteInputStream(), outFile)
             }
         }
     }

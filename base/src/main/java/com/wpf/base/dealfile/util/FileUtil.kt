@@ -10,12 +10,15 @@ object FileUtil {
 
     fun save2File(inputStream: InputStream, outputFile: File) {
         val out = FileOutputStream(outputFile)
-        val buf1 = ByteArray(1024)
-        var len: Int
-        while (inputStream.read(buf1).also { len = it } > 0) {
-            out.write(buf1, 0, len)
+        runCatching {
+            var len: Int
+            val buf1 = ByteArray(1024)
+            while (inputStream.read(buf1).also { len = it } > 0) {
+                out.write(buf1, 0, len)
+            }
+        }.getOrDefault {
+            inputStream.close()
+            out.close()
         }
-        inputStream.close()
-        out.close()
     }
 }

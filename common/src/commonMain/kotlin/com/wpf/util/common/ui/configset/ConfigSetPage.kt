@@ -14,6 +14,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.google.gson.reflect.TypeToken
+import com.russhwolf.settings.get
 import com.wpf.base.dealfile.channelBaseInsertFilePath
 import com.wpf.base.dealfile.channelSavePath
 import com.wpf.base.dealfile.zipalignFile
@@ -22,7 +24,11 @@ import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.FileSelector
+import com.wpf.util.common.ui.utils.gson
+import com.wpf.util.common.ui.utils.mapGson
 import com.wpf.util.common.ui.widget.common.InputView
+import javafx.embed.swing.SwingFXUtils
+import java.io.File
 
 @Preview
 @Composable
@@ -104,10 +110,38 @@ fun configPage() {
                                     Text("选择")
                                 }
                             }
-                            Button(onClick = {
-                                settings.clear()
-                            }, modifier = Modifier.padding(top = 16.dp)) {
-                                Text("清空所有数据")
+                            Row(
+                                modifier = Modifier.padding(top = 16.dp)
+                            ) {
+                                Button(onClick = {
+                                    val allDataMap = mapOf(*settings.keys.map {
+                                        Pair(it, gson.toJson(settings.get<String>(it)))
+                                    }.toTypedArray())
+                                    val allDataJson = mapGson.toJson(allDataMap)
+                                    FileSelector.saveFile(extension = "json", info = allDataJson)
+                                }) {
+                                    Text("备份数据")
+                                }
+                                Button(onClick = {
+                                    FileSelector.showFileSelector(arrayOf("json")) {
+                                        val allDataJson = File(it).readText()
+                                        val allDataMap = mapGson.fromJson<Map<String, String>>(
+                                            allDataJson,
+                                            object : TypeToken<Map<String, String>>() {}.type
+                                        )
+                                        settings.clear()
+                                        allDataMap.forEach { (t, u) ->
+                                            settings.putString(t, u)
+                                        }
+                                    }
+                                }, modifier = Modifier.padding(start = 8.dp)) {
+                                    Text("恢复数据")
+                                }
+                                Button(onClick = {
+                                    settings.clear()
+                                }, modifier = Modifier.padding(start = 8.dp)) {
+                                    Text("清空所有数据")
+                                }
                             }
                         }
                     }
