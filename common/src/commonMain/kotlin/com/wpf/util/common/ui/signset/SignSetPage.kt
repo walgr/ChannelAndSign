@@ -27,13 +27,15 @@ import androidx.compose.ui.unit.sp
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
+import com.wpf.util.common.ui.utils.autoSaveListComposable
+import com.wpf.util.common.ui.utils.getValue
 import com.wpf.util.common.ui.utils.onExternalDrag
 
 @Preview
 @Composable
 fun signPage() {
     //签名列表
-    val signList = remember { mutableStateListOf(*SignSetViewModel.getSignList().toTypedArray()) }
+    val signList by autoSaveListComposable("signList") { remember { mutableStateListOf<SignFile>() } }
 
     //填写签名配置弹窗
     val showSignInfoDialog = remember { mutableStateOf(false) }
@@ -190,7 +192,6 @@ fun signPage() {
             showSignInfoSetDialog(showSignInfoDialog, changeSign) { result ->
                 signList.remove(result)
                 signList.add(result)
-                SignSetViewModel.saveSignList(signList)
             }
         }
     }

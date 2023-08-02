@@ -40,21 +40,21 @@ import com.wpf.util.common.ui.widget.common.*
 @Composable
 fun channelPage() {
     //分组列表
-    val clientList by autoSaveListComposable<Client>("clientList") { remember { mutableStateListOf() } }
+    val clientList by autoSaveListComposable("clientList") { remember { mutableStateListOf<Client>() } }
     //渠道包文件名
     val channelFileNameList = remember { mutableStateListOf("") }
     //渠道名
     val channelNameList = remember { mutableStateListOf("") }
 
     //待打渠道包的apk
-    val pathList = remember { mutableStateListOf(*ChannelSetViewModel.getPathList().toTypedArray()) }
+    val pathList by autoSaveListComposable("pathList") { remember { mutableStateListOf<Path>() } }
 
     //分组添加Dialog
     val groupDialog = remember { mutableStateOf(false) }
     val groupDialogInput = remember { mutableStateOf("") }
 
     //签名列表
-    val signList = remember { mutableStateListOf(*SignSetViewModel.getSignList().toTypedArray()) }
+    val signList by autoSaveListComposable("signList") { remember { mutableStateListOf<SignFile>() } }
     //选择签名弹窗
     val showSignSelectDialog = remember { mutableStateOf(false) }
 
@@ -62,7 +62,7 @@ fun channelPage() {
 
     val marketDescription = autoSaveComposable("marketDescription") { remember { mutableStateOf("") } }
     val marketLeaveMessage = autoSaveComposable("marketLeaveMessage") { remember { mutableStateOf("") } }
-    val marketScreenShotList = autoSaveListComposable("marketScreenShotList") { remember { mutableStateListOf("") } }
+    val marketScreenShotList by autoSaveListComposable("marketScreenShotList") { remember { mutableStateListOf("") } }
     //打完后的市场包列表
     val marketPlaceList =
         remember { mutableStateListOf(*ChannelSetViewModel.dealMargetPlace(pathList.map { it.path }).toTypedArray()) }
@@ -126,7 +126,7 @@ fun channelPage() {
                                                         }
                                                         group.isSelect = true
                                                         group.isSelectState.value = true
-                                                        ChannelSetViewModel.saveClientList(clientList)
+                                                        clientList.saveData()
                                                         channelFileNameList.clear()
                                                         channelNameList.clear()
                                                         if (group.channelPath.isNotEmpty()) {
@@ -237,7 +237,6 @@ fun channelPage() {
                                         Column {
                                             FileAddTitle("apk地址", arrayOf("apk")) {
                                                 pathList.add(Path(name = it, path = it))
-                                                ChannelSetViewModel.savePathList(pathList)
                                             }
                                             Box(modifier = Modifier.padding(8.dp, 0.dp, 8.dp, 0.dp)) {
                                                 Column {
@@ -253,7 +252,6 @@ fun channelPage() {
                                                             ItemView(modifier = Modifier.heightIn(min = 24.dp)
                                                                 .combinedClickable(onDoubleClick = {
                                                                     pathList.remove(it)
-                                                                    ChannelSetViewModel.savePathList(pathList)
                                                                 }) {}) {
                                                                 Text(
                                                                     it.path,
@@ -276,7 +274,6 @@ fun channelPage() {
                                                     mutableListOf(Path(name = file, path = file))
                                                 } else mutableListOf()
                                             }.toMutableList())
-                                            ChannelSetViewModel.savePathList(pathList)
                                         }
                                         Box(
                                             modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd
@@ -333,16 +330,16 @@ fun channelPage() {
                             modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Title("市场包")
-                            InputView(input = marketDescription.value, hint = "请输入更新文案", maxLine = 5) {
-                                marketDescription.stateValue = it
+                            InputView(input = marketDescription, hint = "请输入更新文案", maxLine = 5) {
+                                marketDescription.value = it
                             }
-                            InputView(input = marketLeaveMessage.value, hint = "请输入留言", maxLine = 5) {
-                                marketLeaveMessage.stateValue = it
+                            InputView(input = marketLeaveMessage, hint = "请输入留言", maxLine = 5) {
+                                marketLeaveMessage.value = it
                             }
                             LazyRow(
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                             ) {
-                                items(marketScreenShotList.value) {
+                                items(marketScreenShotList) {
                                     AddImage(it) { new ->
                                         marketScreenShotList.remove(it)
                                         if (new.isNotEmpty()) {
@@ -375,8 +372,8 @@ fun channelPage() {
                             it.isSelectState.value
                         }.map { marketApk ->
                             UploadData(marketApk,
-                                marketDescription.stateValue,
-                                marketLeaveMessage.stateValue.ifEmpty { null },
+                                marketDescription.value,
+                                marketLeaveMessage.value.ifEmpty { null },
                                 marketScreenShotList.value.filter { screenShot ->
                                     screenShot.isNotEmpty()
                                 })
@@ -407,7 +404,7 @@ fun channelPage() {
                         isSelectState.value = true
                     })
                 }
-                ChannelSetViewModel.saveClientList(clientList)
+                clientList.saveData()
                 groupDialogInput.value = ""
             }
         }
@@ -434,7 +431,7 @@ fun channelPage() {
 @Composable
 private fun showSelectSignDialog(showSignSelectDialog: MutableState<Boolean>, callback: (SignFile) -> Unit) {
     //签名列表
-    val signList = remember { mutableStateListOf(*SignSetViewModel.getSignList().toTypedArray()) }
+    val signList by autoSaveListComposable("signList") { remember { mutableStateListOf<SignFile>() } }
     signList.getOrNull(0)?.isSelect = true
 
     AlertDialog(onDismissRequest = {

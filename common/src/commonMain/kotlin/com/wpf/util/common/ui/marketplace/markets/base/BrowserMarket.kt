@@ -12,8 +12,6 @@ interface BrowserMarket : Market {
 
     val showBrowserS: MutableState<Boolean>
 
-    val cookies: MutableMap<String, String>
-
     val canPush: Boolean
 
     fun onWebUrlChange(url: String?, webView: WebView) {

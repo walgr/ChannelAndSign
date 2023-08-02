@@ -1,6 +1,7 @@
 package com.wpf.util.common.ui.utils
 
 import com.google.gson.reflect.TypeToken
+import kotlin.reflect.KProperty
 
 open class AutoSaveMap<K, V>(
     private val key: String, val value: MutableMap<K, V>
@@ -76,6 +77,17 @@ inline fun <reified K, reified V> autoSaveMap(
 internal operator fun <K, V> AutoSaveMap<K, V>.get(key: K): V? {
     return get(key)
 }
+
 internal operator fun <W, P, F> AutoSaveMap<W, MutableMap<P, F>>.get(key: W): MutableMap<P, F> {
     return get(key) ?: return put(key, mutableMapOf())!!
+}
+
+internal inline operator fun <reified K, reified V> AutoSaveMap<K, V>.getValue(
+    thisObj: Any?, property: KProperty<*>
+) = this
+
+internal inline operator fun <reified K, reified V> AutoSaveMap<K, V>.setValue(
+    thisObj: Any?, property: KProperty<*>, key: K, value: V
+) {
+    this[key] = value
 }

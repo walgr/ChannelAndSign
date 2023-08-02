@@ -7,9 +7,8 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KProperty
 
-class AutoSave<T : @Serializable Any>(
-    private val key: String,
-    private var data: T
+class AutoSave<T>(
+    private val key: String, private var data: T
 ) {
 
     var value: T = data
@@ -17,67 +16,72 @@ class AutoSave<T : @Serializable Any>(
         set(value) {
             field = value
             data = value
-            settings.putString(key, gson.toJson(data))
+            settings.putString(key, if (value is Serializable) gson.toJson(value) else value.toString())
         }
 
     init {
         val json = settings.getString(key, "")
-        val t = gson.fromJson<T>(json, object : TypeToken<T>() {}.type)
-        t?.let {
-            data = it
+        if (data is Serializable) {
+            val t = gson.fromJson<T>(json, object : TypeToken<T>() {}.type)
+            t?.let {
+                data = it
+            }
+        } else {
+            this.data = json as T
         }
     }
 }
 
-inline fun <reified T : @Serializable Any> autoSave(
+inline fun <reified T> autoSave(
     key: String, crossinline calculation: () -> T
 ) = AutoSave(key, calculation())
 
-internal inline operator fun <reified T : @Serializable Any> AutoSave<T>.getValue(
+internal inline operator fun <reified T> AutoSave<T>.getValue(
     thisObj: Any?, property: KProperty<*>
 ) = value
 
-internal inline operator fun <reified T : @Serializable Any> AutoSave<T>.setValue(
+internal inline operator fun <reified T> AutoSave<T>.setValue(
     thisObj: Any?, property: KProperty<*>, value: T
 ) {
     this.value = value
 }
 
-class AutoSaveState<T : @Serializable Any, H : MutableState<T>>(
+class AutoSaveState<T, H : MutableState<T>>(
     private var key: String, value: H
-) {
+): MutableState<T> by value {
     private var data: H = value
 
-    var value = data
-
-    var stateValue: T = data.value
+    override var value: T
+        get() = data.value
         set(value) {
             this.data.value = value
-            settings.putString(key, gson.toJson(value))
+            settings.putString(key, if (value is Serializable) gson.toJson(value) else value.toString())
         }
 
     init {
         val json = settings.getString(key, "")
-        val t = gson.fromJson<T>(json, object : TypeToken<T>() {}.type)
-        t?.let {
-            data.value = it
+        if (data.value is Serializable) {
+            val t = gson.fromJson<T>(json, object : TypeToken<T>() {}.type)
+            t?.let {
+                this.data.value = it
+            }
+        } else {
+            this.data.value = json as T
         }
     }
 }
 
 @Composable
-inline fun <reified T : @Serializable Any, H : MutableState<T>> autoSaveComposable(
+inline fun <reified T, H : MutableState<T>> autoSaveComposable(
     key: String, crossinline calculation: @Composable () -> H
 ) = AutoSaveState(key, calculation())
 
-internal inline operator fun <reified T : @Serializable Any, H : MutableState<T>> AutoSaveState<T, H>.getValue(
+internal inline operator fun <reified T, H : MutableState<T>> AutoSaveState<T, H>.getValue(
     thisObj: Any?, property: KProperty<*>
-) = value
+) = this
 
-internal inline operator fun <reified T : @Serializable Any, H : MutableState<T>> AutoSaveState<T, H>.setValue(
-    thisObj: Any?,
-    property: KProperty<*>,
-    value: T
+internal inline operator fun <reified T, H : MutableState<T>> AutoSaveState<T, H>.setValue(
+    thisObj: Any?, property: KProperty<*>, value: T
 ) {
-    stateValue = value
+    this.value = value
 }

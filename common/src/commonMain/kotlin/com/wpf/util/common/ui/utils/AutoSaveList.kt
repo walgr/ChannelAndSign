@@ -3,27 +3,31 @@ package com.wpf.util.common.ui.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.google.gson.reflect.TypeToken
-import com.wpf.util.common.ui.channelset.Client
-import kotlinx.serialization.Serializable
 import kotlin.reflect.KProperty
 
 class AutoSaveListState<T, H : SnapshotStateList<T>>(
     private val key: String, var value: H
-) {
+): MutableList<T> by value {
 
-    val size: Int = value.size
-
-    fun remove(t: T) {
-        value.remove(t)
+    override fun remove(element: T): Boolean {
+        val b = value.remove(element)
         saveData()
+        return b
     }
 
-    fun add(t: T) {
-        value.add(t)
+    override fun add(element: T): Boolean {
+        val b = value.add(element)
         saveData()
+        return b
     }
 
-    private fun saveData() {
+    override fun addAll(elements: Collection<T>): Boolean {
+        val b = value.addAll(elements)
+        saveData()
+        return b
+    }
+
+    fun saveData() {
         settings.putString(key, gson.toJson(value))
     }
 
@@ -37,17 +41,17 @@ class AutoSaveListState<T, H : SnapshotStateList<T>>(
     }
 }
 
-internal inline operator fun <reified T : @Serializable Any, H : SnapshotStateList<T>> AutoSaveListState<T, H>.getValue(
+internal inline operator fun <reified T, H : SnapshotStateList<T>> AutoSaveListState<T, H>.getValue(
     thisObj: Any?, property: KProperty<*>
-) = value
+) = this
 
-internal inline operator fun <reified T : @Serializable Any, H : SnapshotStateList<T>> AutoSaveListState<T, H>.setValue(
+internal inline operator fun <reified T, H : SnapshotStateList<T>> AutoSaveListState<T, H>.setValue(
     thisObj: Any?, property: KProperty<*>, value: H
 ) {
     this.value = value
 }
 
-inline fun <reified T : @Serializable Any, H : SnapshotStateList<T>> autoSaveList(
+inline fun <reified T, H : SnapshotStateList<T>> autoSaveList(
     key: String, crossinline calculation: () -> H
 ) = AutoSaveListState(key, calculation()).apply {
     initData<T>(key)

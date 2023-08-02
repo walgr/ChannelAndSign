@@ -1,6 +1,5 @@
 package com.wpf.util.common.ui.channelset
 
-import com.russhwolf.settings.set
 import com.wpf.base.dealfile.*
 import com.wpf.util.common.ui.utils.json
 import com.wpf.util.common.ui.utils.settings
@@ -14,7 +13,6 @@ import com.wpf.util.common.ui.utils.marketType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import java.io.File
 
 object ChannelSetViewModel {
@@ -24,21 +22,6 @@ object ChannelSetViewModel {
             return json.decodeFromString(it)
         }
         return arrayListOf()
-    }
-
-    fun saveClientList(clientList: List<Client>) {
-        settings["clientList"] = json.encodeToString(clientList)
-    }
-
-    fun getPathList(): List<Path> {
-        settings.getStringOrNull("pathList")?.let {
-            return json.decodeFromString(it)
-        }
-        return arrayListOf()
-    }
-
-    fun savePathList(pathList: List<Path>) {
-        settings["pathList"] = json.encodeToString(pathList)
     }
 
     fun getChannelDataInFile(txtFilePath: String): List<Array<String>> {
