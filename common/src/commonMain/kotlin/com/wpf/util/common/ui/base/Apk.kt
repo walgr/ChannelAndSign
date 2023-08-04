@@ -1,7 +1,6 @@
 package com.wpf.util.common.ui.base
 
 import com.wpf.util.common.ui.marketplace.markets.base.MarketType
-import com.wpf.util.common.ui.marketplace.markets.base.Market
 import com.wpf.util.common.ui.utils.abiType
 import com.wpf.util.common.ui.utils.channelName
 import kotlinx.serialization.Serializable
@@ -42,5 +41,5 @@ data class Apk(
 fun Apk.canApi(): Boolean {
     return MarketType.values().find { market ->
         channelName.contains(market.channelName, ignoreCase = true)
-    }?.canApi() ?: false
+    }?.isApi() ?: false
 }

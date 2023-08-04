@@ -192,7 +192,7 @@ data class QH360Market(
             if (qidStr != qid) {
                 qid = qidStr
             }
-            webView.load(pushUrl + appId)
+//            webView.load(pushUrl + appId)
         } else if (url.startsWith(pushUrl + appId) || url == "https://dev.360.cn/mod3/mobileapp/?qid=160270285&appid=201882426") {
             //上传页面
             isUploadUrl = true

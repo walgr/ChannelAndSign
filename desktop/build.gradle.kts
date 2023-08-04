@@ -42,7 +42,10 @@ compose.desktop {
                 iconFile.set(project.file("icon.png"))
                 dirChooser = true
             }
-            targetFormats(TargetFormat.Exe)
+            macOS {
+                iconFile.set(project.file("icon.png"))
+            }
+            targetFormats(TargetFormat.Exe, TargetFormat.Dmg)
             packageName = "ChannelAndSign"
             packageVersion = "1.0.0"
             description = "by wpf"

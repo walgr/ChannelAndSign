@@ -26,6 +26,7 @@ object MarketPlaceViewModel {
     }
 
     private val marketMap = mutableMapOf<String, Market>()
+
     fun getSelectMarket(clientId: String, marketName: String): Market? {
         if (getCanApiMarketList().isEmpty()) return null
         val key = "Client${clientId}Market${marketName}"
@@ -48,7 +49,7 @@ object MarketPlaceViewModel {
         if (getDefaultSelectClientList().isEmpty()) return arrayListOf()
         if (canApiMarketList == null) {
             canApiMarketList = MarketType.values().filter { marketType ->
-                marketType.canApi()
+                marketType.isApi()
             }.map { marketType ->
                 gson.fromJson("{}", marketType.market.java)
             }.toMutableList()
@@ -61,7 +62,7 @@ object MarketPlaceViewModel {
 
     fun getCanApiMarketTypeList(): List<MarketType> {
         val marketList = MarketType.values().filter { marketType ->
-            marketType.canApi()
+            marketType.isApi()
         }
         return marketList
     }

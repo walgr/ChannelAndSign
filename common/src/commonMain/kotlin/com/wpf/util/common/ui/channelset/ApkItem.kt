@@ -9,9 +9,7 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -26,7 +24,6 @@ import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.marketplace.MarketPlaceViewModel
 import com.wpf.util.common.ui.widget.common.ItemView
 import com.wpf.util.common.ui.marketplace.markets.base.MarketApk
-import com.wpf.util.common.ui.marketplace.markets.base.UploadState
 import com.wpf.util.common.ui.marketplace.markets.base.UploadState.*
 import com.wpf.util.common.ui.widget.common.ShapeText
 
@@ -94,7 +91,7 @@ fun ApkItem(marketApk: MarketApk) {
                             }
                         }
                     }
-                    if (marketApk.marketType.canApi()) {
+                    if (marketApk.marketType.isApi()) {
                         Box(modifier = Modifier.size(4.dp))
                         apiIcon()
                     }

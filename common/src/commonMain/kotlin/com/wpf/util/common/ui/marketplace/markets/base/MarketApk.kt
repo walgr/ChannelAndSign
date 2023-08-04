@@ -9,7 +9,7 @@ data class MarketApk(
     val channelName: String,
     val abiApk: MutableList<Apk> = mutableListOf()
 ) : SelectItem() {
-    override var isSelect: Boolean = marketType.canApi()
+    override var isSelect: Boolean = marketType.isApi()
 
     val uploadState = mutableStateOf(UploadState.UPLOAD_WAIT)               //上传状态
 
