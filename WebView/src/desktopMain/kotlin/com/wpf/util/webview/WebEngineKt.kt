@@ -1,3 +1,5 @@
+package com.wpf.util.webview
+
 import java.net.CookieHandler
 import java.net.URI
 import javafx.scene.web.WebEngine
@@ -50,12 +52,12 @@ fun WebView.executeScript(script: String) {
 
 /**
  * Set cookie
- * 需要再加载之前设置，才有效果
+ * 需要在加载之前设置，才有效果
  * It needs to be set before loading to have an effect
  * @param url
  * @param headers
  */
-fun WebView.setCookie(url: String, headers: HashMap<String, List<String>>) {
+fun WebView.setCookie(url: String, headers: MutableMap<String, List<String>>) {
     val uri: URI = URI.create(url)
     CookieHandler.getDefault().put(uri, headers)
 }

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,16 +25,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wpf.util.common.ui.centerBgColor
-import com.wpf.util.common.ui.itemBgColor
-import com.wpf.util.common.ui.mainTextColor
+import com.wpf.util.common.ui.*
 import com.wpf.util.common.ui.marketplace.markets.base.UploadData
 import com.wpf.util.common.ui.marketplace.markets.base.upload
 import com.wpf.util.common.ui.signset.SignFile
-import com.wpf.util.common.ui.signset.SignSetViewModel
-import com.wpf.util.common.ui.uploadIcon
 import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.*
+import java.util.UUID
 
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
@@ -113,40 +111,28 @@ fun channelPage() {
                                                     .padding(8.dp, 4.dp, 8.dp, 4.dp)
                                                     .clip(shape = RoundedCornerShape(8.dp))
                                                     .background(color = if (group.isSelectState.value) mainTextColor else Color.White)
-                                                    .combinedClickable(enabled = true, onDoubleClick = {
-                                                        groupDialogInput.value = group.name
-                                                        groupDialog.value = true
-                                                    }, onLongClick = {
+                                                    .combinedClickable(enabled = true, onLongClick = {
+                                                        //长按 修改
                                                         groupDialogInput.value = group.name
                                                         groupDialog.value = true
                                                     }, onClick = {
-                                                        clientList.forEach {
-                                                            it.isSelect = false
-                                                            it.isSelectState.value = false
-                                                        }
-                                                        group.isSelect = true
-                                                        group.isSelectState.value = true
-                                                        clientList.saveData()
-                                                        channelFileNameList.clear()
-                                                        channelNameList.clear()
-                                                        if (group.channelPath.isNotEmpty()) {
-                                                            val result =
-                                                                ChannelSetViewModel.getChannelDataInFile(group.channelPath)
-                                                            if (result.isNotEmpty()) {
-                                                                channelFileNameList.addAll(result.map { array -> array[0] })
-                                                                channelNameList.addAll(result.map { array -> array[1] })
-                                                            } else {
-                                                                channelFileNameList.add("文件解析错误，路径:(${group.channelPath})")
-                                                                channelNameList.add("文件解析错误，路径:(${group.channelPath}")
-                                                            }
-                                                        }
-                                                    }), contentAlignment = Alignment.CenterStart
+                                                        dealClientClick(
+                                                            clientList,
+                                                            clientList.indexOf(group),
+                                                            channelFileNameList,
+                                                            channelNameList
+                                                        )
+                                                    }), contentAlignment = Alignment.CenterEnd
                                             ) {
                                                 Text(
                                                     group.nameState.value,
                                                     color = if (group.isSelectState.value) Color.White else Color.Black,
-                                                    modifier = Modifier.padding(8.dp, 4.dp, 8.dp, 4.dp)
+                                                    modifier = Modifier.padding(8.dp, 0.dp, 8.dp, 0.dp).fillMaxWidth()
                                                 )
+                                                IconButton(onClick = {
+                                                    clientList.remove(group)
+                                                    dealClientClick(clientList, 0, channelFileNameList, channelNameList)
+                                                }) { Icon(Icons.Default.Close, "关闭") }
                                             }
                                         }
                                     }
@@ -158,7 +144,8 @@ fun channelPage() {
                                 Column {
                                     Box(
                                         modifier = Modifier.fillMaxWidth().weight(2f)
-                                            .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
+                                            .clip(shape = RoundedCornerShape(8.dp))
+                                            .background(color = centerBgColor),
                                     ) {
                                         Column {
                                             FileAddTitle("渠道列表", arrayOf("txt")) { path ->
@@ -215,7 +202,7 @@ fun channelPage() {
                                         }
                                         onExternalDrag(modifier = Modifier.fillMaxSize()) {
                                             if (it.size != 1 || !it[0].contains(".txt")) return@onExternalDrag
-                                            clientList.find { channel -> channel.isSelect }?.channelPath = it[0]
+                                            clientList.find { client -> client.isSelect }?.channelPath = it[0]
                                             channelFileNameList.clear()
                                             channelNameList.clear()
                                             if (it[0].isNotEmpty()) {
@@ -231,8 +218,10 @@ fun channelPage() {
                                         }
                                     }
                                     Box(
-                                        modifier = Modifier.fillMaxWidth().weight(1f).padding(0.dp, 10.dp, 0.dp, 0.dp)
-                                            .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
+                                        modifier = Modifier.fillMaxWidth().weight(1f)
+                                            .padding(0.dp, 10.dp, 0.dp, 0.dp)
+                                            .clip(shape = RoundedCornerShape(8.dp))
+                                            .background(color = centerBgColor),
                                     ) {
                                         Column {
                                             FileAddTitle("apk地址", arrayOf("apk")) {
@@ -276,7 +265,8 @@ fun channelPage() {
                                             }.toMutableList())
                                         }
                                         Box(
-                                            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.BottomEnd
                                         ) {
                                             IconButton(onClick = {
                                                 if (pathList.isEmpty()) {
@@ -399,12 +389,11 @@ fun channelPage() {
                     findGroup.name = inputStr
                     findGroup.nameState.value = inputStr
                 } else {
-                    clientList.add(Client(inputStr).apply {
+                    clientList.add(Client(id = UUID.randomUUID().toString(), inputStr).apply {
                         isSelect = true
                         isSelectState.value = true
                     })
                 }
-                clientList.saveData()
                 groupDialogInput.value = ""
             }
         }
@@ -415,13 +404,42 @@ fun channelPage() {
                     file.path
                 }
                 ChannelSetViewModel.dealApk(
-                    filePathList, clientList.find { channel -> channel.isSelect }?.channelPath, it
+                    filePathList, clientList.find { client -> client.isSelect }?.channelPath, it
                 ) {
                     isRunDealFile = false
                     marketPlaceList.clear()
                     marketPlaceList.addAll(ChannelSetViewModel.dealMargetPlace(filePathList))
                 }
             }
+        }
+    }
+}
+
+fun dealClientClick(
+    clientList: AutoSaveList<Client, SnapshotStateList<Client>>,
+    pos: Int,
+    channelFileNameList: SnapshotStateList<String>,
+    channelNameList: SnapshotStateList<String>
+) {
+    clientList.forEach {
+        it.isSelect = false
+        it.isSelectState.value = false
+    }
+    val client = clientList[pos]
+    client.isSelect = true
+    client.isSelectState.value = true
+    clientList.saveData()
+    channelFileNameList.clear()
+    channelNameList.clear()
+    if (client.channelPath.isNotEmpty()) {
+        val result =
+            ChannelSetViewModel.getChannelDataInFile(client.channelPath)
+        if (result.isNotEmpty()) {
+            channelFileNameList.addAll(result.map { array -> array[0] })
+            channelNameList.addAll(result.map { array -> array[1] })
+        } else {
+            channelFileNameList.add("文件解析错误，路径:(${client.channelPath})")
+            channelNameList.add("文件解析错误，路径:(${client.channelPath}")
         }
     }
 }

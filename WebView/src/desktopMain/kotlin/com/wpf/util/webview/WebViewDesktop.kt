@@ -1,4 +1,4 @@
-/*
+package com.wpf.util.webview/*
  * Copyright 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,12 @@
  * use with JavaFx WebView
  */
 
-import LoadingState.*
+import com.wpf.util.webview.LoadingState.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
+import com.wpf.util.webview.*
 import javafx.application.Platform
 import javafx.concurrent.Worker.State.*
 import javafx.embed.swing.JFXPanel
@@ -104,15 +105,14 @@ internal fun WebViewDesktop(
     }, modifier = modifier)
 }
 
-
 fun addEngineListener(
     webView: WebView, state: WebViewState, navigator: WebViewNavigator
 ) {
     val engine = webView.engine
     engine.loadWorker.exceptionProperty().addListener { _, _, newError ->
-//        println("page load error : $newError")
+        println("page load error : $newError")
         state.errorsForCurrentRequest.add(
-            WebViewError(
+            com.wpf.util.webview.WebViewError(
                 engine.getCurrentUrl(), newError?.message ?: ""
             )
         )
@@ -168,6 +168,7 @@ actual sealed class WebContent {
     data class Url(
         val url: String,
         val additionalHttpHeaders: Map<String, String> = emptyMap(),
+        val cookies: MutableMap<String, List<String>>? = null
     ) : WebContent()
 
     data class Data(val data: String) : WebContent()
@@ -177,6 +178,11 @@ actual sealed class WebContent {
             is Url -> url
             is Data -> null
         }
+    }
+
+    fun getLocalCookies() = when (this) {
+        is Url -> cookies
+        is Data -> null
     }
 }
 
@@ -328,14 +334,14 @@ actual data class WebViewError(
  */
 @Composable
 actual fun rememberWebViewState(
-    url: String, additionalHttpHeaders: Map<String, String>, urlChange: UrlChange?
+    url: String, additionalHttpHeaders: Map<String, String>, urlChange: UrlChange?, cookies: MutableMap<String, List<String>>?
 ): WebViewState =
 // Rather than using .apply {} here we will recreate the state, this prevents
     // a recomposition loop when the webview updates the url itself.
     remember(url, additionalHttpHeaders) {
         WebViewState(
             WebContent.Url(
-                url = url, additionalHttpHeaders = additionalHttpHeaders
+                url = url, additionalHttpHeaders = additionalHttpHeaders, cookies = cookies
             )
         ).apply {
             this.urlChange = urlChange
@@ -348,8 +354,10 @@ actual fun rememberWebViewState(
  * @param data The uri to load in the WebView
  */
 @Composable
-actual fun rememberWebViewStateWithHTMLData(data: String, baseUrl: String?): WebViewState = remember(data) {
-    WebViewState(WebContent.Data(data))
+actual fun rememberWebViewStateWithHTMLData(data: String, baseUrl: String?, urlChange: UrlChange?): WebViewState = remember(data) {
+    WebViewState(WebContent.Data(data)).apply {
+        this.urlChange = urlChange
+    }
 }
 
 

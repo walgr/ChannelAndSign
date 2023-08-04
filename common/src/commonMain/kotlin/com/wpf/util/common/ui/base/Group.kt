@@ -14,6 +14,7 @@ open class Group(
     @kotlin.jvm.Transient @Transient
     open var nameState: MutableState<String> = mutableStateOf(name)
         get() {
+            if (field == null) field = mutableStateOf(name)
             field.value = name
             return field
         }

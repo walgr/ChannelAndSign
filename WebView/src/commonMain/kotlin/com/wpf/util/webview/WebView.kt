@@ -1,5 +1,7 @@
-import LoadingState.Finished
-import LoadingState.Loading
+package com.wpf.util.webview
+
+import com.wpf.util.webview.LoadingState.Finished
+import com.wpf.util.webview.LoadingState.Loading
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
@@ -18,6 +20,10 @@ fun WebView(
     onDispose: WebView.() -> Unit = {},
 ) {
     WebViewImpl(state, modifier, navigator, onCreated, onDispose)
+}
+
+fun WebView.enableFirebug() {
+    engine.executeScript("if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', 'https://getfirebug.com/' + 'firebug-lite.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', 'https://getfirebug.com/' + '#startOpened');}")
 }
 
 @Composable
@@ -85,7 +91,12 @@ typealias UrlChange = (String?, WebView) -> Unit
  *                              Note that these headers are used for all subsequent requests of the WebView.
  */
 @Composable
-expect fun rememberWebViewState(url: String, additionalHttpHeaders: Map<String, String> = emptyMap(), urlChange: UrlChange? = null): WebViewState
+expect fun rememberWebViewState(
+    url: String,
+    additionalHttpHeaders: Map<String, String> = emptyMap(),
+    urlChange: UrlChange? = null,
+    cookies: MutableMap<String, List<String>>? = null
+): WebViewState
 
 /**
  * Creates a WebView state that is remembered across Compositions.
@@ -93,7 +104,7 @@ expect fun rememberWebViewState(url: String, additionalHttpHeaders: Map<String, 
  * @param data The uri to load in the WebView
  */
 @Composable
-expect fun rememberWebViewStateWithHTMLData(data: String, baseUrl: String? = null): WebViewState
+expect fun rememberWebViewStateWithHTMLData(data: String, baseUrl: String? = null, urlChange: UrlChange?): WebViewState
 
 
 /**
@@ -106,5 +117,9 @@ expect fun rememberWebViewStateWithHTMLData(data: String, baseUrl: String? = nul
 @Composable
 fun rememberWebViewNavigator(
     coroutineScope: CoroutineScope = rememberCoroutineScope()
-): WebViewNavigator = remember(coroutineScope) { WebViewNavigator(coroutineScope) }
+): WebViewNavigator = remember(coroutineScope) {
+    WebViewNavigator(
+        coroutineScope
+    )
+}
 

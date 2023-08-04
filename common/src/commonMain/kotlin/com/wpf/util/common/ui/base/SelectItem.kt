@@ -11,6 +11,7 @@ open class SelectItem(
     @kotlin.jvm.Transient @Transient
     open var isSelectState = mutableStateOf(isSelect)
         get() {
+            if (field == null) field = mutableStateOf(isSelect)
             field.value = isSelect
             return field
         }

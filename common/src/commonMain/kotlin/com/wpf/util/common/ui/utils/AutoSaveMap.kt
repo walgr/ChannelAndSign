@@ -90,4 +90,5 @@ internal inline operator fun <reified K, reified V> AutoSaveMap<K, V>.setValue(
     thisObj: Any?, property: KProperty<*>, key: K, value: V
 ) {
     this[key] = value
+    saveData()
 }

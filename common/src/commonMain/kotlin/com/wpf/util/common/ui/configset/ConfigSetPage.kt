@@ -16,12 +16,14 @@ import com.russhwolf.settings.get
 import com.wpf.base.dealfile.channelBaseInsertFilePath
 import com.wpf.base.dealfile.channelSavePath
 import com.wpf.base.dealfile.zipalignFile
+import com.wpf.server.serverBasePath
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.InputView
 import java.io.File
+import javax.swing.JFileChooser
 
 @Preview
 @Composable
@@ -30,6 +32,8 @@ fun configPage() {
     val inputChannelBaseFilePath by autoSaveComposable("channelBaseFilePath") { remember { mutableStateOf("") } }
     //渠道保存位置
     val inputChannelSaveFilePath by autoSaveComposable("channelSaveFilePath") { remember { mutableStateOf("") } }
+    //文件服务器基础位置
+    val serverBasePathC by autoSaveComposable("serverBasePath") { remember { mutableStateOf("") } }
     //apk对齐工具位置
     val inputZipalignFilePath by autoSaveComposable("zipalignFilePath") { remember { mutableStateOf("") } }
 
@@ -58,7 +62,11 @@ fun configPage() {
                             Row(
                                 modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically
                             ) {
-                                InputView(input = inputChannelBaseFilePath, hint = "请输入渠道基础文件位置") {
+                                InputView(
+                                    modifier = Modifier.weight(1f),
+                                    input = inputChannelBaseFilePath,
+                                    hint = "请输入渠道基础文件位置"
+                                ) {
                                     inputChannelBaseFilePath.value = it
                                     channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
                                 }
@@ -82,7 +90,11 @@ fun configPage() {
                             Row(
                                 modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically
                             ) {
-                                InputView(input = inputZipalignFilePath, hint = "请输入Apk对齐工具Zipalign位置") {
+                                InputView(
+                                    modifier = Modifier.weight(1f),
+                                    input = inputZipalignFilePath,
+                                    hint = "请输入Apk对齐工具Zipalign位置"
+                                ) {
                                     inputZipalignFilePath.value = it
                                     zipalignFile = ConfigPageViewModel.getZipalignFilePath()
                                 }
@@ -90,6 +102,26 @@ fun configPage() {
                                     FileSelector.showFileSelector(arrayOf("exe")) {
                                         inputZipalignFilePath.value = it
                                         zipalignFile = ConfigPageViewModel.getZipalignFilePath()
+                                    }
+                                }, modifier = Modifier.padding(start = 8.dp)) {
+                                    Text("选择")
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                InputView(
+                                    modifier = Modifier.weight(1f),
+                                    input = serverBasePathC,
+                                    hint = "请输入文件服务器基础目录"
+                                ) {
+                                    serverBasePathC.value = it
+                                    serverBasePath = it
+                                }
+                                Button(onClick = {
+                                    FileSelector.showFileSelector(selectionMode = JFileChooser.DIRECTORIES_ONLY) {
+                                        serverBasePathC.value = it
+                                        serverBasePath = it
                                     }
                                 }, modifier = Modifier.padding(start = 8.dp)) {
                                     Text("选择")

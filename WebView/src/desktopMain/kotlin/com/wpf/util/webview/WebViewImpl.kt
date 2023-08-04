@@ -1,3 +1,5 @@
+package com.wpf.util.webview
+
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import javafx.scene.web.WebView

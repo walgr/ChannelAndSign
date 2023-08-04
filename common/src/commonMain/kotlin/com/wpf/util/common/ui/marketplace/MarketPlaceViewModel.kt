@@ -20,21 +20,22 @@ object MarketPlaceViewModel {
 
     fun getSelectMarket(clientList: List<Client>? = null, marketList: List<Market>? = null): Market? {
         return getSelectMarket(
-            (clientList ?: getDefaultSelectClientList()).find { it.isSelect }?.name ?: "",
+            (clientList ?: getDefaultSelectClientList()).find { it.isSelect }?.id ?: "",
             (marketList ?: getCanApiMarketList()).find { it.isSelect }?.name ?: ""
         )
     }
 
     private val marketMap = mutableMapOf<String, Market>()
-    fun getSelectMarket(channelName: String, marketName: String): Market? {
+    fun getSelectMarket(clientId: String, marketName: String): Market? {
         if (getCanApiMarketList().isEmpty()) return null
-        val key = "Channel${channelName}Market${marketName}"
+        val key = "Client${clientId}Market${marketName}"
         val market = marketMap[key]
         market?.initByData()
         if (market != null) {
             return market
         }
         val dataJson = settings.getString(key, "{}")
+        if (dataJson.isEmpty()) return null
         val saveMarket = gson.fromJson(dataJson, getCanApiMarketList().find { it.name == marketName }!!.javaClass)
         saveMarket?.changeSelect(getCanApiMarketList().find { it.name == marketName }?.isSelect ?: false)
         saveMarket.initByData()
@@ -67,7 +68,7 @@ object MarketPlaceViewModel {
 
     fun saveMarketList(clientList: List<Client>, marketSelect: Market) {
         val channelSelect = clientList.find { it.isSelect } ?: return
-        val key = "Channel${channelSelect.name}Market${marketSelect.name}"
+        val key = "Client${channelSelect.id}Market${marketSelect.name}"
         marketMap.remove(key)
         settings.putString(key, gson.toJson(marketSelect))
         //换信息后清空初始化的数据

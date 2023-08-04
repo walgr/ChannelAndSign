@@ -32,7 +32,7 @@ fun marketPlacePage() {
     val showAddMarketDialog = remember { mutableStateOf(false) }
     val marketList = remember { mutableStateListOf(*MarketPlaceViewModel.getCanApiMarketList().toTypedArray()) }
     //分组列表
-    val channelList = remember { mutableStateListOf(*MarketPlaceViewModel.getDefaultSelectClientList().toTypedArray()) }
+    val clientList = remember { mutableStateListOf(*MarketPlaceViewModel.getDefaultSelectClientList().toTypedArray()) }
 
     val selectMarket = remember { mutableStateOf(MarketPlaceViewModel.getSelectMarket()) }
 
@@ -56,14 +56,14 @@ fun marketPlacePage() {
                                     Title("市场")
                                     Row {
                                         LazyColumn(modifier = Modifier.weight(1f)) {
-                                            items(channelList) {
+                                            items(clientList) {
                                                 ItemTextView(it.name, modifier = Modifier.clickable {
-                                                    channelList.forEach { market ->
+                                                    clientList.forEach { market ->
                                                         market.changeSelect(false)
                                                     }
                                                     it.changeSelect(true)
                                                     selectMarket.value =
-                                                        MarketPlaceViewModel.getSelectMarket(channelList, marketList)
+                                                        MarketPlaceViewModel.getSelectMarket(clientList, marketList)
                                                 }, isSelectState = it.isSelectState)
                                             }
                                         }
@@ -75,7 +75,7 @@ fun marketPlacePage() {
                                                     }
                                                     it.changeSelect(true)
                                                     selectMarket.value =
-                                                        MarketPlaceViewModel.getSelectMarket(channelList, marketList)
+                                                        MarketPlaceViewModel.getSelectMarket(clientList, marketList)
                                                 }, isSelectState = it.isSelectState)
                                             }
                                         }
@@ -101,7 +101,7 @@ fun marketPlacePage() {
                                                 Text("清空缓存")
                                             }
                                             Button(onClick = {
-                                                MarketPlaceViewModel.saveMarketList(channelList, it)
+                                                MarketPlaceViewModel.saveMarketList(clientList, it)
                                             }, modifier = Modifier.padding(start = 8.dp)) {
                                                 Text("保存")
                                             }

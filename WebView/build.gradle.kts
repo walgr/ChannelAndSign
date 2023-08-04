@@ -45,6 +45,13 @@ kotlin {
                 api("org.openjfx:javafx-swing:$jdkVersion:${platform}")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.7.2")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
+                api("org.seleniumhq.selenium:selenium-java:4.11.0")
+
+                implementation("org.eclipse.jetty.websocket:websocket-server:9.2.15.v20160210")
+                implementation("org.eclipse.jetty.websocket:websocket-servlet:9.2.15.v20160210")
+                implementation("org.eclipse.jetty:jetty-server:9.2.15.v20160210")
+                implementation("org.eclipse.jetty:jetty-servlet:9.2.15.v20160210")
+
             }
         }
     }

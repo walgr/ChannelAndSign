@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,6 +18,9 @@ val itemBgColor = Color(1f, 1f, 1f, 0.6f)
 val mainTextColor = Color(98, 88, 179)
 val mainBgColor = Color(28, 30, 46)
 val centerBgColor = Color(234, 234, 245)
+
+@Composable
+fun closeIcon() = Icon(Icons.Default.Close, "失败")
 
 @Composable
 fun size24(content: @Composable BoxScope.() -> Unit) {

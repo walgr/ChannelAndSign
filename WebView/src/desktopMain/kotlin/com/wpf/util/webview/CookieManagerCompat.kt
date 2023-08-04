@@ -1,3 +1,5 @@
+package com.wpf.util.webview
+
 import java.net.CookieHandler
 import java.net.URI
 import java.util.LinkedHashMap
@@ -6,8 +8,11 @@ actual object CookieManagerCompat {
 
     actual fun setCookie(url: String,  headers: MutableMap<String, String>) {
         val uri: URI = URI.create(url)
-        val stringList = headers.map {
+        var stringList: List<String> = headers.map {
             "${it.key}=${it.value}"
+        }
+        if (headers.size == 1 && headers.containsKey("Cookie")) {
+            stringList = mutableListOf("Cookie=" + headers["Cookie"])
         }
         val headersCookie: MutableMap<String, List<String>> = LinkedHashMap()
         headersCookie["Set-Cookie"] = stringList

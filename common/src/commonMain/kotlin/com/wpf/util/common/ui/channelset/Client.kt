@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class Client(
+    var id: String,
     override var name: String = "",
     override var isSelect: Boolean = false,
     var channelPath: String = ""

@@ -15,7 +15,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 object FileSelector {
 
     fun showFileSelector(
-        suffixList: Array<String>,
+        suffixList: Array<String> = arrayOf(),
         selectionMode: Int = JFileChooser.FILES_ONLY,
         onFileSelected: (String) -> Unit
     ) {
@@ -31,7 +31,9 @@ object FileSelector {
 
             fileSelectionMode = selectionMode
             isMultiSelectionEnabled = false
-            fileFilter = FileNameExtensionFilter("文件过滤", *suffixList)
+            if (suffixList.isNotEmpty()) {
+                fileFilter = FileNameExtensionFilter("文件过滤", *suffixList)
+            }
 
             val result = showOpenDialog(ComposeWindow())
             if (result == JFileChooser.APPROVE_OPTION) {
