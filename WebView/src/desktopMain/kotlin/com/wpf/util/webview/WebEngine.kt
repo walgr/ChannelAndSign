@@ -6,8 +6,6 @@ import javafx.scene.web.WebEngine
 import javafx.scene.web.WebView
 import kotlin.collections.HashMap
 
-
-
 fun WebView.load(url: String) {
     engine.load(url)
 }
@@ -69,6 +67,10 @@ fun WebView.getCookies(): MutableMap<String, MutableList<String>>? {
     return cookieHandler.get(uri, HashMap())
 }
 
+//支持跨域
+fun WebView.crossDomain() {
+
+}
 
 internal fun WebEngine.getCurrentUrl(): String? {
     if (history.entries.size <= 0) return null

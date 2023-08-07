@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import com.sun.javafx.scene.web.Debugger
+import com.sun.javafx.webkit.WebConsoleListener
 import com.wpf.server.FileServer
 import com.wpf.util.webview.*
 import io.ktor.http.*
@@ -64,7 +65,6 @@ fun WebViewShow(url: String, cookies: MutableMap<String, List<String>>? = null, 
 //                "  </div>\n" +
 //                "</form>\n", null, urlChange = urlChange
 //    )
-    System.setProperty("sun.net.http.allowRestrictedHeaders", "true")
     WebView(
         browserUrl,
         modifier = Modifier.fillMaxSize(),
@@ -75,9 +75,12 @@ fun WebViewShow(url: String, cookies: MutableMap<String, List<String>>? = null, 
                 setCookie(url, cookies)
             }
             runCatching {
-                CoroutineScope(Dispatchers.IO).launch {
-                    FileServer.start()
+                WebConsoleListener.setDefaultListener { _, message, _, _ ->
+                    println(message)
                 }
+//                CoroutineScope(Dispatchers.IO).launch {
+//                    FileServer.start()
+//                }
 //                val webEngineClazz: Class<*> = WebEngine::class.java
 //                val debuggerField: Field = webEngineClazz.getDeclaredField("debugger")
 //                debuggerField.setAccessible(true)
@@ -97,7 +100,7 @@ fun WebViewShow(url: String, cookies: MutableMap<String, List<String>>? = null, 
         }) {
         //销毁
         runCatching {
-            FileServer.stop()
+//            FileServer.stop()
 //            DevToolsDebuggerServer.stopDebugServer()
         }
     }

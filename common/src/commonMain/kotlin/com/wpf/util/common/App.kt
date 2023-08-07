@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.WindowScope
+import com.wpf.server.FileServer
 import com.wpf.util.common.ui.base.Menu
 import com.wpf.util.common.ui.channelset.channelPage
 import com.wpf.util.common.ui.configset.configPage
@@ -26,11 +27,23 @@ import com.wpf.util.common.ui.marketplace.marketPlacePage
 import com.wpf.util.common.ui.signset.signPage
 import com.wpf.util.common.ui.utils.OnApplicationExit
 import com.wpf.util.common.ui.utils.WindowDraggableArea
+import com.wpf.util.common.ui.utils.settings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.system.exitProcess
 
 @Preview
 @Composable
 fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
+    LaunchedEffect(window) {
+        println("文件服务已开启")
+        FileServer.serverBasePath = settings.getString("serverBasePath", "")
+        withContext(Dispatchers.IO) {
+            FileServer.start()
+        }
+    }
     val menuList = remember {
         mutableStateListOf(
             Menu("渠道打包", true),

@@ -21,12 +21,12 @@ package com.wpf.util.webview/*
  * use with JavaFx WebView
  */
 
-import com.wpf.util.webview.LoadingState.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import com.wpf.util.webview.*
+import com.wpf.util.webview.LoadingState.*
 import javafx.application.Platform
 import javafx.concurrent.Worker.State.*
 import javafx.embed.swing.JFXPanel

@@ -2,9 +2,8 @@ package com.wpf.util.common.ui.marketplace.markets.base
 
 import androidx.compose.runtime.MutableState
 import com.wpf.server.FileServer
-import com.wpf.server.serverBasePath
+import com.wpf.server.plugins.GET_FILE
 import javafx.scene.web.WebView
-import java.io.File
 
 interface BrowserMarket : Market {
 
@@ -42,10 +41,10 @@ interface BrowserMarket : Market {
         return returnObj != "undefined" && (returnObj != 0 || returnObj != "0")
     }
 
-    fun WebView.inputFile(name: String, pos: Int = 0, filePath: String, fileName: String = "") {
+    fun WebView.inputFile(name: String, pos: Int = 0, fileUrl: String, fileName: String = "") {
         if (findElements(name)) {
-            println("准备上传：$filePath")
-            this.engine.executeScript("var fileInput = document.getElementsByName(\"$name\").item($pos);const path = '$filePath';fetch(path).then(response => response.blob()).then(blob => {const file = new File([blob], '$fileName');var changeEvent = new Event(\"change\");Object.defineProperty(fileInput, 'files', { value: [file] });fileInput.dispatchEvent(changeEvent);});")
+            println("准备上传：$fileUrl")
+            this.engine.executeScript("var fileInput = document.getElementsByName('$name').item($pos);const path = '$fileUrl';fetch(path).then(response => response.blob()).then(blob => {const file = new File([blob], '$fileName');var changeEvent = new Event(\"change\");Object.defineProperty(fileInput, 'files', { value: [file] });fileInput.dispatchEvent(changeEvent);});")
         }
     }
 
@@ -54,6 +53,6 @@ interface BrowserMarket : Market {
     }
 
     fun getFileLocalUrl(filePath: String): String {
-        return FileServer.baseUrl + "?filePath=$serverBasePath${File.separator}$filePath"
+        return FileServer.BASE_URL + "/${GET_FILE}?filePath=$filePath"
     }
 }

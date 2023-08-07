@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import com.wpf.server.serverBasePath
+import com.wpf.server.FileServer.serverBasePath
 import com.wpf.util.common.ui.base.AbiType
+import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.*
 import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.ShowWebView
 import com.wpf.util.common.ui.widget.common.InputView
-import com.wpf.util.webview.CookieManagerCompat
 import com.wpf.util.webview.getCookies
 import javafx.scene.web.WebView
 import kotlinx.coroutines.CoroutineScope
@@ -18,10 +18,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.wpf.util.webview.load
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.util.date.*
+import kotlinx.serialization.Serializable
 import org.openqa.selenium.Cookie
 import org.openqa.selenium.chrome.ChromeDriver
 import java.io.File
-import java.net.URI
 
 
 data class QH360Market(
@@ -162,7 +166,6 @@ data class QH360Market(
     override fun onWebUrlChange(url: String?, webView: WebView) {
         super.onWebUrlChange(url, webView)
 //        webView?.inputFile("file", File("gradlew"))
-        val file = File("D:\\企业上传\\市场图\\1080x1920\\ad1x.jpg")
         if (url.isNullOrEmpty()) return
         this.webView = webView
         println(url)
@@ -200,9 +203,45 @@ data class QH360Market(
                 delay(3000)
                 webView?.setElementValue("edition_brief", "testdaweawe")
                 webView?.setElementValue("apk_desc", "testdaweawe")
-                webView?.inputFile("file", 7, filePath = getFileLocalUrl("ad1x.jpg"), "ad1x.jpg")
+                val file = File(serverBasePath + File.separator + "ad1x.jpg")
+                Http.post("https://dev.360.cn/mod3/upload/shots5/", {
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.MultiPart.FormData)
+                        append(HttpHeaders.Accept, ContentType.Any)
+                        append(HttpHeaders.Cookie, cookies["Cookie"]!!.joinToString("").decodeURLQueryComponent())
+                    }
+                    setBody(MultiPartFormDataContent(formData {
+                        append("id", "WU_FILE_0")
+                        append("name", file.name)
+                        append("size", file.length())
+                        append("type", ContentType.Image.JPEG.toString())
+                        append("lastModifiedDate", GMTDate().toHttpDate())
+                        append("Filedata", file.readBytes(), jpgHeader(file.path))
+                    }))
+                }, object : Callback<String> {
+                    override fun onSuccess(t: String) {
+                        val response = gson.fromJson(t, Qh360UploadImgResponse::class.java)
+                        if (response.isSuccess() && response.data?.url?.isEmpty() == false) {
+                            webView.inputFile(
+                                "file",
+                                7,
+                                fileUrl = response.data.url.replace("http", "https"),
+                                response.data.imgFile!!
+                            )
+                        }
+                    }
+
+                    override fun onFail(msg: String) {
+
+                    }
+
+                })
             }
         }
+    }
+
+    private fun uploadImage(filePath: String) {
+
     }
 
     override fun initByData() {
@@ -216,3 +255,20 @@ data class QH360Market(
         cookies.clear()
     }
 }
+
+@Serializable
+internal data class Qh360UploadImgResponse(
+    val errno: Int? = null,
+    val error: String? = null,
+    val data: Qh360UploadImgData? = null
+) {
+    fun isSuccess() = errno == 0
+}
+
+@Serializable
+internal data class Qh360UploadImgData(
+    val url: String? = null,
+    val imgFile: String? = null,
+    val w: Int? = null,
+    val h: Int? = null,
+)

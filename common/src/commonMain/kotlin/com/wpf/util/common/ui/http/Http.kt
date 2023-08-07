@@ -7,6 +7,7 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.cache.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.cookies.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -32,6 +33,8 @@ val client = HttpClient(CIO) {
     install(ContentNegotiation) {
         json()
     }
+    install(HttpCookies) {
+    }
     install(Logging) {
         logger = Logger.SIMPLE
         level = LogLevel.ALL
@@ -44,13 +47,17 @@ object Http {
         CoroutineScope(Dispatchers.IO).launch {
             runCatching {
                 val responseData = client.get(serverUrl, request)
-                if (responseData.status == HttpStatusCode.OK) {
-                    callback?.onSuccess(responseData.bodyAsText())
-                } else {
-                    callback?.onFail(responseData.bodyAsText())
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (responseData.status == HttpStatusCode.OK) {
+                        callback?.onSuccess(responseData.bodyAsText())
+                    } else {
+                        callback?.onFail(responseData.bodyAsText())
+                    }
                 }
             }.onFailure {
-                callback?.onFail(it.message ?: "")
+                CoroutineScope(Dispatchers.Main).launch {
+                    callback?.onFail(it.message ?: "")
+                }
             }
         }
     }
@@ -59,13 +66,17 @@ object Http {
         CoroutineScope(Dispatchers.IO).launch {
             runCatching {
                 val responseData = client.post(serverUrl, request)
-                if (responseData.status == HttpStatusCode.OK) {
-                    callback?.onSuccess(responseData.bodyAsText())
-                } else {
-                    callback?.onFail(responseData.bodyAsText())
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (responseData.status == HttpStatusCode.OK) {
+                        callback?.onSuccess(responseData.bodyAsText())
+                    } else {
+                        callback?.onFail(responseData.bodyAsText())
+                    }
                 }
             }.onFailure {
-                callback?.onFail(it.message ?: "")
+                CoroutineScope(Dispatchers.Main).launch {
+                    callback?.onFail(it.message ?: "")
+                }
             }
         }
     }
@@ -79,13 +90,17 @@ object Http {
         CoroutineScope(Dispatchers.IO).launch {
             runCatching {
                 val responseData = client.submitForm(serverUrl, formParameters, block = block)
-                if (responseData.status == HttpStatusCode.OK) {
-                    callback?.onSuccess(responseData.bodyAsText())
-                } else {
-                    callback?.onFail(responseData.bodyAsText())
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (responseData.status == HttpStatusCode.OK) {
+                        callback?.onSuccess(responseData.bodyAsText())
+                    } else {
+                        callback?.onFail(responseData.bodyAsText())
+                    }
                 }
             }.onFailure {
-                callback?.onFail(it.message ?: "")
+                CoroutineScope(Dispatchers.Main).launch {
+                    callback?.onFail(it.message ?: "")
+                }
             }
         }
     }
@@ -94,13 +109,17 @@ object Http {
         CoroutineScope(Dispatchers.IO).launch {
             runCatching {
                 val responseData = client.put(serverUrl, request)
-                if (responseData.status == HttpStatusCode.OK) {
-                    callback?.onSuccess(responseData.bodyAsText())
-                } else {
-                    callback?.onFail(responseData.bodyAsText())
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (responseData.status == HttpStatusCode.OK) {
+                        callback?.onSuccess(responseData.bodyAsText())
+                    } else {
+                        callback?.onFail(responseData.bodyAsText())
+                    }
                 }
             }.onFailure {
-                callback?.onFail(it.message ?: "")
+                CoroutineScope(Dispatchers.Main).launch {
+                    callback?.onFail(it.message ?: "")
+                }
             }
         }
     }
@@ -109,13 +128,17 @@ object Http {
         CoroutineScope(Dispatchers.IO).launch {
             runCatching {
                 val responseData = client.delete(serverUrl, request)
-                if (responseData.status == HttpStatusCode.OK) {
-                    callback?.onSuccess(responseData.bodyAsText())
-                } else {
-                    callback?.onFail(responseData.bodyAsText())
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (responseData.status == HttpStatusCode.OK) {
+                        callback?.onSuccess(responseData.bodyAsText())
+                    } else {
+                        callback?.onFail(responseData.bodyAsText())
+                    }
                 }
             }.onFailure {
-                callback?.onFail(it.message ?: "")
+                CoroutineScope(Dispatchers.Main).launch {
+                    callback?.onFail(it.message ?: "")
+                }
             }
         }
     }

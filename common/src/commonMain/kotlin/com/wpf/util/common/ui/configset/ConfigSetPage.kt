@@ -16,7 +16,7 @@ import com.russhwolf.settings.get
 import com.wpf.base.dealfile.channelBaseInsertFilePath
 import com.wpf.base.dealfile.channelSavePath
 import com.wpf.base.dealfile.zipalignFile
-import com.wpf.server.serverBasePath
+import com.wpf.server.FileServer.serverBasePath
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
