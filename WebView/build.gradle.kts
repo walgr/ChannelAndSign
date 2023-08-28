@@ -47,8 +47,6 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
                 //selenium-自动化测试
                 api("org.seleniumhq.selenium:selenium-java:4.11.0")
-//                implementation("org.javassist:javassist:3.29.2-GA")
-//                implementation("com.ea.agentloader:ea-agent-loader:1.0.3")
 
 //                implementation("org.eclipse.jetty.websocket:websocket-server:9.2.15.v20160210")
 //                implementation("org.eclipse.jetty.websocket:websocket-servlet:9.2.15.v20160210")

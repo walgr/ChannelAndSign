@@ -37,13 +37,13 @@ import kotlin.system.exitProcess
 @Preview
 @Composable
 fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
-    LaunchedEffect(window) {
-        println("文件服务已开启")
-        FileServer.serverBasePath = settings.getString("serverBasePath", "")
-        withContext(Dispatchers.IO) {
-            FileServer.start()
-        }
-    }
+//    LaunchedEffect(window) {
+//        println("文件服务已开启")
+//        FileServer.serverBasePath = settings.getString("serverBasePath", "")
+//        withContext(Dispatchers.IO) {
+//            FileServer.start()
+//        }
+//    }
     val menuList = remember {
         mutableStateListOf(
             Menu("渠道打包", true),

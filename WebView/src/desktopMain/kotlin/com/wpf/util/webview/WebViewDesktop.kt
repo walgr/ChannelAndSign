@@ -110,9 +110,9 @@ fun addEngineListener(
 ) {
     val engine = webView.engine
     engine.loadWorker.exceptionProperty().addListener { _, _, newError ->
-        println("page load error : $newError")
+//        println("page load error : $newError")
         state.errorsForCurrentRequest.add(
-            com.wpf.util.webview.WebViewError(
+            WebViewError(
                 engine.getCurrentUrl(), newError?.message ?: ""
             )
         )

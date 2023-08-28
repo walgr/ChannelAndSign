@@ -319,10 +319,10 @@ data class VivoMarket(
         })
     }
 
-    @delegate:Transient
-    private val uploadApkMap by autoSave("VivoUploadApkMap") { mutableMapOf<Apk, VivoUploadFileResponse>() }
+    @Transient
+    private val uploadApkMap = mutableMapOf<String, VivoUploadFileResponse>()
     private fun uploadApk(apk: Apk, callback: SuccessCallback<VivoUploadFileResponse>) {
-        val successResult = uploadApkMap[apk]
+        val successResult = uploadApkMap[apk.filePath]
         if (successResult != null) {
             callback.onSuccess(successResult)
             return
@@ -364,7 +364,7 @@ data class VivoMarket(
                 val response = gson.fromJson(t, VivoUploadFileResponse::class.java)
                 if (response.isSuccess()) {
                     response.abi = apk.abi
-                    uploadApkMap[apk] = response
+                    uploadApkMap[apk.filePath] = response
                     callback.onSuccess(response)
                 } else {
                     callback.onFail(response.msg ?: "")

@@ -33,7 +33,7 @@ class AutoSaveSet<T, H : MutableSet<T>>(
 
     inline fun <reified T> initData(key: String) {
         val json = settings.getString(key, "[]")
-        val t = gson.fromJson<List<T>>(json, object : TypeToken<List<T>>() {}.type)
+        val t = gson.fromJson<Set<T>>(json, object : TypeToken<Set<T>>() {}.type)
         t?.let {
             value.clear()
             (value as MutableSet<T>).addAll(it)

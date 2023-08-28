@@ -23,9 +23,13 @@ import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.util.date.*
 import kotlinx.serialization.Serializable
-import org.openqa.selenium.Cookie
+import org.openqa.selenium.By
+import org.openqa.selenium.Dimension
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.support.ui.WebDriverWait
+import org.openqa.selenium.Cookie
 import java.io.File
+import java.time.Duration
 
 
 data class QH360Market(
@@ -64,8 +68,6 @@ data class QH360Market(
     @delegate:Transient
     var cookieList by autoSaveSet("qh360Cookie") { mutableSetOf<Cookie>() }
 
-    //    @Transient
-//    private var packageName = remember { mutableStateOf("") }
     @Composable
     override fun dispositionViewInBox(market: Market) {
         super.dispositionViewInBox(market)
@@ -98,51 +100,62 @@ data class QH360Market(
         }
 
         if (showBrowser) {
-//            showBrowserS.value = false
-//            showBrowser = false
-//            runCatching {
-//                if (webDriver == null) {
-//                    webDriver = ChromeDriver()
-//                    webDriver?.manage()?.window()?.size = Dimension(1280, 960)
+            showBrowserS.value = false
+            showBrowser = false
+            runCatching {
+                if (webDriver == null) {
+                    webDriver = ChromeDriver()
+                    webDriver?.manage()?.window()?.size = Dimension(1280, 960)
+                }
+                webDriver?.get(browserUrl)
+//                webDriver?.manage()?.deleteAllCookies()
+//                cookieList.forEach {
+//                    webDriver?.manage()?.addCookie(it)
 //                }
-//                webDriver?.get(browserUrl)
-////                webDriver?.manage()?.deleteAllCookies()
-////                cookieList?.forEach {
-////                    webDriver?.manage()?.addCookie(it)
-////                }
-//                webDriver?.manage()?.timeouts()?.implicitlyWait(Duration.ofMillis(5000))
-//                WebDriverWait(webDriver!!, Duration.ofSeconds(3)).until {
-//                    it?.findElements(By.name("userName")) != null
-//                }
-//                webDriver?.findElements(By.name("userName"))?.getOrNull(0)
-//                    ?.sendKeys("D:\\企业上传\\市场图\\1080x1920\\ad1x.jpg")
-//                webDriver?.findElements(By.name("userName"))?.getOrNull(0)?.sendKeys(market.account)
-//                webDriver?.findElements(By.name("password"))?.getOrNull(0)?.sendKeys(market.password)
-//                webDriver?.findElements(By.name("is_agree"))?.getOrNull(0)?.click()
-//                webDriver?.findElements(By.className("quc-button-primary"))?.getOrNull(0)?.submit()
-//
-//                webDriver?.manage()?.cookies?.let {
-//                    cookieList.value = it
-//                    cookieList.saveData()
-//                }
-//
-////                webDriver?.get(pushUrl + market.appId)
-//                WebDriverWait(webDriver!!, Duration.ofSeconds(3)).until {
-//                    webDriver?.findElements(By.name("file"))?.getOrNull(0) != null
-//                }
-//
-//            }.getOrDefault {
-//
-//            }
+                webDriver?.manage()?.timeouts()?.implicitlyWait(Duration.ofMillis(5000))
+                WebDriverWait(webDriver!!, Duration.ofSeconds(1)).until {
+                    println("等待登录页")
+                    val b = webDriver?.findElements(By.name("userName"))?.size != 0
+                    if (!b) {
+                        webDriver?.get(browserUrl)
+                    }
+                    b
+                }
+                webDriver?.manage()?.timeouts()?.implicitlyWait(Duration.ofMillis(1000))
+                if (webDriver?.findElements(By.name("userName"))?.getOrNull(0) != null) {
+                    println("当前在登录页")
+                    webDriver?.findElements(By.name("userName"))?.getOrNull(0)?.sendKeys(market.account)
+                    webDriver?.findElements(By.name("password"))?.getOrNull(0)?.sendKeys(market.password)
+                    webDriver?.findElements(By.name("is_agree"))?.getOrNull(0)?.click()
+                    webDriver?.findElements(By.className("quc-button-primary"))?.getOrNull(0)?.submit()
+                }
+                WebDriverWait(webDriver!!, Duration.ofSeconds(1)).until {
+                    webDriver?.findElements(By.linkText("管理中心"))?.size != 0
+                }
+                println("当前在主页")
+                webDriver?.manage()?.cookies?.let {
+                    cookieList.value = it
+                    cookieList.saveData()
+                }
+                webDriver?.get(pushUrl + market.appId)
+                WebDriverWait(webDriver!!, Duration.ofSeconds(3)).until {
+                    webDriver?.findElements(By.name("file"))?.size != 0
+                }
+                println("可以上传文件了")
+                webDriver?.findElements(By.name("file"))?.getOrNull(7)
+                    ?.sendKeys("D:\\企业上传\\市场图\\1080x1920\\ad1x.jpg")
+            }.getOrDefault {
+
+            }
         } else {
 //            webDriver?.quit()
         }
-        ShowWebView(
-            showBrowserS,
-            url = browserUrl,
-            cookies = cookies.value,
-            urlChange = ::onWebUrlChange
-        )
+//        ShowWebView(
+//            showBrowserS,
+//            url = browserUrl,
+//            cookies = cookies.value,
+//            urlChange = ::onWebUrlChange
+//        )
     }
 
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
@@ -153,7 +166,17 @@ data class QH360Market(
     }
 
     @Transient
-    val cookies = autoSaveMap("${name}Cookie") { mutableMapOf<String, List<String>>() }
+    val cookies = autoSaveMap("${name}Cookie") { mutableMapOf<String, List<String>>() }.apply {
+        value.forEach { (t, u) ->
+            value[t] = u.map {
+                if (it.contains("%")) {
+                    it.decodeURLQueryComponent()
+                } else {
+                    it
+                }
+            }
+        }
+    }
 
     @delegate:Transient
     private var qid by autoSave("${name}Qid") { "" }
@@ -200,48 +223,80 @@ data class QH360Market(
             //上传页面
             isUploadUrl = true
             CoroutineScope(Dispatchers.Main).launch {
-                delay(3000)
+                delay(1000)
                 webView?.setElementValue("edition_brief", "testdaweawe")
                 webView?.setElementValue("apk_desc", "testdaweawe")
-                val file = File(serverBasePath + File.separator + "ad1x.jpg")
-                Http.post("https://dev.360.cn/mod3/upload/shots5/", {
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.MultiPart.FormData)
-                        append(HttpHeaders.Accept, ContentType.Any)
-                        append(HttpHeaders.Cookie, cookies["Cookie"]!!.joinToString("").decodeURLQueryComponent())
-                    }
-                    setBody(MultiPartFormDataContent(formData {
-                        append("id", "WU_FILE_0")
-                        append("name", file.name)
-                        append("size", file.length())
-                        append("type", ContentType.Image.JPEG.toString())
-                        append("lastModifiedDate", GMTDate().toHttpDate())
-                        append("Filedata", file.readBytes(), jpgHeader(file.path))
-                    }))
-                }, object : Callback<String> {
-                    override fun onSuccess(t: String) {
-                        val response = gson.fromJson(t, Qh360UploadImgResponse::class.java)
-                        if (response.isSuccess() && response.data?.url?.isEmpty() == false) {
-                            webView.inputFile(
-                                "file",
-                                7,
-                                fileUrl = response.data.url.replace("http", "https"),
-                                response.data.imgFile!!
-                            )
-                        }
-                    }
-
-                    override fun onFail(msg: String) {
-
-                    }
-
-                })
+                uploadImage(serverBasePath + File.separator + "2.png") {
+                    webView.inputFile(
+                        "file",
+                        7,
+                        fileUrl = it.url!!.replace("http", "https"),
+                        it.imgFile!!
+                    )
+                }
             }
         }
     }
 
-    private fun uploadImage(filePath: String) {
+    private fun uploadImage(
+        filePath: String,
+        onFail: ((String) -> Unit)? = null,
+        callback: (Qh360UploadImgData) -> Unit
+    ) {
+        uploadImage(filePath, object : SuccessCallback<Qh360UploadImgData> {
+            override fun onSuccess(t: Qh360UploadImgData) {
+                callback.invoke(t)
+            }
 
+            override fun onFail(msg: String) {
+                super.onFail(msg)
+                onFail?.invoke(msg)
+            }
+        })
+    }
+
+    @Transient
+    private val uploadUrl = "https://dev.360.cn/mod3/upload/shots5/"
+
+    @Transient
+    private var uploadMap = autoSaveMap("qh360Upload") { mutableMapOf<String, Qh360UploadImgData>() }
+    private fun uploadImage(filePath: String, callback: SuccessCallback<Qh360UploadImgData>) {
+        val successResult = uploadMap[filePath]
+        if (successResult != null) {
+            callback.onSuccess(successResult)
+            return
+        }
+        val file = File(filePath)
+        Http.post(uploadUrl, {
+            headers {
+                append(HttpHeaders.ContentType, ContentType.MultiPart.FormData)
+                append(HttpHeaders.Accept, ContentType.Any)
+                append(HttpHeaders.Cookie, cookies["Cookie"]!!.joinToString("").decodeURLQueryComponent())
+            }
+            setBody(MultiPartFormDataContent(formData {
+                append("id", "WU_FILE_0")
+                append("name", file.name)
+                append("size", file.length())
+                append("type", ContentType.Image.JPEG.toString())
+                append("lastModifiedDate", GMTDate().toHttpDate())
+                append("Filedata", file.readBytes(), jpgHeader(file.path))
+            }))
+        }, object : Callback<String> {
+            override fun onSuccess(t: String) {
+                val response = gson.fromJson(t, Qh360UploadImgResponse::class.java)
+                if (response.isSuccess() && response.data?.url?.isEmpty() == false) {
+                    uploadMap[filePath] = response.data
+                    callback.onSuccess(response.data)
+                } else {
+                    callback.onFail("")
+                }
+            }
+
+            override fun onFail(msg: String) {
+                callback.onFail(msg)
+            }
+
+        })
     }
 
     override fun initByData() {

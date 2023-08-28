@@ -21,7 +21,8 @@ interface BrowserMarket : Market {
     }
 
     fun WebView.querySelector(selector: String, attribute: String): String? {
-        return this.engine.executeScript("document.querySelector('a[class=\\'$selector\\']')?.$attribute")?.toString()
+        this.engine.executeScript("document.querySelector('a[class=\\'$selector\\']')")?.toString() ?: return null
+        return this.engine.executeScript("document.querySelector('a[class=\\'$selector\\']').$attribute")?.toString()
     }
 
     fun WebView.setElementValue(name: String, value: String) {
@@ -37,14 +38,16 @@ interface BrowserMarket : Market {
     }
 
     fun WebView.findElements(name: String): Boolean {
-        val returnObj = this.engine.executeScript("document.getElementsByName('${name}')?.length")
+        var returnObj = this.engine.executeScript("document.getElementsByName('${name}')")
+        if (returnObj == null || returnObj == "undefined") return false
+        returnObj = this.engine.executeScript("document.getElementsByName('${name}').length")
         return returnObj != "undefined" && (returnObj != 0 || returnObj != "0")
     }
 
     fun WebView.inputFile(name: String, pos: Int = 0, fileUrl: String, fileName: String = "") {
         if (findElements(name)) {
             println("准备上传：$fileUrl")
-            this.engine.executeScript("var fileInput = document.getElementsByName('$name').item($pos);const path = '$fileUrl';fetch(path).then(response => response.blob()).then(blob => {const file = new File([blob], '$fileName');var changeEvent = new Event(\"change\");Object.defineProperty(fileInput, 'files', { value: [file] });fileInput.dispatchEvent(changeEvent);});")
+            this.engine.executeScript("var fileInput = document.getElementsByName('$name').item($pos);const path = '$fileUrl';fetch(path).then(response => response.blob()).then(blob => {const file = new File([blob], '$fileName');var changeEvent = new Event(\"change\");Object.defineProperty(fileInput, 'files', { value: [file] });fileInput.dispatchEvent(changeEvent);}).catch((err) => {console.log(\"下载出错：\" + err);});")
         }
     }
 
