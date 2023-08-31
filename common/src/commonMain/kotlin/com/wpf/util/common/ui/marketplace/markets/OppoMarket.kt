@@ -561,6 +561,7 @@ data class OppoMarket(
                 )
                 if (response.isSuccess() && !response.data?.access_token.isNullOrEmpty()) {
                     token[packageName][System.currentTimeMillis() / 1000] = response.data?.access_token!!
+                    token.saveData()
                     callback.onSuccess(response.data.access_token)
                 } else {
                     callback.onFail("")

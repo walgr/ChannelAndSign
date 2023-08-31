@@ -33,6 +33,7 @@ object MarketPlaceViewModel {
         val market = marketMap[key]
         market?.initByData()
         if (market != null) {
+            market.isSelect = true
             return market
         }
         val dataJson = settings.getString(key, "{}")

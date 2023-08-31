@@ -70,7 +70,11 @@ object Http {
                     if (responseData.status == HttpStatusCode.OK) {
                         callback?.onSuccess(responseData.bodyAsText())
                     } else {
-                        callback?.onFail(responseData.bodyAsText())
+                        runCatching {
+                            callback?.onFail(responseData.bodyAsText())
+                        }.onFailure {
+                            callback?.onFail(it.message ?: "")
+                        }
                     }
                 }
             }.onFailure {
@@ -94,7 +98,11 @@ object Http {
                     if (responseData.status == HttpStatusCode.OK) {
                         callback?.onSuccess(responseData.bodyAsText())
                     } else {
-                        callback?.onFail(responseData.bodyAsText())
+                        runCatching {
+                            callback?.onFail(responseData.bodyAsText())
+                        }.onFailure {
+                            callback?.onFail(it.message ?: "")
+                        }
                     }
                 }
             }.onFailure {
@@ -113,7 +121,11 @@ object Http {
                     if (responseData.status == HttpStatusCode.OK) {
                         callback?.onSuccess(responseData.bodyAsText())
                     } else {
-                        callback?.onFail(responseData.bodyAsText())
+                        runCatching {
+                            callback?.onFail(responseData.bodyAsText())
+                        }.onFailure {
+                            callback?.onFail(it.message ?: "")
+                        }
                     }
                 }
             }.onFailure {
@@ -132,7 +144,11 @@ object Http {
                     if (responseData.status == HttpStatusCode.OK) {
                         callback?.onSuccess(responseData.bodyAsText())
                     } else {
-                        callback?.onFail(responseData.bodyAsText())
+                        runCatching {
+                            callback?.onFail(responseData.bodyAsText())
+                        }.onFailure {
+                            callback?.onFail(it.message ?: "")
+                        }
                     }
                 }
             }.onFailure {

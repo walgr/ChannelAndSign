@@ -28,7 +28,7 @@ open class AutoSaveMap<K, V>(
     fun put(key: K, value: V): V? {
         val v = this.value.put(key, value)
         saveData()
-        return v
+        return v ?: value
     }
 
     fun get(key: K): V? {
