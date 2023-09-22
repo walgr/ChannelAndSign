@@ -47,7 +47,7 @@ interface BrowserMarket : Market {
     fun WebView.inputFile(name: String, pos: Int = 0, fileUrl: String, fileName: String = "") {
         if (findElements(name)) {
             println("准备上传：$fileUrl")
-            this.engine.executeScript("var fileInput = document.getElementsByName('$name').item($pos);const path = '$fileUrl';fetch(path).then(response => response.blob()).then(blob => {const file = new File([blob], '$fileName');var changeEvent = new Event(\"change\");Object.defineProperty(fileInput, 'files', { value: [file] });fileInput.dispatchEvent(changeEvent);}).catch((err) => {console.log(\"下载出错：\" + err);});")
+            this.engine.executeScript("var fileInput = document.getElementsByName('$name').item($pos);const path = '$fileUrl';fetch(path).then(response => response.blob()).then(blob => {const file = new File([blob], '$fileName');console.log(blob);console.log(URL.createObjectURL(blob));var changeEvent = new Event(\"change\");Object.defineProperty(fileInput, 'files', { value: [file] });fileInput.dispatchEvent(changeEvent);}).catch((err) => {console.log(\"下载出错：\" + err);});")
         }
     }
 

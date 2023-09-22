@@ -15,6 +15,10 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.io.File
 import java.nio.charset.Charset
@@ -85,7 +89,7 @@ data class OppoMarket(
         getToken(packageName) { token ->
             Http.get("$baseUrl/resource/v1/app/info", {
                 url {
-                    val parameterList = getCommonParams(token).plus(
+                    val parameterList = getCommonParams(packageName, token).plus(
                         mapOf("pkg_name" to packageName)
                     )
                     parameterList.forEach { (t, u) ->
@@ -132,7 +136,7 @@ data class OppoMarket(
         getToken(packageName) { token ->
             Http.get("$baseUrl/resource/v1/app/multi-info", {
                 url {
-                    val parameterList = getCommonParams(token).plus(
+                    val parameterList = getCommonParams(packageName, token).plus(
                         mapOf("pkg_name" to packageName)
                     )
                     parameterList.forEach { (t, u) ->
@@ -170,11 +174,14 @@ data class OppoMarket(
                     callback.onFail("${name}:${it}")
                 }) { uploadPhotoList ->
                     upload(uploadData, appInfo, uploadApkList, uploadPhotoList, {
-                        getTaskState(uploadData.packageName()!!, uploadData.versionCode()!!) {
-                            if (it.task_state == "2") {
-                                callback.onSuccess(MarketType.Oppo)
-                            } else {
-                                callback.onFail("${name}:${it.err_msg}")
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delay(10000)
+                            getTaskStateResult(uploadData.packageName()!!, uploadData.versionCode()!!) {
+                                if (it.task_state == "2") {
+                                    callback.onSuccess(MarketType.Oppo)
+                                } else {
+                                    callback.onFail("${name}:${it.err_msg}")
+                                }
                             }
                         }
                     }) {
@@ -217,7 +224,7 @@ data class OppoMarket(
         getToken(uploadData.packageName()!!) { token ->
             Http.post("$baseUrl/resource/v1/app/upd", {
                 setBody(MultiPartFormDataContent(formData {
-                    val parameterList = getCommonParams(token).plus(
+                    val parameterList = getCommonParams(uploadData.packageName()!!, token).plus(
                         mapOf(
                             "pkg_name" to uploadData.packageName()!!,
                             "version_code" to uploadData.versionCode()!!,
@@ -278,7 +285,10 @@ data class OppoMarket(
         callback: (OppoTaskStateData) -> Unit
     ) {
         getTaskState(packageName, versionCode, {
-            getTaskStateResult(packageName, versionCode, onFail, callback)
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(2000)
+                getTaskStateResult(packageName, versionCode, onFail, callback)
+            }
         }, callback)
     }
 
@@ -304,7 +314,7 @@ data class OppoMarket(
         getToken(packageName) { token ->
             Http.post("$baseUrl/resource/v1/app/task-state", {
                 setBody(MultiPartFormDataContent(formData {
-                    val parameterList = getCommonParams(token).plus(
+                    val parameterList = getCommonParams(packageName, token).plus(
                         mapOf("pkg_name" to packageName, "version_code" to versionCode)
                     )
                     parameterList.forEach { (t, u) ->
@@ -403,19 +413,7 @@ data class OppoMarket(
     }
 
     @Transient
-    private val uploadFileMap = autoSaveMap("${name}UploadFileMap") { getUploadFileMap() }
-
-    private fun getUploadFileMap(): MutableMap<String, OppoUploadFileData> {
-        return mutableMapOf(
-            "D:\\企业上传\\app-arm64-v8a-release_241_jiagu_8_Market_Oppo_sign.apk" to gson.fromJson(
-                "{\"url\":\"http://storedl1.nearme.com.cn/apk/tmp_apk/202307/28/fc88cec74d47e42c724424f4d0afb499.apk\",\"uri_path\":\"/apk/tmp_apk/202307/28/fc88cec74d47e42c724424f4d0afb499.apk\",\"md5\":\"9ce6a35c2689759179716afeadd73044\",\"file_size\":44480986,\"file_extension\":\"apk\",\"width\":0,\"height\":0,\"id\":\"3c3d3b74-b350-4050-9e6d-c67c5816a823\",\"sign\":\"972ec61849103789cd9d7145d6ee2369\"}",
-                OppoUploadFileData::class.java
-            ), "D:\\企业上传\\app-armeabi-v7a-release_241_jiagu_8_Market_Oppo_sign.apk" to gson.fromJson(
-                "{\"url\":\"http://storedl1.nearme.com.cn/apk/tmp_apk/202307/28/7f3d690d20bef00f8a2fc73704a11a39.apk\",\"uri_path\":\"/apk/tmp_apk/202307/28/7f3d690d20bef00f8a2fc73704a11a39.apk\",\"md5\":\"eceecfb51e12fb4e861012154882d0fa\",\"file_size\":40131092,\"file_extension\":\"apk\",\"width\":0,\"height\":0,\"id\":\"9dd75da4-d138-4d64-a438-5301d94a6f70\",\"sign\":\"cd7cf538003b07e2c8df6d37b30ae748\"}\n",
-                OppoUploadFileData::class.java
-            )
-        )
-    }
+    private val uploadFileMap = autoSaveMap("${name}UploadFileMap") { mutableMapOf<String, OppoUploadFileData>() }
 
     private fun uploadFile(
         packageName: String, filePath: String, type: String, callback: SuccessCallback<OppoUploadFileData>
@@ -432,7 +430,7 @@ data class OppoMarket(
                         requestTimeoutMillis = 300000
                     }
                     setBody(MultiPartFormDataContent(formData {
-                        val parameterList = getCommonParams(token).plus(
+                        val parameterList = getCommonParams(packageName, token).plus(
                             mapOf("type" to type, "sign" to it.sign!!)
                         )
                         parameterList.forEach { (t, u) ->
@@ -501,7 +499,7 @@ data class OppoMarket(
                     append(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded)
                 }
                 url {
-                    val parameterList = getCommonParams(token)
+                    val parameterList = getCommonParams(packageName, token)
                     url {
                         parameterList.forEach { (t, u) ->
                             parameters.append(t, u)

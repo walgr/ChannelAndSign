@@ -17,8 +17,9 @@ kotlin {
     sourceSets {
         val jvmMain by getting {
             dependencies {
-                implementation(project(":common"))
-                implementation(compose.desktop.currentOs)
+                api(project(":common"))
+                api(compose.desktop.currentOs)
+//                api("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.7.77")
             }
         }
     }

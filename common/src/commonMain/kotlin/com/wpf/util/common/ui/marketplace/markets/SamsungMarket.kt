@@ -52,7 +52,7 @@ data class SamsungMarket(
     override val name: String = MarketType.三星.channelName
 
     @Transient
-    override val baseUrl: String = "https://devapi.samsungapps.com"
+    override val baseUrl: String = "http://devapi.samsungapps.com"
 
     override fun uploadAbi() = arrayOf(AbiType.Abi32_64)
 
@@ -351,7 +351,7 @@ data class SamsungMarket(
                 callback.onFail(it)
             }) {
                 println("文件:${apk.fileName} 上传地址:${fileId.url}")
-                Http.post(fileId.url!!, {
+                Http.post(fileId.url!!.replace("https", "http"), {
                     timeout {
                         requestTimeoutMillis = 300000
                     }

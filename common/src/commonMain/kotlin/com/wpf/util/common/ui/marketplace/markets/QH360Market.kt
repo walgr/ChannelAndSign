@@ -12,24 +12,20 @@ import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.ShowWebView
 import com.wpf.util.common.ui.widget.common.InputView
 import com.wpf.util.webview.getCookies
-import javafx.scene.web.WebView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import com.wpf.util.webview.load
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.util.date.*
+import javafx.scene.web.WebView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import org.openqa.selenium.By
-import org.openqa.selenium.Dimension
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.support.ui.WebDriverWait
 import org.openqa.selenium.Cookie
+import org.openqa.selenium.chrome.ChromeDriver
 import java.io.File
-import java.time.Duration
 
 
 data class QH360Market(
@@ -37,6 +33,10 @@ data class QH360Market(
     var password: String = "",
     var appId: String = "",
 ) : BrowserMarket {
+
+    init {
+//        System.setProperty("com.sun.webkit.useHTTP2Loader", "false")
+    }
 
     override val name: String = MarketType.qh360.channelName
     override var isSelect: Boolean = false
@@ -99,63 +99,63 @@ data class QH360Market(
             }
         }
 
-        if (showBrowser) {
-            showBrowserS.value = false
-            showBrowser = false
-            runCatching {
-                if (webDriver == null) {
-                    webDriver = ChromeDriver()
-                    webDriver?.manage()?.window()?.size = Dimension(1280, 960)
-                }
-                webDriver?.get(browserUrl)
-//                webDriver?.manage()?.deleteAllCookies()
-//                cookieList.forEach {
-//                    webDriver?.manage()?.addCookie(it)
+//        if (showBrowser) {
+//            showBrowserS.value = false
+//            showBrowser = false
+//            runCatching {
+//                if (webDriver == null) {
+//                    webDriver = ChromeDriver()
+//                    webDriver?.manage()?.window()?.size = Dimension(1280, 960)
 //                }
-                webDriver?.manage()?.timeouts()?.implicitlyWait(Duration.ofMillis(5000))
-                WebDriverWait(webDriver!!, Duration.ofSeconds(1)).until {
-                    println("等待登录页")
-                    val b = webDriver?.findElements(By.name("userName"))?.size != 0
-                    if (!b) {
-                        webDriver?.get(browserUrl)
-                    }
-                    b
-                }
-                webDriver?.manage()?.timeouts()?.implicitlyWait(Duration.ofMillis(1000))
-                if (webDriver?.findElements(By.name("userName"))?.getOrNull(0) != null) {
-                    println("当前在登录页")
-                    webDriver?.findElements(By.name("userName"))?.getOrNull(0)?.sendKeys(market.account)
-                    webDriver?.findElements(By.name("password"))?.getOrNull(0)?.sendKeys(market.password)
-                    webDriver?.findElements(By.name("is_agree"))?.getOrNull(0)?.click()
-                    webDriver?.findElements(By.className("quc-button-primary"))?.getOrNull(0)?.submit()
-                }
-                WebDriverWait(webDriver!!, Duration.ofSeconds(1)).until {
-                    webDriver?.findElements(By.linkText("管理中心"))?.size != 0
-                }
-                println("当前在主页")
-                webDriver?.manage()?.cookies?.let {
-                    cookieList.value = it
-                    cookieList.saveData()
-                }
-                webDriver?.get(pushUrl + market.appId)
-                WebDriverWait(webDriver!!, Duration.ofSeconds(3)).until {
-                    webDriver?.findElements(By.name("file"))?.size != 0
-                }
-                println("可以上传文件了")
-                webDriver?.findElements(By.name("file"))?.getOrNull(7)
-                    ?.sendKeys("D:\\企业上传\\市场图\\1080x1920\\ad1x.jpg")
-            }.getOrDefault {
-
-            }
-        } else {
-//            webDriver?.quit()
-        }
-//        ShowWebView(
-//            showBrowserS,
-//            url = browserUrl,
-//            cookies = cookies.value,
-//            urlChange = ::onWebUrlChange
-//        )
+//                webDriver?.get(browserUrl)
+////                webDriver?.manage()?.deleteAllCookies()
+////                cookieList.forEach {
+////                    webDriver?.manage()?.addCookie(it)
+////                }
+//                webDriver?.manage()?.timeouts()?.implicitlyWait(Duration.ofMillis(5000))
+//                WebDriverWait(webDriver!!, Duration.ofSeconds(1)).until {
+//                    println("等待登录页")
+//                    val b = webDriver?.findElements(By.name("userName"))?.size != 0
+//                    if (!b) {
+//                        webDriver?.get(browserUrl)
+//                    }
+//                    b
+//                }
+//                webDriver?.manage()?.timeouts()?.implicitlyWait(Duration.ofMillis(1000))
+//                if (webDriver?.findElements(By.name("userName"))?.getOrNull(0) != null) {
+//                    println("当前在登录页")
+//                    webDriver?.findElements(By.name("userName"))?.getOrNull(0)?.sendKeys(market.account)
+//                    webDriver?.findElements(By.name("password"))?.getOrNull(0)?.sendKeys(market.password)
+//                    webDriver?.findElements(By.name("is_agree"))?.getOrNull(0)?.click()
+//                    webDriver?.findElements(By.className("quc-button-primary"))?.getOrNull(0)?.submit()
+//                }
+//                WebDriverWait(webDriver!!, Duration.ofSeconds(1)).until {
+//                    webDriver?.findElements(By.linkText("管理中心"))?.size != 0
+//                }
+//                println("当前在主页")
+//                webDriver?.manage()?.cookies?.let {
+//                    cookieList.value = it
+//                    cookieList.saveData()
+//                }
+//                webDriver?.get(pushUrl + market.appId)
+//                WebDriverWait(webDriver!!, Duration.ofSeconds(3)).until {
+//                    webDriver?.findElements(By.name("file"))?.size != 0
+//                }
+//                println("可以上传文件了")
+//                webDriver?.findElements(By.name("file"))?.getOrNull(7)
+//                    ?.sendKeys("D:\\企业上传\\市场图\\1080x1920\\ad1x.jpg")
+//            }.getOrDefault {
+//
+//            }
+//        } else {
+////            webDriver?.quit()
+//        }
+        ShowWebView(
+            showBrowserS,
+            url = browserUrl,
+            cookies = cookies.value,
+            urlChange = ::onWebUrlChange
+        )
     }
 
     override fun push(uploadData: UploadData, callback: Callback<MarketType>) {
@@ -221,22 +221,26 @@ data class QH360Market(
 //            webView.load(pushUrl + appId)
         } else if (url.startsWith(pushUrl + appId) || url == "https://dev.360.cn/mod3/mobileapp/?qid=160270285&appid=201882426") {
             //上传页面
+//            if (!first) return
+            first = false
             isUploadUrl = true
             CoroutineScope(Dispatchers.Main).launch {
                 delay(1000)
                 webView?.setElementValue("edition_brief", "testdaweawe")
                 webView?.setElementValue("apk_desc", "testdaweawe")
-                uploadImage(serverBasePath + File.separator + "2.png") {
+                uploadImage(serverBasePath + File.separator + "ICP.png") {
                     webView.inputFile(
                         "file",
                         7,
-                        fileUrl = it.url!!.replace("http", "https"),
+                        fileUrl = it.url!!.replace("http:", "https:"),
                         it.imgFile!!
                     )
                 }
             }
         }
     }
+
+    private var first = true
 
     private fun uploadImage(
         filePath: String,
