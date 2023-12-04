@@ -1,76 +1,61 @@
 package com.wpf.base.dealfile.util
 
-import com.wpf.base.dealfile.zipalignFile
+import com.wpf.base.dealfile.isLinuxRuntime
+import com.wpf.base.dealfile.isMacRuntime
+import com.wpf.base.dealfile.isWinRuntime
+import java.io.File
 
 /**
  * apk对齐
  */
 
-interface Zipalign {
-    fun check(inputApkFile: String): Boolean
-    fun zipalign(inputApkFile: String, outApkFile: String): Boolean
-}
-
-object ZipalignUtil : Zipalign {
-
-    override fun check(inputApkFile: String): Boolean {
-        return if (zipalignFile.endsWith(".exe")) {
-            ZipalignUtilWin.check(inputApkFile)
+object ZipalignUtil {
+    private val zipalignPath: String by lazy {
+        if (isWinRuntime) {
+            return@lazy ResourceManager.getResourceFile("zipalign.exe", isFile = true).path
+        } else if (isLinuxRuntime) {
+            val zipalignZipFile = ResourceManager.getResourceFile("zipalign_linux.zip", isFile = true)
+            val zipalignOutPath = zipalignZipFile.parent + File.separator + "zipalign_linux"
+            FileUtil.unZipFiles(zipalignZipFile, zipalignOutPath)
+            zipalignZipFile.delete()
+            return@lazy zipalignOutPath + File.separator + "zipalign_linux"
+        } else if (isMacRuntime) {
+            return@lazy ResourceManager.getResourceFile("zipalign_mac", isFile = true).path
         } else {
-            ZipalignUtilLinux.check(inputApkFile)
+            ""
         }
     }
 
-    override fun zipalign(inputApkFile: String, outApkFile: String): Boolean {
-        return if (zipalignFile.endsWith(".exe")) {
-            ZipalignUtilWin.zipalign(inputApkFile, outApkFile)
-        } else {
-            ZipalignUtilLinux.zipalign(inputApkFile, outApkFile)
-        }
+    fun delJar() {
+        ResourceManager.delResourceByPath(zipalignPath)
+        ResourceManager.delResourceByPath("zipalign_linux")
     }
-}
 
-object ZipalignUtilWin : Zipalign {
-
-    override fun check(inputApkFile: String): Boolean {
-        val cmd = arrayOf(zipalignFile, "-c", "-v", "4", inputApkFile)
-        val result = Runtime.getRuntime().exec(cmd)
+    fun check(inputApkFile: String): Boolean {
+        if (isLinuxRuntime || isMacRuntime) {
+            Runtime.getRuntime().exec(arrayOf("chmod", "-R", "775", zipalignPath)).waitFor()
+        }
+        val cmd = arrayOf(zipalignPath, "-c", "-v", "4", inputApkFile)
+        val result = Runtime.getRuntime().exec(cmd, null, File(zipalignPath).parentFile)
         val resultStr = result.inputStream.readBytes().decodeToString()
         return resultStr.contains("succesful")
     }
 
-    override fun zipalign(inputApkFile: String, outApkFile: String): Boolean {
-        val cmd = arrayOf(zipalignFile, "-p", "-f", "4", inputApkFile, outApkFile)
-        val result = Runtime.getRuntime().exec(cmd)
+    fun zipalign(inputApkFile: String, outApkFile: String): Boolean {
+        if (isLinuxRuntime || isMacRuntime) {
+            Runtime.getRuntime().exec(arrayOf("chmod", "-R", "775", zipalignPath)).waitFor()
+        }
+        val cmd = arrayOf(zipalignPath, "-p", "-f", "-v", "4", inputApkFile, outApkFile)
+        val result = Runtime.getRuntime().exec(cmd, null, File(zipalignPath).parentFile)
         val resultStr = result.inputStream.readBytes().decodeToString()
         val error = result.errorStream.readBytes().decodeToString()
         if (error.isNotEmpty()) {
             println(error)
         }
-        result.destroy()
-        return resultStr.contains("succesful")
-    }
-}
-
-object ZipalignUtilLinux : Zipalign {
-
-    override fun check(inputApkFile: String): Boolean {
-        val shell = arrayOf(zipalignFile, "-c", "-v", "4", inputApkFile)
-        val result = Runtime.getRuntime().exec(shell)
-        val resultStr = result.inputStream.readBytes().decodeToString()
-        return resultStr.contains("succesful")
-    }
-
-    override fun zipalign(inputApkFile: String, outApkFile: String): Boolean {
-        val shell = arrayOf(zipalignFile, "-p", "-f", "4", inputApkFile, outApkFile)
-        val result = Runtime.getRuntime().exec(shell)
-        val resultStr = result.inputStream.readBytes().decodeToString()
-        val error = result.errorStream.readBytes().decodeToString()
-        if (error.isNotEmpty()) {
-            println(error)
+        if (!resultStr.contains("succesful")) {
+            println(resultStr)
         }
         result.destroy()
         return resultStr.contains("succesful")
     }
-
 }

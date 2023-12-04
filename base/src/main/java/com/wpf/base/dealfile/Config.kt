@@ -1,5 +1,7 @@
 package com.wpf.base.dealfile
 
+import java.io.File
+
 //渠道基础文件路径
 var channelBaseInsertFilePath = ""
 
@@ -8,8 +10,6 @@ var channelSavePath = ""
 
 //友盟渠道配置位置
 var channelsFilePath = ""
-
-var zipalignFile = ""
 
 //签名文件
 var signFile = ""
@@ -31,3 +31,8 @@ var apksignerPath = ""
 
 //去除xml标签程序路径
 var axmlEditorPath = ""
+
+var curPath = File(".").canonicalPath + File.separator
+val isLinuxRuntime by lazy { System.getProperties().getProperty("os.name").contains("Linux") }
+val isWinRuntime by lazy { System.getProperties().getProperty("os.name").contains("Windows") }
+val isMacRuntime by lazy { System.getProperties().getProperty("os.name").contains("Mac") }

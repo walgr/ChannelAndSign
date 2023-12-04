@@ -1,5 +1,7 @@
 package com.wpf.base.dealfile
 
+import com.wpf.base.dealfile.util.ResourceManager
+
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
         println("参数异常，请检查输入")
@@ -19,9 +21,6 @@ fun main(args: Array<String>? = null) {
         }
         if ("-channelsPath" == arg) {
             channelsFilePath = nextInput
-        }
-        if ("-zipalignPath" == arg) {
-            zipalignFile = nextInput
         }
         if ("-signFile" == arg) {
             signFile = nextInput
@@ -56,4 +55,5 @@ fun main(args: Array<String>? = null) {
     ChannelAndSign.scanFile(inputFilePath = filePath, fileFilter = fileFilter, dealSign = dealSign) {
         println("处理完毕... 用时：${System.currentTimeMillis() - startTime}毫秒")
     }
+    ResourceManager.delTemp()
 }

@@ -44,7 +44,6 @@ object ChannelSetViewModel {
         channelsFilePath = channelPath ?: ""
         channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
         channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
-        zipalignFile = ConfigPageViewModel.getZipalignFilePath()
         signFile = sign.StoreFile
         signPassword = sign.StorePass
         signAlias = sign.KeyAlias

@@ -15,7 +15,6 @@ import com.google.gson.reflect.TypeToken
 import com.russhwolf.settings.get
 import com.wpf.base.dealfile.channelBaseInsertFilePath
 import com.wpf.base.dealfile.channelSavePath
-import com.wpf.base.dealfile.zipalignFile
 import com.wpf.server.FileServer.serverBasePath
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
@@ -85,26 +84,6 @@ fun configPage() {
                                 InputView(input = inputChannelSaveFilePath, hint = "请输入渠道保存位置,默认当前目录") {
                                     inputChannelSaveFilePath.value = it
                                     channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
-                                }
-                            }
-                            Row(
-                                modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                InputView(
-                                    modifier = Modifier.weight(1f),
-                                    input = inputZipalignFilePath,
-                                    hint = "请输入Apk对齐工具Zipalign位置"
-                                ) {
-                                    inputZipalignFilePath.value = it
-                                    zipalignFile = ConfigPageViewModel.getZipalignFilePath()
-                                }
-                                Button(onClick = {
-                                    FileSelector.showFileSelector(arrayOf("exe")) {
-                                        inputZipalignFilePath.value = it
-                                        zipalignFile = ConfigPageViewModel.getZipalignFilePath()
-                                    }
-                                }, modifier = Modifier.padding(start = 8.dp)) {
-                                    Text("选择")
                                 }
                             }
                             Row(

@@ -10,19 +10,12 @@ import java.io.FileOutputStream
  * 映射到命令
  */
 object AXMLEditor2Util {
-    init {
-        axmlEditorPath = File("").canonicalPath + File.separator + "AXMLEditor2.jar"
-        if (!File(axmlEditorPath).exists()) {
-            val openStream = javaClass.getResource("/AXMLEditor2Github.jar")?.openStream()
-            val outSteam = FileOutputStream(axmlEditorPath)
-            openStream?.copyTo(outSteam)
-            openStream?.close()
-            outSteam.close()
-        }
+    private val axmlEditorPath by lazy {
+        ResourceManager.getResourceFile("AXMLEditor2Github.jar").path
     }
 
     fun dealJar() {
-        File(axmlEditorPath).delete()
+        ResourceManager.delResourceByPath(axmlEditorPath)
     }
 
     /**
@@ -55,7 +48,7 @@ object AXMLEditor2Util {
             outputXmlPath
         )
 //        Main.main(cmd)
-        val result = Runtime.getRuntime().exec(axmlEditorPath, cmd)
+        val result = Runtime.getRuntime().exec(RunJar.javaJar(axmlEditorPath, cmd))
         val resultStr = result.errorStream.readBytes().decodeToString()
         if (resultStr.isNotEmpty()) {
             println(resultStr)

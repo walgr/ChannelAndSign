@@ -36,6 +36,7 @@ object ChannelAndSign {
         try {
             dealScanFile(inputFilePath, fileFilter, dealSign) {
                 finish.invoke()
+                ZipalignUtil.delJar()
                 ApkSignerUtil.dealJar()
                 AXMLEditor2Util.dealJar()
                 if (exitProcess) {
@@ -46,6 +47,7 @@ object ChannelAndSign {
             e.printStackTrace()
             println("运行错误:${e.message}")
             finish.invoke()
+            ZipalignUtil.delJar()
             ApkSignerUtil.dealJar()
             AXMLEditor2Util.dealJar()
             if (exitProcess) {
@@ -127,7 +129,7 @@ object ChannelAndSign {
         val baseManifestFile =
             File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifest.xml")
         if (!baseManifestFile.exists()) {
-            baseManifestFile.parentFile.mkdirs();
+            baseManifestFile.parentFile.mkdirs()
         }
         baseManifestFile.createNewFile()
         FileUtil.save2File(inputZipFile.getInputStream(inputZipFile.getEntry("AndroidManifest.xml")), baseManifestFile)
@@ -137,7 +139,7 @@ object ChannelAndSign {
         val outNoChannelFile =
             File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifestNoChannel.xml")
         if (!outNoChannelFile.exists()) {
-            outNoChannelFile.parentFile.mkdirs();
+            outNoChannelFile.parentFile.mkdirs()
         }
         outNoChannelFile.createNewFile()
         AXMLEditor2Util.doCommandTagDel(
