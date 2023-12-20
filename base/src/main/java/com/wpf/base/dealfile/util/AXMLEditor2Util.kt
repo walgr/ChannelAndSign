@@ -53,6 +53,8 @@ object AXMLEditor2Util {
         if (resultStr.isNotEmpty()) {
             println(resultStr)
         }
+        result.waitFor()
+        result.destroy()
     }
 
     /**
@@ -75,6 +77,8 @@ object AXMLEditor2Util {
         if (resultStr.isNotEmpty()) {
             println(resultStr)
         }
+        result.waitFor()
+        result.destroy()
     }
 
     /**
@@ -95,6 +99,8 @@ object AXMLEditor2Util {
         if (resultStr.isNotEmpty()) {
             println(resultStr)
         }
+        result.waitFor()
+        result.destroy()
     }
 
     /**
@@ -117,6 +123,8 @@ object AXMLEditor2Util {
         if (resultStr.isNotEmpty()) {
             println(resultStr)
         }
+        result.waitFor()
+        result.destroy()
     }
 
     fun clearCache() {

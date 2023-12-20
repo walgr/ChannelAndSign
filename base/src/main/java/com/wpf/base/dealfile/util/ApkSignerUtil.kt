@@ -9,19 +9,12 @@ import java.io.FileOutputStream
  * Android apk签名
  */
 object ApkSignerUtil {
-    init {
-        apksignerPath = File("").canonicalPath + File.separator + "apksigner.jar"
-        if (!File(apksignerPath).exists()) {
-            val openStream = javaClass.getResource("/apksigner.jar")?.openStream()
-            val outSteam = FileOutputStream(apksignerPath)
-            openStream?.copyTo(outSteam)
-            openStream?.close()
-            outSteam.close()
-        }
+    private val apksignerPath by lazy {
+        ResourceManager.getResourceFile("apksigner.jar").path
     }
 
     fun dealJar() {
-        File(apksignerPath).delete()
+        ResourceManager.delResourceByPath(apksignerPath)
     }
 
     /**
@@ -66,6 +59,8 @@ object ApkSignerUtil {
         if (resultStr.isNotEmpty()) {
             println(resultStr)
         }
+        result.waitFor()
+        result.destroy()
         return resultStr.isEmpty()
 //        ApkSignerTool.main(
 //            arrayOf(

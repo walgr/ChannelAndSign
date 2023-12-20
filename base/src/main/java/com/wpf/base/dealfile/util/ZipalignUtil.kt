@@ -28,7 +28,7 @@ object ZipalignUtil {
 
     fun delJar() {
         ResourceManager.delResourceByPath(zipalignPath)
-        ResourceManager.delResourceByPath("zipalign_linux")
+        ResourceManager.delResourceByPath(ResourceManager.getTempPath() + File.separator + "zipalign_linux")
     }
 
     fun check(inputApkFile: String): Boolean {
@@ -38,6 +38,8 @@ object ZipalignUtil {
         val cmd = arrayOf(zipalignPath, "-c", "-v", "4", inputApkFile)
         val result = Runtime.getRuntime().exec(cmd, null, File(zipalignPath).parentFile)
         val resultStr = result.inputStream.readBytes().decodeToString()
+        result.waitFor()
+        result.destroy()
         return resultStr.contains("succesful")
     }
 
@@ -55,6 +57,7 @@ object ZipalignUtil {
         if (!resultStr.contains("succesful")) {
             println(resultStr)
         }
+        result.waitFor()
         result.destroy()
         return resultStr.contains("succesful")
     }

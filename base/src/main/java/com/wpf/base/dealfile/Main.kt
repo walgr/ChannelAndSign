@@ -13,7 +13,7 @@ fun main(args: Array<String>? = null) {
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
         if (arg.startsWith("-") && nextInput.startsWith("-")) {
-            println("参数异常，请检查输入")
+            println("参数异常，请检查输入:$arg")
             return
         }
         if ("-baseChannel" == arg) {
