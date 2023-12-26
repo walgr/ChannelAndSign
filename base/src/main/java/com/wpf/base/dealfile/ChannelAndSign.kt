@@ -3,7 +3,12 @@ package com.wpf.base.dealfile
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.wpf.base.dealfile.util.*
-import test.AXMLPrinter
+import com.wpf.utils.ex.FileUtil
+import com.wpf.utils.ex.createCheck
+import com.wpf.utils.tools.AXMLEditor2Util
+import com.wpf.utils.tools.ApkSignerUtil
+import com.wpf.utils.tools.ZipalignUtil
+import net.dongliu.apk.parser.ApkParsers
 import java.io.File
 import java.lang.Exception
 import java.util.concurrent.Callable
@@ -37,8 +42,8 @@ object ChannelAndSign {
             dealScanFile(inputFilePath, fileFilter, dealSign) {
                 finish.invoke()
                 ZipalignUtil.delJar()
-                ApkSignerUtil.dealJar()
-                AXMLEditor2Util.dealJar()
+                ApkSignerUtil.delJar()
+                AXMLEditor2Util.delJar()
                 if (exitProcess) {
                     exitProcess(0)
                 }
@@ -48,8 +53,8 @@ object ChannelAndSign {
             println("运行错误:${e.message}")
             finish.invoke()
             ZipalignUtil.delJar()
-            ApkSignerUtil.dealJar()
-            AXMLEditor2Util.dealJar()
+            ApkSignerUtil.delJar()
+            AXMLEditor2Util.delJar()
             if (exitProcess) {
                 exitProcess(-6457)
             }
@@ -59,7 +64,6 @@ object ChannelAndSign {
     private fun dealScanFile(
         inputFilePath: String, fileFilter: String = "", dealSign: Boolean = true, finish: (() -> Unit)
     ) {
-        AXMLEditor2Util.clearCache()
         val dealFile = File(inputFilePath)
         if (dealFile.exists() && dealFile.isFile && "apk" == dealFile.extension) {
             println("处理文件:${dealFile.name}")
@@ -127,21 +131,13 @@ object ChannelAndSign {
 
         //解压得到AndroidManifest.xml
         val baseManifestFile =
-            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifest.xml")
-        if (!baseManifestFile.exists()) {
-            baseManifestFile.parentFile.mkdirs()
-        }
-        baseManifestFile.createNewFile()
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifest.xml").createCheck(true)
         FileUtil.save2File(inputZipFile.getInputStream(inputZipFile.getEntry("AndroidManifest.xml")), baseManifestFile)
         logList.add("解压 ${inputApkPath.name} 得到AndroidManifest.xml")
 
         //先去除旧的渠道数据
         val outNoChannelFile =
-            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifestNoChannel.xml")
-        if (!outNoChannelFile.exists()) {
-            outNoChannelFile.parentFile.mkdirs()
-        }
-        outNoChannelFile.createNewFile()
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifestNoChannel.xml").createCheck(true)
         AXMLEditor2Util.doCommandTagDel(
             "meta-data", "UMENG_CHANNEL", baseManifestFile.path, outNoChannelFile.path
         )
@@ -217,7 +213,7 @@ object ChannelAndSign {
         baseManifestFileNew.delete()
         File(baseManifestChannelFilePath).delete()
         logList.add("apk已更新渠道信息，并保存到${newChannelApkZipFile.path.toAbsolutePath()}")
-        val newChannelApkXmlStr = AXMLPrinter.getManifestXMLFromAPK(newChannelApkFile.path)
+        val newChannelApkXmlStr = ApkParsers.getManifestXml(newChannelApkFile.path)
         if (newChannelApkXmlStr.isNotEmpty()) {
             val channelStrS = "<meta-data android:name=\"UMENG_CHANNEL\" android:value=\""
             val channelStrE = "\">"

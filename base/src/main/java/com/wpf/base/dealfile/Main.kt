@@ -1,6 +1,6 @@
 package com.wpf.base.dealfile
 
-import com.wpf.base.dealfile.util.ResourceManager
+import com.wpf.utils.ResourceManager
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {

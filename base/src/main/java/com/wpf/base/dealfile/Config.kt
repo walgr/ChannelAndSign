@@ -1,7 +1,5 @@
 package com.wpf.base.dealfile
 
-import java.io.File
-
 //渠道基础文件路径
 var channelBaseInsertFilePath = ""
 
@@ -25,14 +23,3 @@ var signAliasPassword = ""
 
 //是否签名后删除渠道包
 var delApkAfterSign = false
-
-//签名程序路径
-var apksignerPath = ""
-
-//去除xml标签程序路径
-var axmlEditorPath = ""
-
-var curPath = File(".").canonicalPath + File.separator
-val isLinuxRuntime by lazy { System.getProperties().getProperty("os.name").contains("Linux") }
-val isWinRuntime by lazy { System.getProperties().getProperty("os.name").contains("Windows") }
-val isMacRuntime by lazy { System.getProperties().getProperty("os.name").contains("Mac") }
