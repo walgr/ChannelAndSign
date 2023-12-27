@@ -1,12 +1,14 @@
 package com.wpf.base.dealfile
 
 import com.wpf.utils.ResourceManager
+import com.wpf.utils.curPath
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
         println("参数异常，请检查输入")
         return
     }
+    var serviceBaseUrl = "http://0.0.0.0:8080/"
     var filePath = ""
     var fileFilter = ""
     var dealSign = true
@@ -15,6 +17,9 @@ fun main(args: Array<String>? = null) {
         if (arg.startsWith("-") && nextInput.startsWith("-")) {
             println("参数异常，请检查输入:$arg")
             return
+        }
+        if ("-serviceBaseUrl" == arg) {
+            serviceBaseUrl = nextInput
         }
         if ("-baseChannel" == arg) {
             channelBaseInsertFilePath = nextInput
@@ -51,6 +56,7 @@ fun main(args: Array<String>? = null) {
         }
     }
     println("开始处理...")
+    ResourceManager.serverBaseUrl = serviceBaseUrl
     val startTime = System.currentTimeMillis()
     ChannelAndSign.scanFile(inputFilePath = filePath, fileFilter = fileFilter, dealSign = dealSign) {
         println("处理完毕... 用时：${System.currentTimeMillis() - startTime}毫秒")

@@ -5,6 +5,7 @@ import com.android.zipflinger.ZipArchive
 import com.wpf.base.dealfile.util.*
 import com.wpf.utils.ex.FileUtil
 import com.wpf.utils.ex.createCheck
+import com.wpf.utils.ex.subString
 import com.wpf.utils.tools.AXMLEditor2Util
 import com.wpf.utils.tools.ApkSignerUtil
 import com.wpf.utils.tools.ZipalignUtil
@@ -131,13 +132,17 @@ object ChannelAndSign {
 
         //解压得到AndroidManifest.xml
         val baseManifestFile =
-            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifest.xml").createCheck(true)
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifest.xml").createCheck(
+                true
+            )
         FileUtil.save2File(inputZipFile.getInputStream(inputZipFile.getEntry("AndroidManifest.xml")), baseManifestFile)
         logList.add("解压 ${inputApkPath.name} 得到AndroidManifest.xml")
 
         //先去除旧的渠道数据
         val outNoChannelFile =
-            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifestNoChannel.xml").createCheck(true)
+            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifestNoChannel.xml").createCheck(
+                true
+            )
         AXMLEditor2Util.doCommandTagDel(
             "meta-data", "UMENG_CHANNEL", baseManifestFile.path, outNoChannelFile.path
         )
@@ -213,14 +218,10 @@ object ChannelAndSign {
         baseManifestFileNew.delete()
         File(baseManifestChannelFilePath).delete()
         logList.add("apk已更新渠道信息，并保存到${newChannelApkZipFile.path.toAbsolutePath()}")
-        val newChannelApkXmlStr = ApkParsers.getManifestXml(newChannelApkFile.path)
+        val newChannelApkXmlStr = ApkParsers.getManifestXml(newChannelApkFile)
         if (newChannelApkXmlStr.isNotEmpty()) {
-            val channelStrS = "<meta-data android:name=\"UMENG_CHANNEL\" android:value=\""
-            val channelStrE = "\">"
-            val channelIndexS = newChannelApkXmlStr.indexOf(channelStrS)
-            val channelIndexE = newChannelApkXmlStr.indexOf(channelStrE, channelIndexS + channelStrS.length)
             val apkChannelName =
-                newChannelApkXmlStr.subSequence(channelIndexS + channelStrS.length, channelIndexE).trim()
+                Regex("<meta-data android:name=\"UMENG_CHANNEL\" android:value=\".*\" />").find(newChannelApkXmlStr)?.value?.subString("android:value=\"", "\"")
             logList.add("获取渠道apk内渠道信息:${apkChannelName}")
             if (channelName != apkChannelName) {
                 logList.add("获取渠道apk内渠道信息和渠道不一致，请排查问题!!!")
