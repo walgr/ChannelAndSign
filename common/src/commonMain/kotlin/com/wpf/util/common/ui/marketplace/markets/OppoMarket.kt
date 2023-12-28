@@ -22,7 +22,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.io.File
 import java.nio.charset.Charset
-import java.util.ArrayList
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -500,12 +499,10 @@ data class OppoMarket(
                 }
                 url {
                     val parameterList = getCommonParams(packageName, token)
-                    url {
-                        parameterList.forEach { (t, u) ->
-                            parameters.append(t, u)
-                        }
-                        parameters.append("api_sign", hmacSHA256(getUrlParamsFromMap(parameterList), clientSecret))
+                    parameterList.forEach { (t, u) ->
+                        parameters.append(t, u)
                     }
+                    parameters.append("api_sign", hmacSHA256(getUrlParamsFromMap(parameterList), clientSecret))
                 }
             }, object : Callback<String> {
                 override fun onSuccess(t: String) {

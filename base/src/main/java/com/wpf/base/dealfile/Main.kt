@@ -1,7 +1,6 @@
 package com.wpf.base.dealfile
 
 import com.wpf.utils.ResourceManager
-import com.wpf.utils.curPath
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
@@ -11,6 +10,7 @@ fun main(args: Array<String>? = null) {
     var serviceBaseUrl = "http://0.0.0.0:8080/"
     var filePath = ""
     var fileFilter = ""
+    var cachePath = ""
     var dealSign = true
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
@@ -51,12 +51,19 @@ fun main(args: Array<String>? = null) {
         if ("-channelSavePath" == arg) {
             channelSavePath = nextInput
         }
+        if ("-cachePath" == arg) {
+            cachePath = nextInput
+        }
         if ("-delApkAfterSign" == arg) {
             delApkAfterSign = "1" == nextInput
         }
     }
     println("开始处理...")
     ResourceManager.serverBaseUrl = serviceBaseUrl
+    ResourceManager.cachePath = cachePath
+    if (cachePath.isNotEmpty()) {
+        println("设置ResourceManager缓存目录:${cachePath}")
+    }
     val startTime = System.currentTimeMillis()
     ChannelAndSign.scanFile(inputFilePath = filePath, fileFilter = fileFilter, dealSign = dealSign) {
         println("处理完毕... 用时：${System.currentTimeMillis() - startTime}毫秒")
