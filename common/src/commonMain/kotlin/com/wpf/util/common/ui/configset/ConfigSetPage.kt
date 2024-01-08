@@ -4,8 +4,11 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.Button
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -15,14 +18,12 @@ import com.google.gson.reflect.TypeToken
 import com.russhwolf.settings.get
 import com.wpf.base.dealfile.channelBaseInsertFilePath
 import com.wpf.base.dealfile.channelSavePath
-import com.wpf.server.FileServer.serverBasePath
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.InputView
 import java.io.File
-import javax.swing.JFileChooser
 
 @Preview
 @Composable
@@ -31,10 +32,6 @@ fun configPage() {
     val inputChannelBaseFilePath by autoSaveComposable("channelBaseFilePath") { remember { mutableStateOf("") } }
     //渠道保存位置
     val inputChannelSaveFilePath by autoSaveComposable("channelSaveFilePath") { remember { mutableStateOf("") } }
-    //文件服务器基础位置
-    val serverBasePathC by autoSaveComposable("serverBasePath") { remember { mutableStateOf("") } }
-    //apk对齐工具位置
-    val inputZipalignFilePath by autoSaveComposable("zipalignFilePath") { remember { mutableStateOf("") } }
 
     Box {
         Row {
@@ -67,12 +64,12 @@ fun configPage() {
                                     hint = "请输入渠道基础文件位置"
                                 ) {
                                     inputChannelBaseFilePath.value = it
-                                    channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
+                                    channelBaseInsertFilePath = inputChannelBaseFilePath.value
                                 }
                                 Button(onClick = {
                                     FileSelector.showFileSelector(arrayOf("xml")) {
                                         inputChannelBaseFilePath.value = it
-                                        channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
+                                        channelBaseInsertFilePath = inputChannelBaseFilePath.value
                                     }
                                 }, modifier = Modifier.padding(start = 8.dp)) {
                                     Text("选择")
@@ -81,26 +78,17 @@ fun configPage() {
                             Row(
                                 modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically
                             ) {
-                                InputView(input = inputChannelSaveFilePath, hint = "请输入渠道保存位置,默认当前目录") {
-                                    inputChannelSaveFilePath.value = it
-                                    channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
-                                }
-                            }
-                            Row(
-                                modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically
-                            ) {
                                 InputView(
                                     modifier = Modifier.weight(1f),
-                                    input = serverBasePathC,
-                                    hint = "请输入文件服务器基础目录"
+                                    input = inputChannelSaveFilePath, hint = "请输入渠道保存位置,默认当前目录"
                                 ) {
-                                    serverBasePathC.value = it
-                                    serverBasePath = it
+                                    inputChannelSaveFilePath.value = it
+                                    channelSavePath = inputChannelSaveFilePath.value
                                 }
                                 Button(onClick = {
-                                    FileSelector.showFileSelector(selectionMode = JFileChooser.DIRECTORIES_ONLY) {
-                                        serverBasePathC.value = it
-                                        serverBasePath = it
+                                    FileSelector.showFileSelector(arrayOf("xml")) {
+                                        inputChannelSaveFilePath.value = it
+                                        channelSavePath = inputChannelSaveFilePath.value
                                     }
                                 }, modifier = Modifier.padding(start = 8.dp)) {
                                     Text("选择")

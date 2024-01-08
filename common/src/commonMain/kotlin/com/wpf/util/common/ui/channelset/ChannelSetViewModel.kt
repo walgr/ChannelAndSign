@@ -29,12 +29,14 @@ object ChannelSetViewModel {
         val channelsFile = File(txtFilePath)
         val result = mutableListOf<Array<String>>()
         if (!channelsFile.exists()) return result
-        channelsFile.forEachLine {
-            if (it.isNotEmpty()) {
-                val fields = it.split(" ")
-                val channelApkFileName: String = fields[1].trim().replace("\n", "")
-                val channelName: String = fields[2].trim().replace("\n", "")
-                result.add(arrayOf(channelApkFileName, channelName))
+        runCatching {
+            channelsFile.forEachLine {
+                if (it.isNotEmpty()) {
+                    val fields = it.split(" ")
+                    val channelApkFileName: String = fields[1].trim().replace("\n", "")
+                    val channelName: String = fields[2].trim().replace("\n", "")
+                    result.add(arrayOf(channelApkFileName, channelName))
+                }
             }
         }
         return result

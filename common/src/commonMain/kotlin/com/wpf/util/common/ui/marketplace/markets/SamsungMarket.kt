@@ -242,45 +242,45 @@ data class SamsungMarket(
                         uploadData.imageList,
                         { error -> callback.onFail(error) }) { screensResponse ->
                         uploadApkList(uploadData, { error -> callback.onFail(error) }) { apksResponse ->
-//                            Http.submitForm("$baseUrl/seller/contentUpdate", parameters {
-//                                append("contentId", contentId)
-//                                append("newFeature", uploadData.description)
-//                                if (screensResponse.isNotEmpty()) {
-//                                    append("screenshots", gson.toJson(addNewToList(screenShotList, screenShotList)))
-//                                }
-//                                append(
-//                                    "binaryList",
-//                                    gson.toJson(addNewToList(binaryList, apksResponse.map { uploadFile ->
-//                                        SamsungApkBody(
-//                                            filekey = uploadFile.fileKey!!,
-//                                            fileName = uploadFile.apk?.fileName!!,
-//                                            packageName = uploadFile.apk?.packageName!!,
-//                                            versionCode = uploadFile.apk?.versionCode ?: "",
-//                                            versionName = uploadFile.apk?.versionName ?: ""
-//                                        )
-//                                    }))
-//                                )
-//                            }, {
-//                                headers {
-//                                    append(HttpHeaders.ContentType, ContentType.Application.Json)
-//                                    append("service-account-id", serviceAccountId)
-//                                    bearerAuth(token)
-//                                }
-//                            }, object : Callback<String> {
-//                                override fun onSuccess(t: String) {
-//                                    val response = gson.fromJson(t, SamSungBaseResponse::class.java)
-//                                    if (response.isSuccess()) {
-//                                        callback.onSuccess("")
-//                                    } else {
-//                                        callback.onFail("")
-//                                    }
-//                                }
-//
-//                                override fun onFail(msg: String) {
-//                                    callback.onFail(msg)
-//                                }
-//
-//                            })
+                            Http.submitForm("$baseUrl/seller/contentUpdate", parameters {
+                                append("contentId", contentId)
+                                append("newFeature", uploadData.description)
+                                if (screensResponse.isNotEmpty()) {
+                                    append("screenshots", gson.toJson(addNewToList(screenShotList, screenShotList)))
+                                }
+                                append(
+                                    "binaryList",
+                                    gson.toJson(addNewToList(binaryList, apksResponse.map { uploadFile ->
+                                        SamsungApkBody(
+                                            filekey = uploadFile.fileKey!!,
+                                            fileName = uploadFile.apk?.fileName!!,
+                                            packageName = uploadFile.apk?.packageName!!,
+                                            versionCode = uploadFile.apk?.versionCode ?: "",
+                                            versionName = uploadFile.apk?.versionName ?: ""
+                                        )
+                                    }))
+                                )
+                            }, {
+                                headers {
+                                    append(HttpHeaders.ContentType, ContentType.Application.Json)
+                                    append("service-account-id", serviceAccountId)
+                                    bearerAuth(token)
+                                }
+                            }, object : Callback<String> {
+                                override fun onSuccess(t: String) {
+                                    val response = gson.fromJson(t, SamSungBaseResponse::class.java)
+                                    if (response.isSuccess()) {
+                                        callback.onSuccess("")
+                                    } else {
+                                        callback.onFail("")
+                                    }
+                                }
+
+                                override fun onFail(msg: String) {
+                                    callback.onFail(msg)
+                                }
+
+                            })
                         }
                     }
                 }
@@ -353,7 +353,7 @@ data class SamsungMarket(
                 println("文件:${apk.fileName} 上传地址:${fileId.url}")
                 Http.post(fileId.url!!.replace("https", "http"), {
                     timeout {
-                        requestTimeoutMillis = 300000
+                        requestTimeoutMillis = 600000
                     }
                     headers {
                         append(HttpHeaders.ContentType, ContentType.MultiPart.FormData)
@@ -361,8 +361,8 @@ data class SamsungMarket(
                         bearerAuth(it)
                     }
                     setBody(MultiPartFormDataContent(formData {
-                        append("sessionId", fileId.sessionId!!)
-//                        append("file", File(apk.filePath).readBytes(), apkHeader(apk.filePath))
+                        append("\"sessionId\"", fileId.sessionId!!)
+                        append("\"file\"", File(apk.filePath).readBytes(), apkHeader(apk.filePath))
                     }))
                     var lastProcess = 0L
                     onUpload { bytesSentTotal, contentLength ->
@@ -469,8 +469,8 @@ data class SamsungMarket(
                         bearerAuth(it)
                     }
                     setBody(MultiPartFormDataContent(formData {
-                        append("sessionId", fileId.sessionId!!)
-                        append("file", File(screenShotPath).readBytes(), pngHeader(screenShotPath))
+                        append("\"sessionId\"", fileId.sessionId!!)
+                        append("\"file\"", File(screenShotPath).readBytes(), pngHeader(screenShotPath))
                     }))
                 }, object : Callback<String> {
                     override fun onSuccess(t: String) {

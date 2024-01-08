@@ -426,7 +426,7 @@ data class OppoMarket(
             getUploadUrl(packageName, filePath, { callback.onFail(it) }) {
                 Http.post("${it.upload_url}", {
                     timeout {
-                        requestTimeoutMillis = 300000
+                        requestTimeoutMillis = 600000
                     }
                     setBody(MultiPartFormDataContent(formData {
                         val parameterList = getCommonParams(packageName, token).plus(

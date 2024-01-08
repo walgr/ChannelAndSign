@@ -86,10 +86,14 @@ class AutoSaveList<T, H : MutableList<T>>(
 
     inline fun <reified T> initData(key: String) {
         val json = settings.getString(key, "[]")
-        val t = gson.fromJson<List<T>>(json, object : TypeToken<List<T>>() {}.type)
-        t?.let {
-            value.clear()
-            (value as MutableList<T>).addAll(it)
+        if (json.isNotEmpty()) {
+            runCatching {
+                val t = gson.fromJson<List<T>>(json, object : TypeToken<List<T>>() {}.type)
+                t?.let {
+                    value.clear()
+                    (value as MutableList<T>).addAll(it)
+                }
+            }
         }
     }
 }

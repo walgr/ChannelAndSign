@@ -6,6 +6,4 @@ object ConfigPageViewModel {
     fun getChannelBaseFilePath() = settings.getString("channelBaseFilePath", "")
 
     fun getChannelSaveFilePath() = settings.getString("channelSaveFilePath", "")
-
-    fun getZipalignFilePath() = settings.getString("zipalignFilePath", "")
 }

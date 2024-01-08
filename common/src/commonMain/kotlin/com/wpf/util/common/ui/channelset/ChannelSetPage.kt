@@ -150,6 +150,7 @@ fun channelPage() {
                                         Column {
                                             FileAddTitle("渠道列表", arrayOf("txt")) { path ->
                                                 clientList.find { it.isSelect }?.channelPath = path
+                                                clientList.saveData()
                                                 channelFileNameList.clear()
                                                 channelNameList.clear()
                                                 if (path.isNotEmpty()) {
@@ -202,17 +203,19 @@ fun channelPage() {
                                         }
                                         onExternalDrag(modifier = Modifier.fillMaxSize()) {
                                             if (it.size != 1 || !it[0].contains(".txt")) return@onExternalDrag
-                                            clientList.find { client -> client.isSelect }?.channelPath = it[0]
+                                            val realPath = it[0].checkWinPath()
+                                            clientList.find { client -> client.isSelect }?.channelPath = realPath
+                                            clientList.saveData()
                                             channelFileNameList.clear()
                                             channelNameList.clear()
-                                            if (it[0].isNotEmpty()) {
-                                                val result = ChannelSetViewModel.getChannelDataInFile(it[0])
+                                            if (realPath.isNotEmpty()) {
+                                                val result = ChannelSetViewModel.getChannelDataInFile(realPath)
                                                 if (result.isNotEmpty()) {
                                                     channelFileNameList.addAll(result.map { array -> array[0] })
                                                     channelNameList.addAll(result.map { array -> array[1] })
                                                 } else {
-                                                    channelFileNameList.add("文件解析错误，路径:(${it[0]})")
-                                                    channelNameList.add("文件解析错误，路径:(${it[0]}")
+                                                    channelFileNameList.add("文件解析错误，路径:(${realPath})")
+                                                    channelNameList.add("文件解析错误，路径:(${realPath}")
                                                 }
                                             }
                                         }
