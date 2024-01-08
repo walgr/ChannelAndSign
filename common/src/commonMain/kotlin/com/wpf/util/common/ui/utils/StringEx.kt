@@ -26,7 +26,7 @@ fun String?.asFile() = if (this == null) null else File(this)
 
 fun String.checkWinPath(): String {
     if (isWinRuntime) {
-        return replace("/", "\\").replace("%20", " ")
+        return replace("/", "\\\\").replace("%20", " ")
     }
     return this
 }

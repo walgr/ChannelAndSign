@@ -2,13 +2,12 @@ package com.wpf.util.common.ui.widget
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 
 
-@OptIn(ExperimentalMaterialApi::class)
 @Preview
 @Composable
 fun AddItemDialog(showDialog: MutableState<Boolean> = mutableStateOf(false), inputStr: String = "", callback: (String) -> Unit) {

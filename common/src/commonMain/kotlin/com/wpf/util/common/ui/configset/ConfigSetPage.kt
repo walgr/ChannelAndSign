@@ -4,8 +4,8 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,6 +23,7 @@ import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.InputView
+import com.wpf.utils.ex.subString
 import java.io.File
 
 @Preview
@@ -112,9 +113,16 @@ fun configPage() {
                                         val allDataMap = mapGson.fromJson<Map<String, String>>(
                                             allDataJson, object : TypeToken<Map<String, String>>() {}.type
                                         )
-                                        settings.clear()
-                                        allDataMap.forEach { (t, u) ->
-                                            settings.putString(t, u)
+                                        if (allDataMap.isNotEmpty()) {
+                                            settings.clear()
+                                            allDataMap.forEach { (t, u) ->
+                                                var realValue = if (u.startsWith("\"") && u.endsWith("\"")) {
+                                                    u.substring(1, u.length - 1)
+                                                } else u
+                                                realValue = realValue.replace("\\\"", "\"")
+                                                realValue = realValue.replace("\\\\", "\\")
+                                                settings.putString(t, realValue)
+                                            }
                                         }
                                     }
                                 }, modifier = Modifier.padding(start = 8.dp)) {

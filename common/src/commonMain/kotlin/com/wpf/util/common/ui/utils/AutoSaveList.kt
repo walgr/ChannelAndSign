@@ -3,6 +3,7 @@ package com.wpf.util.common.ui.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.google.gson.reflect.TypeToken
+import com.wpf.utils.ex.checkWinPath
 import kotlin.reflect.KProperty
 
 class AutoSaveSet<T, H : MutableSet<T>>(
@@ -87,13 +88,11 @@ class AutoSaveList<T, H : MutableList<T>>(
     inline fun <reified T> initData(key: String) {
         val json = settings.getString(key, "[]")
         if (json.isNotEmpty()) {
-            runCatching {
                 val t = gson.fromJson<List<T>>(json, object : TypeToken<List<T>>() {}.type)
                 t?.let {
                     value.clear()
                     (value as MutableList<T>).addAll(it)
                 }
-            }
         }
     }
 }

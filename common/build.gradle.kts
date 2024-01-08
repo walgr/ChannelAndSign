@@ -16,7 +16,7 @@ kotlin {
             dependencies {
                 api(compose.runtime)
                 api(compose.foundation)
-                api(compose.material)
+                api(compose.material3)
                 api(project(":base"))
                 api(project(":WebView"))
                 api(project(":FileService"))
@@ -31,7 +31,7 @@ kotlin {
                 api("io.ktor:ktor-client-logging:2.3.7")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
-                api("com.russhwolf:multiplatform-settings-no-arg:1.0.0")
+                api("com.russhwolf:multiplatform-settings-no-arg:1.1.1")
                 api("com.google.code.gson:gson:2.10.1")
                 api("com.auth0:java-jwt:4.4.0")
                 api("com.github.winterreisender:webviewko-jvm:0.6.0")

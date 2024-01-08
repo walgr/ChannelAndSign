@@ -8,28 +8,29 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wpf.base.dealfile.channelSavePath
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
+import com.wpf.util.common.ui.utils.FileSelector
 import com.wpf.util.common.ui.utils.autoSaveListComposable
 import com.wpf.util.common.ui.utils.getValue
 import com.wpf.util.common.ui.utils.onExternalDrag
+import com.wpf.util.common.ui.widget.common.InputView
 
 @Preview
 @Composable
@@ -56,7 +57,8 @@ fun signPage() {
                         Text("签名配置", fontWeight = FontWeight.Bold, color = mainTextColor)
                     }
                     Box(
-                        modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        modifier = Modifier.weight(1f).fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                     ) {
                         Column {
@@ -197,7 +199,6 @@ fun signPage() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun showSignInfoSetDialog(
     showSignInfoDialog: MutableState<Boolean>,
@@ -235,83 +236,74 @@ private fun showSignInfoSetDialog(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedTextField(
-                    value = TextFieldValue(inputName.value, TextRange(inputName.value.length)),
-                    onValueChange = {
-                        signFile.name = it.text
-                        inputName.value = signFile.name
-                    },
-                    label = {
-                        Text("请输入签名名称")
-                    },
-                    singleLine = true,
-                )
+                InputView(
+                    input = inputName,
+                    hint = "请输入签名名称",
+                ) {
+                    signFile.name = it
+                    inputName.value = signFile.name
+                }
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedTextField(
-                    value = TextFieldValue(inputStoreFile.value, TextRange(inputStoreFile.value.length)),
-                    onValueChange = {
-                        signFile.StoreFile = it.text
+                Row(
+                    modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically
+                ) {
+                    InputView(
+                        modifier = Modifier.weight(1f),
+                        input = inputStoreFile,
+                        hint = "请输入签名文件位置",
+                    ) {
+                        signFile.StoreFile = it
                         inputStoreFile.value = signFile.StoreFile
-                    },
-                    label = {
-                        Text("请输入签名文件位置")
-                    },
-                    singleLine = true,
-                )
+                    }
+                    Button(onClick = {
+                        FileSelector.showFileSelector(arrayOf("keystore", "jks")) {
+                            signFile.StoreFile = it
+                            inputStoreFile.value = signFile.StoreFile
+                        }
+                    }, modifier = Modifier.padding(start = 8.dp)) {
+                        Text("选择")
+                    }
+                }
             }
             Row(
                 modifier = Modifier.padding(top = 4.dp)
             ) {
-                OutlinedTextField(
-                    value = TextFieldValue(inputStorePass.value, TextRange(inputStorePass.value.length)),
-                    onValueChange = {
-                        signFile.StorePass = it.text
-                        inputStorePass.value = signFile.StorePass
-                    },
-                    label = {
-                        Text("请输入签名密码")
-                    },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
+                InputView(
+                    input = inputStorePass,
+                    hint = "请输入签名密码",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = PasswordVisualTransformation()
+                ) {
+                    signFile.StorePass = it
+                    inputStorePass.value = signFile.StorePass
+                }
             }
             Row(
                 modifier = Modifier.padding(top = 4.dp)
             ) {
-                OutlinedTextField(
-                    value = TextFieldValue(inputKeyAlias.value, TextRange(inputKeyAlias.value.length)),
-                    onValueChange = {
-                        signFile.KeyAlias = it.text
-                        inputKeyAlias.value = signFile.KeyAlias
-                    },
-                    label = {
-                        Text("请输入签名别名")
-                    },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
+                InputView(
+                    input = inputKeyAlias,
+                    hint = "请输入签名别名"
+                ) {
+                    signFile.KeyAlias = it
+                    inputKeyAlias.value = signFile.KeyAlias
+                }
             }
             Row(
                 modifier = Modifier.padding(top = 4.dp)
             ) {
-                OutlinedTextField(
-                    value = TextFieldValue(inputKeyPass.value, TextRange(inputKeyPass.value.length)),
-                    onValueChange = {
-                        signFile.KeyPass = it.text
-                        inputKeyPass.value = signFile.KeyPass
-                    },
-                    label = {
-                        Text("请输入签名别名密码")
-                    },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
+                InputView(
+                    input = inputKeyPass,
+                    hint = "请输入签名别名密码",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = PasswordVisualTransformation()
+                ) {
+                    signFile.KeyPass = it
+                    inputKeyPass.value = signFile.KeyPass
+                }
             }
         }
     })
