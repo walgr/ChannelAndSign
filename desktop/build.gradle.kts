@@ -28,6 +28,7 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "MainKt"
+        buildTypes.release.proguard.isEnabled = false
         nativeDistributions {
             //配置需要的模块
             modules(

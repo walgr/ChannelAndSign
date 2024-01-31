@@ -23,7 +23,6 @@ import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.InputView
-import com.wpf.utils.ex.subString
 import java.io.File
 
 @Preview

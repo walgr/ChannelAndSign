@@ -24,11 +24,11 @@ val client = HttpClient(CIO) {
 //        proxy = ProxyBuilder.http(
 //            "http://127.0.0.1:8888"
 //        )
-        requestTimeout = 60000
+        requestTimeout = 600000
     }
     install(HttpTimeout) {
-        requestTimeoutMillis = 60000
-        connectTimeoutMillis = 60000
+        requestTimeoutMillis = 600000
+        connectTimeoutMillis = 600000
     }
     install(ContentNegotiation) {
         json()

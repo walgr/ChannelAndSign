@@ -30,10 +30,13 @@ kotlin {
                 api("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
                 api("io.ktor:ktor-client-logging:2.3.7")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.7.2")
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
                 api("com.russhwolf:multiplatform-settings-no-arg:1.1.1")
                 api("com.google.code.gson:gson:2.10.1")
                 api("com.auth0:java-jwt:4.4.0")
+                api("com.fasterxml.jackson.core:jackson-core:2.16.1")
+                api("com.fasterxml.jackson.core:jackson-databind:2.16.1")
                 api("com.github.winterreisender:webviewko-jvm:0.6.0")
                 api("androidx.compose.ui:ui-util-desktop:1.6.0-beta02")
             }

@@ -603,7 +603,7 @@ data class SamsungMarket(
         val noEfficientToken = mutableListOf<Long>()
         token[packageName].forEach { (t, u) ->
             if ((System.currentTimeMillis() / 1000) - t < extTime) {
-                efficientToken = u
+//                efficientToken = u
             } else {
                 noEfficientToken.add(t)
             }
@@ -643,7 +643,7 @@ data class SamsungMarket(
                 val response = gson.fromJson(t, SamSungTokenResponse::class.java)
                 if (response.isSuccess() && !response.createdItem?.accessToken.isNullOrEmpty()) {
                     token[packageName][System.currentTimeMillis() / 1000] = response.createdItem?.accessToken!!
-                    token.saveData()
+//                    token.saveData()
                     callback.onSuccess(response.createdItem.accessToken)
                 } else {
                     callback.onFail("")

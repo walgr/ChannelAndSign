@@ -500,6 +500,7 @@ data class HuaweiMarket(
         getToken(packageName, { callback.onFail(it) }) { token ->
             Http.get("$baseUrl/publish/v2/upload-url", {
                 headers {
+                    append(HttpHeaders.ContentType, ContentType.Application.Json.withCharset(Charsets.UTF_8))
                     append("client_id", clientId)
                     bearerAuth(token)
                 }
@@ -553,6 +554,7 @@ data class HuaweiMarket(
         getToken(packageName, { callback.onFail(it) }) {
             Http.get("$baseUrl/publish/v2/appid-list", request = {
                 headers {
+                    append(HttpHeaders.ContentType, ContentType.Application.Json.withCharset(Charsets.UTF_8))
                     append("client_id", clientId)
                     bearerAuth(it)
                 }
@@ -592,12 +594,12 @@ data class HuaweiMarket(
     }
 
     @Transient
-    private var token = autoSaveMap("huaweiToken") { mutableMapOf<String, MutableMap<Long, String>>() }
+    private var token = mutableMapOf<String, MutableMap<Long, String>>()
 
     private fun getEfficientToken(packageName: String): String {
         var efficientToken = ""
         val noEfficientToken = mutableListOf<Long>()
-        token[packageName].forEach { (t, u) ->
+        token[packageName]?.forEach { (t, u) ->
             if ((System.currentTimeMillis() / 1000) - t < 172800) {
                 efficientToken = u
             } else {
@@ -605,7 +607,7 @@ data class HuaweiMarket(
             }
         }
         noEfficientToken.forEach {
-            token[packageName].remove(it)
+            token[packageName]?.remove(it)
         }
         return efficientToken
     }
@@ -627,8 +629,10 @@ data class HuaweiMarket(
             override fun onSuccess(t: String) {
                 val response = gson.fromJson(t, HuaweiTokenResponse::class.java)
                 if (response?.access_token?.isNotEmpty() == true) {
-                    token[packageName][System.currentTimeMillis() / 1000] = response.access_token
-                    token.saveData()
+                    token.getOrPut(packageName) {
+                        mutableMapOf()
+                    }[System.currentTimeMillis() / 1000] = response.access_token
+//                    token.saveData()
                     callback.onSuccess(response.access_token)
                 } else {
                     callback.onFail("")
