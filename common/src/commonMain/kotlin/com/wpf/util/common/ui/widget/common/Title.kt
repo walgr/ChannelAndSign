@@ -2,9 +2,9 @@ package com.wpf.util.common.ui.widget.common
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.runtime.Composable
@@ -48,7 +48,7 @@ fun Title(title: String, onClick: (() -> Unit)? = null) {
 
 @Preview
 @Composable
-fun FileAddTitle(title: String, fileFilter: Array<String> = arrayOf(), onFileSelected: ((String) -> Unit)? = null) {
+fun SelectFileAddTitle(title: String, fileFilter: Array<String> = arrayOf(), onFileSelected: ((String) -> Unit)? = null) {
     Box(
         modifier = Modifier.fillMaxWidth().height(44.dp),
         contentAlignment = Alignment.Center

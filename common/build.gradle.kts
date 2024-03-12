@@ -16,7 +16,7 @@ kotlin {
             dependencies {
                 api(compose.runtime)
                 api(compose.foundation)
-                api(compose.material3)
+                api(compose.material)
                 api(project(":base"))
                 api(project(":WebView"))
                 api(project(":FileService"))

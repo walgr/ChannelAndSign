@@ -7,9 +7,7 @@ import com.wpf.utils.ex.FileUtil
 import com.wpf.utils.ex.createCheck
 import com.wpf.utils.ex.subString
 import com.wpf.utils.tools.AXMLEditor2Util
-import com.wpf.utils.tools.ApkSignerUtil
 import com.wpf.utils.tools.SignHelper
-import com.wpf.utils.tools.ZipalignUtil
 import net.dongliu.apk.parser.ApkParsers
 import java.io.File
 import java.util.concurrent.Callable
@@ -42,9 +40,6 @@ object ChannelAndSign {
         try {
             dealScanFile(inputFilePath, fileFilter, dealSign) {
                 finish.invoke()
-                ZipalignUtil.delJar()
-                ApkSignerUtil.delJar()
-                AXMLEditor2Util.delJar()
                 if (exitProcess) {
                     exitProcess(0)
                 }
@@ -53,9 +48,6 @@ object ChannelAndSign {
             e.printStackTrace()
             println("运行错误:${e.message}")
             finish.invoke()
-            ZipalignUtil.delJar()
-            ApkSignerUtil.delJar()
-            AXMLEditor2Util.delJar()
             if (exitProcess) {
                 exitProcess(-6457)
             }
@@ -117,7 +109,9 @@ object ChannelAndSign {
      */
     private fun dealChannel(inputApkPath: File, finish: (() -> Unit)? = null): List<String> {
         //如果是渠道包
-        if (inputApkPath.nameWithoutExtension.contains("_")) return arrayListOf("已是渠道文件，不需处理")
+        if (inputApkPath.nameWithoutExtension.contains("_") && !inputApkPath.nameWithoutExtension.contains("_jiagu")) return arrayListOf(
+            "已是渠道文件，不需处理"
+        )
         val logList = arrayListOf<String>()
         val curPath = inputApkPath.parent
         val inputZipFile = ZipFile(inputApkPath)

@@ -1,16 +1,19 @@
 package com.wpf.util.common.ui.signset
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +25,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wpf.base.dealfile.channelSavePath
 import com.wpf.util.common.ui.centerBgColor
 import com.wpf.util.common.ui.itemBgColor
 import com.wpf.util.common.ui.mainTextColor
@@ -32,6 +34,7 @@ import com.wpf.util.common.ui.utils.getValue
 import com.wpf.util.common.ui.utils.onExternalDrag
 import com.wpf.util.common.ui.widget.common.InputView
 
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 fun signPage() {
@@ -92,13 +95,15 @@ fun signPage() {
                                 items(signList) {
                                     Box(
                                         modifier = Modifier.fillMaxWidth()
+                                            .combinedClickable(onDoubleClick = {
+                                                changeSign = it
+                                                showSignInfoDialog.value = true
+                                            }) {
+
+                                            }
                                             .padding(8.dp, 4.dp, 8.dp, 4.dp)
                                             .clip(shape = RoundedCornerShape(8.dp))
                                             .background(color = itemBgColor)
-                                            .clickable {
-                                                changeSign = it
-                                                showSignInfoDialog.value = true
-                                            }
                                     ) {
                                         Column(
                                             modifier = Modifier.padding(8.dp)
@@ -174,6 +179,12 @@ fun signPage() {
                                                 )
                                             }
                                         }
+                                        Icon(Icons.Default.Close, "删除",
+                                            modifier = Modifier.align(Alignment.TopEnd)
+                                                .onClick {
+                                                    signList.remove(it)
+                                                    signList.saveData()
+                                                })
                                     }
                                 }
                             }

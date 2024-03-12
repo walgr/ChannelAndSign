@@ -13,7 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -21,17 +21,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wpf.util.common.ui.*
+import com.wpf.util.common.ui.centerBgColor
+import com.wpf.util.common.ui.itemBgColor
+import com.wpf.util.common.ui.mainTextColor
 import com.wpf.util.common.ui.marketplace.markets.base.UploadData
 import com.wpf.util.common.ui.marketplace.markets.base.upload
 import com.wpf.util.common.ui.signset.SignFile
+import com.wpf.util.common.ui.uploadIcon
 import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.widget.common.*
-import java.util.UUID
+import java.util.*
 
 @OptIn(ExperimentalFoundationApi::class)
 @Preview
@@ -101,7 +105,7 @@ fun channelPage() {
                                     .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                             ) {
                                 Column {
-                                    Title("分组") {
+                                    Title("客户端") {
                                         groupDialog.value = true
                                     }
                                     LazyColumn {
@@ -143,12 +147,12 @@ fun channelPage() {
                             ) {
                                 Column {
                                     Box(
-                                        modifier = Modifier.fillMaxWidth().weight(2f)
+                                        modifier = Modifier.fillMaxWidth().weight(1f)
                                             .clip(shape = RoundedCornerShape(8.dp))
                                             .background(color = centerBgColor),
                                     ) {
                                         Column {
-                                            FileAddTitle("渠道列表", arrayOf("txt")) { path ->
+                                            SelectFileAddTitle("渠道文件", arrayOf("txt")) { path ->
                                                 clientList.find { it.isSelect }?.channelPath = path
                                                 clientList.saveData()
                                                 channelFileNameList.clear()
@@ -221,13 +225,13 @@ fun channelPage() {
                                         }
                                     }
                                     Box(
-                                        modifier = Modifier.fillMaxWidth().weight(1f)
+                                        modifier = Modifier.fillMaxWidth().weight(4f)
                                             .padding(0.dp, 10.dp, 0.dp, 0.dp)
                                             .clip(shape = RoundedCornerShape(8.dp))
                                             .background(color = centerBgColor),
                                     ) {
                                         Column {
-                                            FileAddTitle("apk地址", arrayOf("apk")) {
+                                            SelectFileAddTitle("打渠道包并签名", arrayOf("apk")) {
                                                 pathList.add(Path(name = it, path = it))
                                             }
                                             Box(modifier = Modifier.padding(8.dp, 0.dp, 8.dp, 0.dp)) {
@@ -452,7 +456,10 @@ fun dealClientClick(
 private fun showSelectSignDialog(showSignSelectDialog: MutableState<Boolean>, callback: (SignFile) -> Unit) {
     //签名列表
     val signList by autoSaveListComposable("signList") { remember { mutableStateListOf<SignFile>() } }
-    signList.getOrNull(0)?.isSelect = true
+    if (signList.find { it.isSelect } == null) {
+        signList.getOrNull(0)?.isSelect = true
+        signList.getOrNull(0)?.isSelectState?.value = true
+    }
 
     AlertDialog(onDismissRequest = {
         showSignSelectDialog.value = false
@@ -477,17 +484,21 @@ private fun showSelectSignDialog(showSignSelectDialog: MutableState<Boolean>, ca
         Column {
             Spacer(modifier = Modifier.height(10.dp))
             Row {
+                val isSelectRL = signList.map { remember { it.isSelectState } }
                 signList.forEach { sign ->
                     Row(modifier = Modifier.weight(1f).padding(start = 8.dp).clickable {
                         signList.forEach {
                             it.isSelect = false
                             it.isSelectState.value = false
+                            isSelectRL[signList.indexOf(it)].value = false
                         }
                         sign.isSelect = true
                         sign.isSelectState.value = true
+                        isSelectRL[signList.indexOf(sign)].value = true
+                        signList.saveData()
                     }) {
                         RadioButton(
-                            selected = sign.isSelectState.value,
+                            selected = isSelectRL[signList.indexOf(sign)].value,
                             onClick = null,
                             enabled = true,
                             modifier = Modifier.size(16.dp)
@@ -502,7 +513,6 @@ private fun showSelectSignDialog(showSignSelectDialog: MutableState<Boolean>, ca
     })
 }
 
-@Preview
 @Composable
 fun showGroupAddDialog(
     groupDialog: MutableState<Boolean>, groupDialogInput: MutableState<String>, callback: ((String) -> Unit)
