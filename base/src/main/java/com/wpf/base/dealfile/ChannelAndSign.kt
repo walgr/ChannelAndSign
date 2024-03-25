@@ -17,12 +17,15 @@ import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.system.exitProcess
 
 object ChannelAndSign {
-    private val defaultChannelName: String =
+    private val defaultChannelName: String by lazy {
+        if (channelBaseInsertFilePath.isEmpty()) return@lazy ""
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(channelBaseInsertFilePath)
             .getElementsByTagName("meta-data").item(0).attributes.item(1).nodeValue
+    }
 
     //原始文件路径
     private var inputFilePath: String = ""
+    private val noSignApkList = mutableListOf<String>()
 
     fun scanFile(
         inputFilePath: String,
@@ -54,20 +57,26 @@ object ChannelAndSign {
         }
     }
 
+    private fun dealChannel() = !(channelsFilePath.isEmpty() || channelBaseInsertFilePath.isEmpty())
+
     private fun dealScanFile(
         inputFilePath: String, fileFilter: String = "", dealSign: Boolean = true, finish: (() -> Unit)
     ) {
         val dealFile = File(inputFilePath)
         if (dealFile.exists() && dealFile.isFile && "apk" == dealFile.extension) {
             println("处理文件:${dealFile.name}")
+            noSignApkList.add(dealFile.path)
             val curPath = dealFile.parent + File.separator
             dealChannel(dealFile) {
                 val channelPath = getChannelPath(curPath).ifEmpty { curPath }
-                signPath(dealSign, channelPath, finish)
+                signPath(dealSign, channelPath, !dealChannel(), finish)
             }
         } else if (dealFile.isDirectory) {
             val apkFileList = dealFile.listFiles()?.filter {
                 it.isFile && "apk" == it.extension && (fileFilter.isEmpty() || it.name.contains(fileFilter))
+            }
+            apkFileList?.forEach {
+                noSignApkList.add(it.path)
             }
             ThreadPoolHelper.run(runnable = apkFileList?.map {
                 println("处理文件:${it.name}")
@@ -82,7 +91,7 @@ object ChannelAndSign {
                 }
                 if (apkFileList?.isNotEmpty() == true) {
                     val channelPath = getChannelPath(inputFilePath).ifEmpty { inputFilePath }
-                    signPath(dealSign, channelPath, finish)
+                    signPath(dealSign, channelPath, !dealChannel(), finish)
                 } else {
                     println("目录下未找到apk")
                     finish.invoke()
@@ -107,14 +116,15 @@ object ChannelAndSign {
     /**
      * 处理加固包打渠道包
      */
-    private fun dealChannel(inputApkPath: File, finish: (() -> Unit)? = null): List<String> {
+    private fun dealChannel(inputApk: File, finish: (() -> Unit)? = null): List<String> {
         //如果是渠道包
-        if (inputApkPath.nameWithoutExtension.contains("_") && !inputApkPath.nameWithoutExtension.contains("_jiagu")) return arrayListOf(
+        if (inputApk.nameWithoutExtension.contains("_") && !inputApk.nameWithoutExtension.contains("_jiagu")) return arrayListOf(
             "已是渠道文件，不需处理"
         )
+        if (!dealChannel()) return arrayListOf("没有渠道文件，不处理：${inputApk.path}")
         val logList = arrayListOf<String>()
-        val curPath = inputApkPath.parent
-        val inputZipFile = ZipFile(inputApkPath)
+        val curPath = inputApk.parent
+        val inputZipFile = ZipFile(inputApk)
         //创建渠道包存储文件夹
         val channelPath = getChannelPath(curPath)
         val channelPathFile = File(channelPath)
@@ -122,15 +132,15 @@ object ChannelAndSign {
 
         //解压得到AndroidManifest.xml
         val baseManifestFile =
-            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifest.xml").createCheck(
+            File(curPath + File.separator + inputApk.nameWithoutExtension + File.separator + "AndroidManifest.xml").createCheck(
                 true
             )
         FileUtil.save2File(inputZipFile.getInputStream(inputZipFile.getEntry("AndroidManifest.xml")), baseManifestFile)
-        logList.add("解压 ${inputApkPath.name} 得到AndroidManifest.xml")
+        logList.add("解压 ${inputApk.name} 得到AndroidManifest.xml")
 
         //先去除旧的渠道数据
         val outNoChannelFile =
-            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "AndroidManifestNoChannel.xml").createCheck(
+            File(curPath + File.separator + inputApk.nameWithoutExtension + File.separator + "AndroidManifestNoChannel.xml").createCheck(
                 true
             )
         AXMLEditor2Util.doCommandTagDel(
@@ -141,7 +151,7 @@ object ChannelAndSign {
         val channelsFile = File(channelsFilePath)
         ThreadPoolHelper.run(runnable = channelsFile.readLines().map {
             Callable {
-                dealChannelApk(it, curPath, outNoChannelFile, channelPath, inputApkPath)
+                dealChannelApk(it, curPath, outNoChannelFile, channelPath, inputApk)
             }
         }) { results ->
             results?.forEach {
@@ -149,7 +159,7 @@ object ChannelAndSign {
                     println(log)
                 }
             }
-            File(curPath + File.separator + inputApkPath.nameWithoutExtension + File.separator + "cache").delete()
+            File(curPath + File.separator + inputApk.nameWithoutExtension + File.separator + "cache").delete()
             inputZipFile.close()
             baseManifestFile.delete()
             outNoChannelFile.parentFile.delete()
@@ -218,7 +228,7 @@ object ChannelAndSign {
             logList.add("获取渠道apk内渠道信息:${apkChannelName}")
             if (channelName != apkChannelName) {
                 logList.add("获取渠道apk内渠道信息和渠道不一致，请排查问题!!!")
-                throw RuntimeException("获取渠道apk内渠道信息和渠道不一致，请排查问题!!!")
+                throw RuntimeException("获取渠道apk内渠道信息(${apkChannelName})和渠道${channelName}不一致，请排查问题!!!")
             }
         } else {
             logList.add("获取渠道apk内渠道信息:失败，请排查问题!!!")
@@ -227,7 +237,12 @@ object ChannelAndSign {
         return logList
     }
 
-    private fun signPath(dealSign: Boolean = true, inputApkPath: String, finish: (() -> Unit)? = null) {
+    private fun signPath(
+        dealSign: Boolean = true,
+        inputApkPath: String,
+        outputNew: Boolean = false,
+        finish: (() -> Unit)? = null
+    ) {
         if (!dealSign) {
             finish?.invoke()
             return
@@ -239,7 +254,7 @@ object ChannelAndSign {
             }
             ThreadPoolHelper.run(runnable = dealFiles?.map {
                 Callable {
-                    signApk(it)
+                    signApk(it, outputNew)
                 }
             }) { results ->
                 results?.forEach {
@@ -250,14 +265,15 @@ object ChannelAndSign {
                 finish?.invoke()
             }
         } else {
-            signApk(dealFile).forEach {
+            signApk(dealFile, outputNew).forEach {
                 println(it)
             }
             finish?.invoke()
         }
     }
 
-    private fun signApk(inputFile: File): List<String> {
+    private fun signApk(inputFile: File, outputNew: Boolean = false): List<String> {
+        if (noSignApkList.contains(inputFile.path) && !outputNew) return arrayListOf("原始Apk文件:${inputFile.path}，不处理")
         if (!inputFile.isFile || "apk" != inputFile.extension) return arrayListOf("非Apk文件，未处理")
         val logList = arrayListOf<String>()
         if (SignHelper.sign(
@@ -265,8 +281,12 @@ object ChannelAndSign {
                 signAlias = signAlias,
                 keyStorePassword = signPassword,
                 keyPassword = signAliasPassword,
-                outSignPath = "",
-                inputApkPath = inputFile.path
+                outApkPath = if (outputNew) inputFile.path.replace(
+                    inputFile.nameWithoutExtension,
+                    inputFile.nameWithoutExtension + "_sign"
+                ) else "",
+                inputApkPath = inputFile.path,
+                reserveInput = noSignApkList.contains(inputFile.path)
             )
         ) {
             logList.add("签名成功：$inputFile")

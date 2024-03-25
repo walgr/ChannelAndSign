@@ -71,7 +71,7 @@ object ChannelSetViewModel {
         }.forEach { path ->
             File(path).listFiles()?.filter {
                 it.nameWithoutExtension.contains("sign")
-                        && MarketType.values().find { market ->
+                        && MarketType.entries.find { market ->
                     it.nameWithoutExtension.contains(market.channelName, ignoreCase = true)
                 } != null
             }?.let {
