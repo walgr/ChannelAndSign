@@ -1,8 +1,6 @@
 package com.wpf.util.common.ui.marketplace.markets.base
 
 import androidx.compose.runtime.MutableState
-import com.wpf.server.FileServer
-import com.wpf.server.plugins.GET_FILE
 import javafx.scene.web.WebView
 
 interface BrowserMarket : Market {
@@ -56,6 +54,7 @@ interface BrowserMarket : Market {
     }
 
     fun getFileLocalUrl(filePath: String): String {
-        return FileServer.BASE_URL + "/${GET_FILE}?filePath=$filePath"
+//        return FileServer.BASE_URL + "/${GET_FILE}?filePath=$filePath"
+        return ""
     }
 }

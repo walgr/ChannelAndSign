@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import com.wpf.server.FileServer.serverBasePath
 import com.wpf.util.common.ui.base.AbiType
 import com.wpf.util.common.ui.http.Http
 import com.wpf.util.common.ui.marketplace.markets.base.*
@@ -228,14 +227,14 @@ data class QH360Market(
                 delay(1000)
                 webView?.setElementValue("edition_brief", "testdaweawe")
                 webView?.setElementValue("apk_desc", "testdaweawe")
-                uploadImage(serverBasePath + File.separator + "ICP.png") {
-                    webView.inputFile(
-                        "file",
-                        7,
-                        fileUrl = it.url!!.replace("http:", "https:"),
-                        it.imgFile!!
-                    )
-                }
+//                uploadImage(serverBasePath + File.separator + "ICP.png") {
+//                    webView.inputFile(
+//                        "file",
+//                        7,
+//                        fileUrl = it.url!!.replace("http:", "https:"),
+//                        it.imgFile!!
+//                    )
+//                }
             }
         }
     }
@@ -305,7 +304,7 @@ data class QH360Market(
 
     override fun initByData() {
         super.initByData()
-        serverBasePath = settings.getString("serverBasePath", "")
+//        serverBasePath = settings.getString("serverBasePath", "")
     }
 
     override fun clearCache() {
