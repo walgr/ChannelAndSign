@@ -14,6 +14,7 @@ pluginManagement {
         id("org.jetbrains.compose").version(extra["compose.version"] as String)
         id("com.android.application") version "7.4.2"
         id("org.jetbrains.kotlin.android") version "1.9.21"
+        id("com.android.library") version "7.4.2"
     }
 }
 
@@ -33,3 +34,4 @@ include(":desktop")
 include("jiagu")
 include("dealJiagu")
 include(":jiagu")
+include(":jiagulibrary")

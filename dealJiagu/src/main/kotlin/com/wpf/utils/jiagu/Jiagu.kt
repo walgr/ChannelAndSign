@@ -2,11 +2,37 @@ package com.wpf.utils.jiagu
 
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
+import com.google.gson.Gson
+import com.wpf.utils.ex.FileUtil
 import com.wpf.utils.ex.createCheck
+import com.wpf.utils.tools.ManifestEditorUtil
+import net.dongliu.apk.parser.ApkParsers
+import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
+import java.io.RandomAccessFile
 import java.util.zip.Deflater
 import kotlin.math.min
 import kotlin.random.Random
+
+class ApkConfig(
+    private val srcApplicationName: String,
+    val dexInfoList: MutableList<DexInfo> = mutableListOf()
+) {
+    class DexInfo(
+        private val dexName: String,
+        private val dexMd5: String,
+        val dealList: MutableList<DealInfo> = mutableListOf(),
+    ) {
+        class DealInfo(
+            private val stepStartPos: Long,
+            private val stepEndPos: Long,
+            private val dealStartPos: Long,
+            private val dealLength: Int,
+            private val srcBytes: ByteArray,
+        )
+    }
+}
+
 
 object Jiagu {
 
@@ -28,101 +54,57 @@ object Jiagu {
             File(srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_jiagu." + srcApkFile.extension)
         srcApkFile.copyTo(jiaguApkFile, true)
         val jiaguApk = ZipArchive(jiaguApkFile.toPath())
-        val srcDexInputStreamMap = jiaguApk.listEntries().filter {
+        val srcDexList = jiaguApk.listEntries().filter {
             it.endsWith("dex")
-        }.map {
+        }
+        val srcDexInputStreamMap = srcDexList.map {
             it to jiaguApk.getInputStream(it).buffered()
         }
+        val srcDexMd5Map: Map<String, String> = mapOf(*srcDexList.map {
+            it to DigestUtils.md5Hex(jiaguApk.getInputStream(it))
+        }.toTypedArray())
+        val srcManifestFileStr = ApkParsers.getManifestXml(srcApkFile)
+        val applicationStr = "(?<=<application)(.*?)(?=>)".toRegex().find(srcManifestFileStr)!!.value
+        val apkConfig = ApkConfig("(?<=android:name=\")(.*?)(?=\")".toRegex().find(applicationStr)?.value ?: "")
         val jiaguConfigFile = File(srcApkFile.parent + File.separator + "jiagu.config").createCheck(true)
-        val configStrB = StringBuilder()
+        val configModelList = mutableListOf<ApkConfig.DexInfo>()
         val step = 1024 * 1024
         val jiaguFragmentLength = 100
-        val split = ";"
         srcDexInputStreamMap.forEach {
             val dexName = it.first
             val inputStream = it.second
             println("处理${dexName}")
             val jiaguDexFile =
                 File(cachePathFile.path + File.separator + dexName.replace(".dex", ".wpfjiagu")).createCheck(true)
-            val jiaguDexOutputStream = jiaguDexFile.outputStream()
-            configStrB.append(dexName + split)
-            var startPos = 0
-            var stop = false
-            var readCount = 0
-            var writeCount = 0L
+            jiaguDexFile.writeText("")
+            val jiaguDexOutputStream = RandomAccessFile(jiaguDexFile, "rw")
+            val configModel = ApkConfig.DexInfo(dexName, srcDexMd5Map[dexName]!!)
+            var startPos = 0L
+            val allBytes = inputStream.readBytes()
+            val allCount = allBytes.size
             do {
                 println("正在处理${startPos}-${startPos + step}")
-                var randomPos = Random.nextInt(step - jiaguFragmentLength)
-                println("获取随机位置${randomPos}")
-                var readBytesForJiagu = ByteArray(randomPos)
-                var readSize = inputStream.read(readBytesForJiagu)
-                if (readSize > 0) {
-                    readCount += readSize
-                } else {
-                    stop = true
-                    println("已经处理完当前文件了")
-                    continue
+                val randomPos = Random.nextInt(min(step - jiaguFragmentLength, allCount - startPos.toInt()))
+                println("获取随机位置${startPos + randomPos}")
+                val readBytesForFragment =
+                    allBytes.sliceArray(startPos.toInt() + randomPos until startPos.toInt() + randomPos + jiaguFragmentLength)
+                println("获取${readBytesForFragment.size}长度的数据保存到配置文件中")
+                repeat(jiaguFragmentLength) { pos ->
+                    allBytes[startPos.toInt() + randomPos + pos] = 0
                 }
-                println("从位置:${startPos}读取长度：${randomPos}的数据，实际读取了${readSize}的数据")
-                val readBytesForFragment: ByteArray
-                var remainSize: Int
-                if (readSize < randomPos) {
-                    println("未读取到随机位置，说明剩余数据长度小于随机位置长度，下面再次进行随机")
-                    randomPos = Random.nextInt(readSize - jiaguFragmentLength)
-                    println("获取新随机位置${randomPos}")
-                    readBytesForFragment = readBytesForJiagu.copyOfRange(randomPos, randomPos + jiaguFragmentLength)
-                    readBytesForJiagu = readBytesForJiagu.copyOfRange(0, randomPos)
-                    remainSize = readSize - randomPos - jiaguFragmentLength
-                    println("从读取的数据中：[${startPos}-${startPos + readSize}]裁剪新的数据：[${startPos}-${startPos + randomPos}]，剩余长度:${remainSize}")
-                    jiaguDexOutputStream.write(readBytesForJiagu)
-                    writeCount += readBytesForJiagu.size
-                    println("写入新裁剪的数据长度：${readBytesForJiagu.size}到jiagu文件中")
-                    jiaguDexOutputStream.write(ByteArray(readBytesForFragment.size))
-                    writeCount += readBytesForFragment.size
-                    println("写入空数据长度：${readBytesForFragment.size}到jiagu文件中")
-                    stop = true
-                } else {
-                    jiaguDexOutputStream.write(readBytesForJiagu)
-                    writeCount += readBytesForJiagu.size
-                    println("写入读取的数据到jiagu文件中")
-                    readBytesForFragment = ByteArray(jiaguFragmentLength)
-                    readSize = inputStream.read(readBytesForFragment)
-                    if (readSize > 0) {
-                        readCount += readSize
-                    }
-                    println("读取长度：${readSize}的数据到片段中")
-                    jiaguDexOutputStream.write(ByteArray(jiaguFragmentLength))
-                    writeCount += jiaguFragmentLength
-                    println("写入空数据长度：${jiaguFragmentLength}到jiagu文件中")
-                    remainSize = step - randomPos - readSize
-                    if (readSize < 0) {
-                        stop = true
-                    }
-                }
-                configStrB.append(
-                    "[${startPos}-${startPos + step}-${startPos + randomPos.toLong()}-${
-                        min(
-                            jiaguFragmentLength, readSize
-                        )
-                    }]" + split
+                configModel.dealList.add(
+                    ApkConfig.DexInfo.DealInfo(
+                        startPos,
+                        startPos + step,
+                        startPos + randomPos,
+                        jiaguFragmentLength,
+                        readBytesForFragment
+                    )
                 )
-                configStrB.append(readBytesForFragment.joinToString())
-                println("写入片段到日志中，长度：${readBytesForFragment.size}")
-                if (remainSize > 0) {
-                    println("写入剩下的数据长度：${remainSize}到jiagu文件")
-                    readBytesForJiagu = ByteArray(remainSize)
-                    readSize = inputStream.read(readBytesForJiagu)
-                    if (readSize > 0) {
-                        readCount += readSize
-                    }
-                    jiaguDexOutputStream.write(readBytesForJiagu)
-                    writeCount += readBytesForJiagu.size
-                }
                 startPos += step
-            } while (!stop)
-            println("总共读取了${readCount}")
-            println("总共写入了${writeCount}")
-            configStrB.append("\n")
+            } while (startPos < allCount)
+            jiaguDexOutputStream.write(allBytes)
+            configModelList.add(configModel)
             inputStream.close()
             jiaguDexOutputStream.close()
             jiaguApk.delete(dexName)
@@ -133,12 +115,48 @@ object Jiagu {
             )
             jiaguDexFile.delete()
         }
-        jiaguConfigFile.writeText(configStrB.toString())
+        apkConfig.dexInfoList.addAll(configModelList)
+        jiaguConfigFile.writeText(Gson().toJson(apkConfig))
         jiaguApk.add(
             BytesSource(
                 jiaguConfigFile.toPath(), "assets/" + jiaguConfigFile.name, Deflater.DEFAULT_COMPRESSION
             )
         )
+        //添加解密的主dex
+        javaClass.getResourceAsStream("/classes.dex")?.let {
+            jiaguApk.add(
+                BytesSource(
+                    it, "classes.dex", Deflater.DEFAULT_COMPRESSION
+                )
+            )
+            it.close()
+        }
+        //修改manifest的Application为解密的
+        val androidManifest = "AndroidManifest.xml"
+        val srcManifestFile = File(srcApkFile.parent + File.separator + "AndroidManifest_src.xml").createCheck(true)
+        val androidManifestIS = jiaguApk.getInputStream(androidManifest)
+        FileUtil.save2File(androidManifestIS, srcManifestFile)
+        androidManifestIS.close()
+        val fixManifestFile = File(srcApkFile.parent + File.separator + androidManifest).createCheck(true)
+        ManifestEditorUtil.doCommand(
+            mutableListOf(
+                srcManifestFile.path,
+                "-f",
+                "-o",
+                fixManifestFile.path,
+                "-an",
+                "com.wpf.util.jiadulibrary.StubApplication"
+            )
+        )
+        jiaguApk.delete(androidManifest)
+        jiaguApk.add(
+            BytesSource(
+                fixManifestFile.toPath(), androidManifest, Deflater.DEFAULT_COMPRESSION
+            )
+        )
+        srcManifestFile.delete()
+        fixManifestFile.delete()
+
         jiaguConfigFile.delete()
         jiaguApk.close()
         cachePathFile.deleteRecursively()

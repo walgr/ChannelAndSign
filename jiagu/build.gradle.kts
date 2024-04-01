@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -9,23 +8,16 @@ android {
 
     defaultConfig {
         applicationId = "com.wpf.jiagu"
-        minSdk = 19
+        minSdk = 21
         targetSdk = 33
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    kotlin {
-        jvmToolchain(11)
-    }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.21")
-
+    implementation(project(":jiagulibrary"))
 }
