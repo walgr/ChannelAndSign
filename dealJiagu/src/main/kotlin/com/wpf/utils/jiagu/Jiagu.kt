@@ -1,6 +1,7 @@
 package com.wpf.utils.jiagu
 
 import com.android.zipflinger.BytesSource
+import com.android.zipflinger.FullFileSource
 import com.android.zipflinger.ZipArchive
 import com.google.gson.Gson
 import com.wpf.utils.ex.FileUtil
@@ -110,7 +111,7 @@ object Jiagu {
             jiaguApk.delete(dexName)
             jiaguApk.add(
                 BytesSource(
-                    jiaguDexFile.toPath(), "assets/" + jiaguDexFile.name, Deflater.DEFAULT_COMPRESSION
+                    jiaguDexFile.toPath(), "assets/jiagu_wpf/" + jiaguDexFile.name, Deflater.DEFAULT_COMPRESSION
                 )
             )
             jiaguDexFile.delete()
