@@ -1,12 +1,13 @@
 package com.wpf.utils.jiagu
 
 import com.android.zipflinger.BytesSource
-import com.android.zipflinger.FullFileSource
 import com.android.zipflinger.ZipArchive
 import com.google.gson.Gson
 import com.wpf.utils.ex.FileUtil
+import com.wpf.utils.ex.checkWinPath
 import com.wpf.utils.ex.createCheck
 import com.wpf.utils.tools.ManifestEditorUtil
+import com.wpf.utils.tools.SignHelper
 import net.dongliu.apk.parser.ApkParsers
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
@@ -42,7 +43,13 @@ object Jiagu {
      * 2. 修改dex后缀为jiagu
      * 3. 对保存的修改信息加密
      */
-    fun deal(srcApkPath: String, privateKeyFilePath: String = "") {
+    fun deal(
+        srcApkPath: String, privateKeyFilePath: String = "",
+        signFilePath: String = "",
+        signAlias: String = "",
+        keyStorePassword: String = "",
+        keyPassword: String = "",
+    ) {
         if (srcApkPath.isEmpty()) {
             throw IllegalArgumentException("该文件地址为空！")
         }
@@ -57,6 +64,8 @@ object Jiagu {
         val jiaguApk = ZipArchive(jiaguApkFile.toPath())
         val srcDexList = jiaguApk.listEntries().filter {
             it.endsWith("dex")
+        }.sortedBy {
+            (it.replace("classes", "").replace(".dex", "").ifEmpty { "1" }).toInt()
         }
         val srcDexInputStreamMap = srcDexList.map {
             it to jiaguApk.getInputStream(it).buffered()
@@ -146,7 +155,7 @@ object Jiagu {
                 "-o",
                 fixManifestFile.path,
                 "-an",
-                "com.wpf.util.jiadulibrary.StubApplication"
+                "com.wpf.util.jiagulibrary.StubApplication"
             )
         )
         jiaguApk.delete(androidManifest)
@@ -160,6 +169,19 @@ object Jiagu {
 
         jiaguConfigFile.delete()
         jiaguApk.close()
+        if (signFilePath.isNotEmpty()) {
+            println("正在对加固包签名")
+            SignHelper.sign(
+                signFilePath.checkWinPath(),
+                signAlias,
+                keyStorePassword,
+                keyPassword,
+                "",
+                jiaguApkFile.path.checkWinPath(),
+                true
+            )
+            println("签名完成： ${jiaguApkFile.path.replace(".apk", "_sign.apk")}")
+        }
         cachePathFile.deleteRecursively()
     }
 }
