@@ -46,10 +46,10 @@ object ChannelSetViewModel {
         channelsFilePath = channelPath ?: ""
         channelBaseInsertFilePath = ConfigPageViewModel.getChannelBaseFilePath()
         channelSavePath = ConfigPageViewModel.getChannelSaveFilePath()
-        signFile = sign.StoreFile
-        signPassword = sign.StorePass
-        signAlias = sign.KeyAlias
-        signAliasPassword = sign.KeyPass
+        signFile = sign.storeFile
+        signPassword = sign.storePass
+        signAlias = sign.keyAlias
+        signAliasPassword = sign.keyPass
         var returnTime = 0
         CoroutineScope(Dispatchers.Default).launch {
             filePathList.forEach {

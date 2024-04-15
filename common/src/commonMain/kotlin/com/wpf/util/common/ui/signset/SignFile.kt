@@ -6,9 +6,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 class SignFile(
     var name: String = "",               //签名名称
-    var StoreFile: String = "",          //签名文件
-    var StorePass: String = "",          //密码
-    var KeyAlias: String = "",           //别名
-    var KeyPass: String = "",            //密码
+    var storeFile: String = "",          //签名文件
+    var storePass: String = "",          //密码
+    var keyAlias: String = "",           //别名
+    var keyPass: String = "",            //密码
     override var isSelect: Boolean = false
 ): SelectItem()

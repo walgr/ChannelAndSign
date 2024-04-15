@@ -24,16 +24,12 @@ import androidx.compose.ui.window.WindowScope
 import com.wpf.util.common.ui.base.Menu
 import com.wpf.util.common.ui.channelset.channelPage
 import com.wpf.util.common.ui.configset.configPage
+import com.wpf.util.common.ui.dosign.doSignPage
 import com.wpf.util.common.ui.mainBgColor
 import com.wpf.util.common.ui.marketplace.marketPlacePage
 import com.wpf.util.common.ui.signset.signPage
 import com.wpf.util.common.ui.utils.OnApplicationExit
 import com.wpf.util.common.ui.utils.WindowDraggableArea
-import com.wpf.util.common.ui.utils.settings
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.system.exitProcess
 
 @Preview
@@ -49,6 +45,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
     val menuList = remember {
         mutableStateListOf(
             Menu("渠道打包", true),
+            Menu("签名打包"),
             Menu("市场配置"),
             Menu("签名配置"),
             Menu("软件配置")
@@ -102,7 +99,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                             exitProcess(0)
                         }
                     }) {
-                        Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White)
+                        Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White, modifier = Modifier)
                     }
                 }
             }
@@ -113,10 +110,12 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                 if (menuList[0].isSelectState.value) {
                     channelPage()
                 } else if (menuList[1].isSelectState.value) {
-                    marketPlacePage()
+                    doSignPage()
                 } else if (menuList[2].isSelectState.value) {
-                    signPage()
+                    marketPlacePage()
                 } else if (menuList[3].isSelectState.value) {
+                    signPage()
+                } else if (menuList[4].isSelectState.value) {
                     configPage()
                 }
             }

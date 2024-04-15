@@ -130,7 +130,7 @@ fun signPage() {
                                                     modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
                                                 )
                                                 Text(
-                                                    it.StoreFile,
+                                                    it.storeFile,
                                                     fontSize = 10.sp,
                                                     color = Color.DarkGray,
                                                     modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
@@ -144,7 +144,7 @@ fun signPage() {
                                                     modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
                                                 )
                                                 Text(
-                                                    it.StorePass,
+                                                    it.storePass,
                                                     fontSize = 10.sp,
                                                     color = Color.DarkGray,
                                                     modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
@@ -158,7 +158,7 @@ fun signPage() {
                                                     modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
                                                 )
                                                 Text(
-                                                    it.KeyAlias,
+                                                    it.keyAlias,
                                                     fontSize = 10.sp,
                                                     color = Color.DarkGray,
                                                     modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
@@ -172,7 +172,7 @@ fun signPage() {
                                                     modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(1f)
                                                 )
                                                 Text(
-                                                    it.KeyPass,
+                                                    it.keyPass,
                                                     fontSize = 10.sp,
                                                     color = Color.DarkGray,
                                                     modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp).weight(3f)
@@ -193,7 +193,7 @@ fun signPage() {
                             if (it.size != 1) return@onExternalDrag
                             val file = it[0]
                             if (file.contains(".keystore") || file.contains(".jks")) {
-                                changeSign = SignFile(StoreFile = file)
+                                changeSign = SignFile(storeFile = file)
                                 showSignInfoDialog.value = true
                             }
                         }
@@ -203,7 +203,7 @@ fun signPage() {
         }
         if (showSignInfoDialog.value) {
             showSignInfoSetDialog(showSignInfoDialog, changeSign) { result ->
-                signList.remove(result)
+                signList.removeIf { it.name == result.name }
                 signList.add(result)
             }
         }
@@ -217,10 +217,10 @@ private fun showSignInfoSetDialog(
     callback: ((SignFile) -> Unit)
 ) {
     val inputName = mutableStateOf(signFile.name)
-    val inputStoreFile = mutableStateOf(signFile.StoreFile)
-    val inputStorePass = mutableStateOf(signFile.StorePass)
-    val inputKeyAlias = mutableStateOf(signFile.KeyAlias)
-    val inputKeyPass = mutableStateOf(signFile.KeyPass)
+    val inputStoreFile = mutableStateOf(signFile.storeFile)
+    val inputStorePass = mutableStateOf(signFile.storePass)
+    val inputKeyAlias = mutableStateOf(signFile.keyAlias)
+    val inputKeyPass = mutableStateOf(signFile.keyPass)
 
     AlertDialog(onDismissRequest = {
         showSignInfoDialog.value = false
@@ -266,13 +266,13 @@ private fun showSignInfoSetDialog(
                         input = inputStoreFile,
                         hint = "请输入签名文件位置",
                     ) {
-                        signFile.StoreFile = it
-                        inputStoreFile.value = signFile.StoreFile
+                        signFile.storeFile = it
+                        inputStoreFile.value = signFile.storeFile
                     }
                     Button(onClick = {
                         FileSelector.showFileSelector(arrayOf("keystore", "jks")) {
-                            signFile.StoreFile = it
-                            inputStoreFile.value = signFile.StoreFile
+                            signFile.storeFile = it
+                            inputStoreFile.value = signFile.storeFile
                         }
                     }, modifier = Modifier.padding(start = 8.dp)) {
                         Text("选择")
@@ -288,8 +288,8 @@ private fun showSignInfoSetDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     visualTransformation = PasswordVisualTransformation()
                 ) {
-                    signFile.StorePass = it
-                    inputStorePass.value = signFile.StorePass
+                    signFile.storePass = it
+                    inputStorePass.value = signFile.storePass
                 }
             }
             Row(
@@ -299,8 +299,8 @@ private fun showSignInfoSetDialog(
                     input = inputKeyAlias,
                     hint = "请输入签名别名"
                 ) {
-                    signFile.KeyAlias = it
-                    inputKeyAlias.value = signFile.KeyAlias
+                    signFile.keyAlias = it
+                    inputKeyAlias.value = signFile.keyAlias
                 }
             }
             Row(
@@ -312,8 +312,8 @@ private fun showSignInfoSetDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     visualTransformation = PasswordVisualTransformation()
                 ) {
-                    signFile.KeyPass = it
-                    inputKeyPass.value = signFile.KeyPass
+                    signFile.keyPass = it
+                    inputKeyPass.value = signFile.keyPass
                 }
             }
         }
