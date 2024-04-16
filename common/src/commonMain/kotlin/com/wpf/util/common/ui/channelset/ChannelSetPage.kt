@@ -275,6 +275,7 @@ fun channelPage() {
                                             contentAlignment = Alignment.BottomEnd
                                         ) {
                                             IconButton(onClick = {
+                                                if (isRunDealFile) return@IconButton
                                                 if (pathList.isEmpty()) {
 
                                                 } else {

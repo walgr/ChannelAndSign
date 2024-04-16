@@ -20,9 +20,9 @@ import javax.swing.JFileChooser
 
 @Preview
 @Composable
-fun Title(title: String, onClick: (() -> Unit)? = null) {
+fun Title(title: String, modifier: Modifier? = null, onClick: (() -> Unit)? = null) {
     Box(
-        modifier = Modifier.fillMaxWidth().height(44.dp),
+        modifier = modifier ?: Modifier.fillMaxWidth().height(44.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -48,7 +48,11 @@ fun Title(title: String, onClick: (() -> Unit)? = null) {
 
 @Preview
 @Composable
-fun SelectFileAddTitle(title: String, fileFilter: Array<String> = arrayOf(), onFileSelected: ((String) -> Unit)? = null) {
+fun SelectFileAddTitle(
+    title: String,
+    fileFilter: Array<String> = arrayOf(),
+    onFileSelected: ((String) -> Unit)? = null
+) {
     Box(
         modifier = Modifier.fillMaxWidth().height(44.dp),
         contentAlignment = Alignment.Center

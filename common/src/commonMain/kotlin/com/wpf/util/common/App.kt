@@ -25,6 +25,7 @@ import com.wpf.util.common.ui.base.Menu
 import com.wpf.util.common.ui.channelset.channelPage
 import com.wpf.util.common.ui.configset.configPage
 import com.wpf.util.common.ui.dosign.doSignPage
+import com.wpf.util.common.ui.jiagu.jiaguPage
 import com.wpf.util.common.ui.mainBgColor
 import com.wpf.util.common.ui.marketplace.marketPlacePage
 import com.wpf.util.common.ui.signset.signPage
@@ -44,7 +45,8 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
 //    }
     val menuList = remember {
         mutableStateListOf(
-            Menu("渠道打包", true),
+            Menu("加固", true),
+            Menu("渠道打包"),
             Menu("签名打包"),
             Menu("市场配置"),
             Menu("签名配置"),
@@ -108,14 +110,16 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                     .background(color = Color(226, 228, 246))
             ) {
                 if (menuList[0].isSelectState.value) {
-                    channelPage()
+                    jiaguPage()
                 } else if (menuList[1].isSelectState.value) {
-                    doSignPage()
+                    channelPage()
                 } else if (menuList[2].isSelectState.value) {
-                    marketPlacePage()
+                    doSignPage()
                 } else if (menuList[3].isSelectState.value) {
-                    signPage()
+                    marketPlacePage()
                 } else if (menuList[4].isSelectState.value) {
+                    signPage()
+                } else if (menuList[5].isSelectState.value) {
                     configPage()
                 }
             }

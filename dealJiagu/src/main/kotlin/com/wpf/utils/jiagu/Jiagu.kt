@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.wpf.utils.ex.FileUtil
 import com.wpf.utils.ex.checkWinPath
 import com.wpf.utils.ex.createCheck
+import com.wpf.utils.jiagu.utils.RSAUtil
 import com.wpf.utils.tools.ManifestEditorUtil
 import com.wpf.utils.tools.SignHelper
 import net.dongliu.apk.parser.ApkParsers
@@ -18,6 +19,7 @@ import kotlin.random.Random
 
 class ApkConfig(
     private val srcApplicationName: String,
+    var publicKeyFilePath: String = "",
     val dexInfoList: MutableList<DexInfo> = mutableListOf()
 ) {
     class DexInfo(
@@ -44,11 +46,12 @@ object Jiagu {
      * 3. 对保存的修改信息加密
      */
     fun deal(
-        srcApkPath: String, privateKeyFilePath: String = "",
+        srcApkPath: String, privateKeyFilePath: String = "", publicKeyFilePath: String = "",
         signFilePath: String = "",
         signAlias: String = "",
         keyStorePassword: String = "",
         keyPassword: String = "",
+        showLog: Boolean = false,
     ) {
         if (srcApkPath.isEmpty()) {
             throw IllegalArgumentException("该文件地址为空！")
@@ -56,6 +59,9 @@ object Jiagu {
         val srcApkFile = File(srcApkPath)
         if (!srcApkFile.exists() || !srcApkFile.canRead() || srcApkFile.extension != "apk") {
             throw IllegalArgumentException("该文件非apk或者不可读取：${srcApkPath}")
+        }
+        if (showLog) {
+            println("开始加固：${srcApkPath}")
         }
         val cachePathFile = File(srcApkFile.parent + File.separator + "cache").createCheck(false)
         val jiaguApkFile =
@@ -83,7 +89,9 @@ object Jiagu {
         srcDexInputStreamMap.forEach {
             val dexName = it.first
             val inputStream = it.second
-            println("处理${dexName}")
+            if (showLog) {
+                println("处理${dexName}")
+            }
             val jiaguDexFile =
                 File(cachePathFile.path + File.separator + dexName.replace(".dex", ".wpfjiagu")).createCheck(true)
             jiaguDexFile.writeText("")
@@ -93,12 +101,18 @@ object Jiagu {
             val allBytes = inputStream.readBytes()
             val allCount = allBytes.size
             do {
-                println("正在处理${startPos}-${startPos + step}")
-                val randomPos = Random.nextInt(min(step - jiaguFragmentLength, allCount - startPos.toInt()))
-                println("获取随机位置${startPos + randomPos}")
+                if (showLog) {
+                    println("正在处理${startPos}-${startPos + step}")
+                }
+                val randomPos = Random.nextInt(min(step, allCount - startPos.toInt()) - jiaguFragmentLength)
+                if (showLog) {
+                    println("获取随机位置${startPos + randomPos}")
+                }
                 val readBytesForFragment =
                     allBytes.sliceArray(startPos.toInt() + randomPos until startPos.toInt() + randomPos + jiaguFragmentLength)
-                println("获取${readBytesForFragment.size}长度的数据保存到配置文件中")
+                if (showLog) {
+                    println("获取${readBytesForFragment.size}长度的数据保存到配置文件中")
+                }
                 repeat(jiaguFragmentLength) { pos ->
                     allBytes[startPos.toInt() + randomPos + pos] = 0
                 }
@@ -125,8 +139,24 @@ object Jiagu {
             )
             jiaguDexFile.delete()
         }
+        var apkConfigStr = Gson().toJson(apkConfig)
         apkConfig.dexInfoList.addAll(configModelList)
-        jiaguConfigFile.writeText(Gson().toJson(apkConfig))
+        if (privateKeyFilePath.isNotEmpty() && publicKeyFilePath.isNotEmpty()) {
+            val srcPrivateKeyFile = File(privateKeyFilePath)
+            val srcPublicKeyFile = File(publicKeyFilePath)
+            if (!srcPrivateKeyFile.exists() || !srcPublicKeyFile.exists()) return
+            val publicKeyFile = File(cachePathFile.path + File.separator + "publicKey.cer")
+            srcPublicKeyFile.copyTo(publicKeyFile, true)
+            apkConfig.publicKeyFilePath = "assets/jiagu_wpf/" + publicKeyFile.name
+            apkConfigStr = Gson().toJson(apkConfig)
+            apkConfigStr = RSAUtil.encryptByPrivateKey(apkConfigStr, srcPrivateKeyFile.readText())
+            jiaguApk.add(
+                BytesSource(
+                    publicKeyFile.toPath(), "assets/jiagu_wpf/" + publicKeyFile.name, Deflater.DEFAULT_COMPRESSION
+                )
+            )
+        }
+        jiaguConfigFile.writeText(apkConfigStr)
         jiaguApk.add(
             BytesSource(
                 jiaguConfigFile.toPath(), "assets/" + jiaguConfigFile.name, Deflater.DEFAULT_COMPRESSION
@@ -170,7 +200,9 @@ object Jiagu {
         jiaguConfigFile.delete()
         jiaguApk.close()
         if (signFilePath.isNotEmpty()) {
-            println("正在对加固包签名")
+            if (showLog) {
+                println("正在对加固包签名")
+            }
             SignHelper.sign(
                 signFilePath.checkWinPath(),
                 signAlias,
@@ -180,8 +212,13 @@ object Jiagu {
                 jiaguApkFile.path.checkWinPath(),
                 true
             )
-            println("签名完成： ${jiaguApkFile.path.replace(".apk", "_sign.apk")}")
+            if (showLog) {
+                println("签名完成： ${jiaguApkFile.path.replace(".apk", "_sign.apk")}")
+            }
         }
         cachePathFile.deleteRecursively()
+        if (showLog) {
+            println("加固完成：${srcApkPath}")
+        }
     }
 }

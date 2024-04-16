@@ -19,6 +19,7 @@ kotlin {
                 api(compose.material)
                 api(project(":base"))
                 api(project(":WebView"))
+                api(project(":dealJiagu"))
                 api("org.apache.directory.studio:org.apache.commons.codec:1.8")
                 api("org.bouncycastle:bcprov-jdk18on:1.75")
                 api("net.dongliu:apk-parser:2.6.10")

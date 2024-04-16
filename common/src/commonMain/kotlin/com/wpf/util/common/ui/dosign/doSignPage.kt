@@ -96,6 +96,7 @@ fun doSignPage() {
                                     contentAlignment = Alignment.BottomEnd
                                 ) {
                                     IconButton(onClick = {
+                                        if (isRunDealFile) return@IconButton
                                         if (dealFileList.isEmpty()) {
 
                                         } else {
