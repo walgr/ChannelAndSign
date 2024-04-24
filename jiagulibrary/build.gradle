@@ -39,6 +39,6 @@ dependencies {
 tasks.register("dealRelease", Copy) {
     group = "jiagu"
     dependsOn("assembleRelease")
-    from("jiagulibrary/build/outputs/aar/jiagulibrary-release.aar")
-    into("dealJiagu/src/resources/jiagulibrary-release.aar")
+    from("build/outputs/aar/jiagulibrary-release.aar")
+    into("../dealJiagu/src/main/resources/")
 }
