@@ -562,8 +562,8 @@ void AES_CTR_xcrypt_buffer(struct AES_ctx *ctx, uint8_t *buf, uint32_t length)
 
 #endif // #if defined(CTR) && (CTR == 1)
 
-const char* AES_KEYCODE = "bajk3b4j3bvuoa3h";
-const char* AES_IV = "mers46ha35ga23hn";
+const char* AES_KEYCODE = "183ehypp8zaokmvf";
+const char* AES_IV = "7dtu4vzwdwosceej";
 
 char* tiny_aes_encrypt_cbc(char* in, int inLen, int* outLen)
 {

@@ -12,9 +12,11 @@ public class AssetsUtil {
     public static String copyJiagu(Context context) {
         String absolutePath = Objects.requireNonNull(context.getFilesDir().getParentFile()).getAbsolutePath();
         File jiaguDir = new File(absolutePath, ".jiagu");
-        if (!jiaguDir.exists()) {
-            jiaguDir.mkdir();
+        if (jiaguDir.exists()) {
+            jiaguDir.delete();
         }
+        jiaguDir.mkdir();
+
         String destSo = absolutePath + "/.jiagu/libjiagu" + StubApp.VERSION +".so";
 
         boolean is64 = Build.CPU_ABI.contains("64") || Build.CPU_ABI2.contains("64");
