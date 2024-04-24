@@ -7,6 +7,7 @@ fun main(args: Array<String>? = null) {
     }
     var srcApkPath = ""
     var privateKeyFilePath = ""
+    var publicKeyFilePath = ""
     var signFilePath = ""
     var signAlias = ""
     var keyStorePassword = ""
@@ -23,6 +24,9 @@ fun main(args: Array<String>? = null) {
         if ("-privateKeyFilePath" == arg) {
             privateKeyFilePath = nextInput
         }
+        if ("-publicKeyFilePath" == arg) {
+            publicKeyFilePath = nextInput
+        }
         if ("-signFilePath" == arg) {
             signFilePath = nextInput
         }
@@ -38,6 +42,6 @@ fun main(args: Array<String>? = null) {
     }
     println("开始加固")
     val startTime = System.currentTimeMillis()
-    Jiagu.deal(srcApkPath, privateKeyFilePath, signFilePath, signAlias, keyStorePassword, keyPassword)
+    Jiagu.deal(srcApkPath, privateKeyFilePath, publicKeyFilePath, signFilePath, signAlias, keyStorePassword, keyPassword)
     println("加固结束，用时:${System.currentTimeMillis() - startTime}")
 }
