@@ -79,7 +79,7 @@ object Jiagu {
         soFileList.forEach {
             jiaguApkZip.add(
                 BytesSource(
-                    it.value.toPath(), "assets/" + it.key, Deflater.DEFAULT_COMPRESSION
+                    it.value.toPath(), "assets/" + it.key, Deflater.BEST_COMPRESSION
                 )
             )
         }
@@ -128,15 +128,13 @@ object Jiagu {
         val mergeDex = DexHelper.mergeDex(keDexByteArray, encryptData!!)
         //添加壳Dex
         val mainDexName = "classes.dex"
-        val mergeDexFile = File(cachePathFile.path + File.separator + mainDexName).createCheck(true)
-        mergeDexFile.writeBytes(mergeDex)
         //删除原包内所有dex
         srcDexList.forEach {
             jiaguApkZip.delete(it.first)
         }
         jiaguApkZip.add(
             BytesSource(
-                mergeDexFile.toPath(), mainDexName, Deflater.DEFAULT_COMPRESSION
+                mergeDex, mainDexName, Deflater.BEST_COMPRESSION
             )
         )
 
