@@ -105,9 +105,9 @@ static void init(JNIEnv *env, jobject application) {
         env->DeleteLocalRef(dexDir);
         env->DeleteLocalRef(path);
 
-        char vm_path[128];
-        sprintf(vm_path, "%s/vm.dex", g_jiagu_path);
-        write_vm_dex(vm_path);
+//        char vm_path[128];
+//        sprintf(vm_path, "%s/vm.dex", g_jiagu_path);
+//        write_vm_dex(vm_path);
     }
 }
 
