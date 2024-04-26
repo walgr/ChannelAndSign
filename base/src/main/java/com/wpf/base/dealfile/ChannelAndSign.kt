@@ -65,10 +65,15 @@ object ChannelAndSign {
         val dealFile = File(inputFilePath)
         if (dealFile.exists() && dealFile.isFile && "apk" == dealFile.extension) {
             println("处理文件:${dealFile.name}")
-            noSignApkList.add(dealFile.path)
+            val apkFileList = dealFile.parentFile.listFiles()?.filter {
+                it.isFile && "apk" == it.extension && (fileFilter.isEmpty() || it.name.contains(fileFilter))
+            }
+            apkFileList?.forEach {
+                noSignApkList.add(it.path)
+            }
             val curPath = dealFile.parent + File.separator
             dealChannel(dealFile) {
-                val channelPath = getChannelPath(curPath).ifEmpty { curPath }
+                val channelPath = getChannelPath(curPath)
                 signPath(dealSign, channelPath, !dealChannel(), finish)
             }
         } else if (dealFile.isDirectory) {
@@ -90,7 +95,7 @@ object ChannelAndSign {
                     }
                 }
                 if (apkFileList?.isNotEmpty() == true) {
-                    val channelPath = getChannelPath(inputFilePath).ifEmpty { inputFilePath }
+                    val channelPath = getChannelPath(inputFilePath)
                     signPath(dealSign, channelPath, !dealChannel(), finish)
                 } else {
                     println("目录下未找到apk")
@@ -110,7 +115,7 @@ object ChannelAndSign {
             if (!(channelPath.startsWith(File.separator) || channelPath.contains(":"))) channelPath =
                 curPath + channelPath
         }
-        return channelPath
+        return channelPath.ifEmpty { curPath }
     }
 
     /**
