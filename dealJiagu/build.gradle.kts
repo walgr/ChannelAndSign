@@ -24,3 +24,25 @@ java {
 kotlin {
     jvmToolchain(8)
 }
+
+tasks.register("zipJiaguLibrary", Zip::class) {
+    group = "jiagu"
+    archiveFileName = "jiaguLibrary.zip"
+    destinationDirectory = layout.projectDirectory.dir("src/main/resources")
+    from("../jiagulibrary") {
+        include("src/**", "build.gradle")
+        into("jiagulibrary")
+    }
+    from(
+        "../gradle") {
+        into("gradle")
+    }
+    from(
+        "../jiagulibrary/settings.gradle.kts",
+        "../jiagulibrary/build.gradle.kts",
+        "../jiagulibrary/local.properties",
+        "../gradlew",
+        "../gradle.properties",
+        "../gradlew.bat"
+    )
+}

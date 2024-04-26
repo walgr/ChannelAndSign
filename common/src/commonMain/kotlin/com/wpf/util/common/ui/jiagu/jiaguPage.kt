@@ -32,16 +32,14 @@ import com.wpf.util.common.ui.widget.common.InputView
 import com.wpf.util.common.ui.widget.common.ItemView
 import com.wpf.util.common.ui.widget.common.SelectFileAddTitle
 import com.wpf.util.common.ui.widget.common.Title
-import com.wpf.utils.curPath
-import com.wpf.utils.ex.createCheck
 import com.wpf.utils.jiagu.Jiagu
 import com.wpf.utils.jiagu.utils.AES128Helper
 import com.wpf.utils.jiagu.utils.AES128Helper.KEY_VI
-import com.wpf.utils.jiagu.utils.RSAUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import javax.swing.JFileChooser
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -51,8 +49,9 @@ fun jiaguPage() {
     var isRunDealFile by remember { mutableStateOf(false) }
     val dealFileList by autoSaveListComposable("jiaguDealFileList") { remember { mutableStateListOf<Path>() } }
 
-    val inputPrivateKeyFilePath by autoSaveComposable("privateKeyFilePath") { remember { mutableStateOf("") } }
-    val inputPublicKeyFilePath by autoSaveComposable("publicKeyFilePath") { remember { mutableStateOf("") } }
+    val inputAes128Key by autoSaveComposable("inputAes128Key") { remember { mutableStateOf("") } }
+    val inputAes128KeyIV by autoSaveComposable("inputAes128KeyIV") { remember { mutableStateOf("") } }
+    val inputAndroidSdkPath by autoSaveComposable("inputAndroidSdkPath") { remember { mutableStateOf("") } }
 
     Box {
         Row {
@@ -90,33 +89,69 @@ fun jiaguPage() {
                                     ) {
                                         InputView(
                                             modifier = Modifier.weight(1f),
-                                            input = inputPrivateKeyFilePath,
+                                            input = inputAes128Key,
                                             hint = "请输入密钥"
                                         ) {
-                                            inputPrivateKeyFilePath.value = it
+                                            inputAes128Key.value = it
                                         }
                                     }
 
                                     Row(
-                                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 8.dp, end = 16.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                            .padding(start = 16.dp, top = 8.dp, end = 16.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         InputView(
                                             modifier = Modifier.weight(1f),
-                                            input = inputPublicKeyFilePath,
+                                            input = inputAes128KeyIV,
                                             hint = "请输入密钥IV"
                                         ) {
-                                            inputPublicKeyFilePath.value = it
+                                            inputAes128KeyIV.value = it
                                         }
                                     }
                                 }
                                 Button(onClick = {
                                     AES128Helper.DEFAULT_SECRET_KEY = AES128Helper.getRandom(16)
                                     KEY_VI = AES128Helper.getRandom(16)
-                                    inputPrivateKeyFilePath.value = AES128Helper.DEFAULT_SECRET_KEY
-                                    inputPublicKeyFilePath.value = KEY_VI
+                                    inputAes128Key.value = AES128Helper.DEFAULT_SECRET_KEY
+                                    inputAes128KeyIV.value = KEY_VI
                                 }, modifier = Modifier.padding(top = 8.dp)) {
                                     Text("生成新密钥IV")
+                                }
+
+                                Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = 16.dp)) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.wrapContentWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Title("加固打包设置", modifier = Modifier.wrapContentWidth().height(44.dp))
+                                        }
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth()
+                                                .padding(start = 16.dp, top = 8.dp, end = 16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+//                                            Row {
+                                                InputView(
+                                                    modifier = Modifier.weight(1f),
+                                                    input = inputAndroidSdkPath,
+                                                    hint = "请输入Android SDK"
+                                                ) {
+                                                    inputAndroidSdkPath.value = it
+                                                }
+                                                Button(onClick = {
+                                                    FileSelector.showFileSelector(selectionMode = JFileChooser.DIRECTORIES_ONLY) {
+                                                        inputAndroidSdkPath.value = it
+                                                    }
+                                                }, modifier = Modifier.padding(start = 8.dp)) {
+                                                    Text("选择")
+                                                }
+//                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -174,12 +209,17 @@ fun jiaguPage() {
                                                 if (apkPathList.isEmpty()) return@IconButton
                                                 CoroutineScope(Dispatchers.Default).launch {
                                                     apkPathList.forEach {
-                                                        Jiagu.deal(
-                                                            it,
-                                                            privateKeyFilePath = inputPrivateKeyFilePath.value,
-                                                            publicKeyFilePath = inputPublicKeyFilePath.value,
-                                                            showLog = true
-                                                        )
+                                                        runCatching {
+                                                            Jiagu.deal(
+                                                                it,
+                                                                secretKey = inputAes128Key.value,
+                                                                keyVi = inputAes128KeyIV.value,
+                                                                androidSdkPath = inputAndroidSdkPath.value,
+                                                                showLog = true
+                                                            )
+                                                        }.getOrElse {
+                                                            println("加固失败：${it.message}")
+                                                        }
                                                     }
                                                     isRunDealFile = false
                                                 }
