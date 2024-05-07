@@ -1,8 +1,5 @@
 package com.wpf.utils.jiagu.utils
 
-import com.wpf.utils.jiagu.utils.RSAUtil.decryptByPublicKey
-import com.wpf.utils.jiagu.utils.RSAUtil.encryptByPrivateKey
-import com.wpf.utils.jiagu.utils.RSAUtil.generateKeyPair
 import org.apache.commons.codec.binary.Base64
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
@@ -86,7 +83,7 @@ object RSAUtil {
                 cipher.doFinal(data.toByteArray(), offset, inputLen - offset)
             }
             out.write(cache, 0, cache.size)
-            i++
+            i += 1
             offset = i * MAX_ENCRYPT_BLOCK
         }
         val encryptedData = out.toByteArray()
@@ -125,33 +122,12 @@ object RSAUtil {
                 cipher.doFinal(dataBytes, offset, inputLen - offset)
             }
             out.write(cache, 0, cache.size)
-            i++
+            i += 1
             offset = i * MAX_DECRYPT_BLOCK
         }
         val decryptedData = out.toByteArray()
         out.close()
         // 解密后的内容
         return String(decryptedData, StandardCharsets.UTF_8)
-    }
-}
-
-fun main() {
-    try {
-        // 生成密钥对
-        val rsaKeyPair = generateKeyPair()
-        println("私钥:" + rsaKeyPair.privateKey)
-        println("公钥:" + rsaKeyPair.publicKey)
-
-        // RSA 私钥加密
-        val data1 = "待加密的文字内容"
-        val encryptPrivateKeyData = encryptByPrivateKey(data1, rsaKeyPair.privateKey)
-        println("私钥加密后内容:$encryptPrivateKeyData")
-        // RSA 公钥解密
-        val decryptPublicKeyData = decryptByPublicKey(encryptPrivateKeyData, rsaKeyPair.publicKey)
-        println("公钥解密后内容:$decryptPublicKeyData")
-
-    } catch (e: java.lang.Exception) {
-        e.printStackTrace()
-        print("加解密异常")
     }
 }
