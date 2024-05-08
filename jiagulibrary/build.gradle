@@ -35,10 +35,3 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
 }
-
-tasks.register("dealRelease", Copy) {
-    group = "jiagu"
-    dependsOn("assembleRelease")
-    from("build/outputs/aar/jiagulibrary-release.aar")
-    into("../dealJiagu/src/main/resources/")
-}

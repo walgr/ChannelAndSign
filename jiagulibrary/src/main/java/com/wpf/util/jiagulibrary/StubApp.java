@@ -2,12 +2,10 @@ package com.wpf.util.jiagulibrary;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 import com.wpf.util.jiagulibrary.utils.ApplicationHook;
-import com.wpf.util.jiagulibrary.utils.AssetsUtil;
 import com.wpf.util.jiagulibrary.utils.IO;
 
-import java.io.*;
+import static com.wpf.util.jiagulibrary.utils.AssetsUtil.copyJiaGu;
 
 public class StubApp extends Application {
     /**
@@ -19,7 +17,7 @@ public class StubApp extends Application {
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(context);
 
-        System.load(AssetsUtil.copyJiagu(context));
+        System.load(copyJiaGu(context));
 
         attach(this);
     }
@@ -33,7 +31,7 @@ public class StubApp extends Application {
 
     @Override
     public String getPackageName() {
-        return "JIAGU"; // 如果有ContentProvider，修改getPackageName后会重走createPackageContext
+        return "jiagu"; // 如果有ContentProvider，修改getPackageName后会重走createPackageContext
     }
 
     @Override

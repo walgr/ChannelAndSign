@@ -13,8 +13,8 @@ pluginManagement {
         kotlin("plugin.serialization").version(extra["kotlin.version"] as String)
         id("org.jetbrains.compose").version(extra["compose.version"] as String)
         id("com.android.application") version "7.4.2"
-        id("org.jetbrains.kotlin.android") version "1.9.21"
         id("com.android.library") version "7.4.2"
+        id("org.jetbrains.kotlin.android") version "1.9.21"
     }
 }
 

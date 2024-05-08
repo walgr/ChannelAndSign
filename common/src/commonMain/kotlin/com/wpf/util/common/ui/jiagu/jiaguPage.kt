@@ -93,6 +93,7 @@ fun jiaguPage() {
                                             hint = "请输入密钥"
                                         ) {
                                             inputAes128Key.value = it
+                                            AES128Helper.DEFAULT_SECRET_KEY = it
                                         }
                                     }
 
@@ -107,6 +108,7 @@ fun jiaguPage() {
                                             hint = "请输入密钥IV"
                                         ) {
                                             inputAes128KeyIV.value = it
+                                            AES128Helper.KEY_VI = it
                                         }
                                     }
                                 }

@@ -1,6 +1,3 @@
-group = "com.wpf.compose.desktop"
-version = "1.0-SNAPSHOT"
-
 allprojects {
     repositories {
         mavenLocal()

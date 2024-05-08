@@ -9,6 +9,12 @@ import java.io.InputStream
 
 object ApplicationHelper {
 
+    fun getPackageName(srcApkFile: File): String? {
+        val srcManifestFileStr = ApkParsers.getManifestXml(srcApkFile)
+        val applicationStr = "(?<=<manifest)(.*?)(?=>)".toRegex().find(srcManifestFileStr)!!.value
+        return "(?<=package=\")(.*?)(?=\")".toRegex().find(applicationStr)?.value
+    }
+
     fun getName(srcApkFile: File): String? {
         val srcManifestFileStr = ApkParsers.getManifestXml(srcApkFile)
         val applicationStr = "(?<=<application)(.*?)(?=>)".toRegex().find(srcManifestFileStr)!!.value

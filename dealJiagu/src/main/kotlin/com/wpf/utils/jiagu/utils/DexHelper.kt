@@ -1,21 +1,63 @@
 package com.wpf.utils.jiagu.utils
 
 import com.android.zipflinger.ZipArchive
+import com.wpf.utils.jiagu.utils.parsedex.ParseDexUtils
+import com.wpf.utils.jiagu.utils.parsedex.Utils
+import com.wpf.utils.jiagu.utils.parsedex.struct.CodeItem
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.util.zip.Adler32
 
 object DexHelper {
-    fun getApkSrcDexList(jiaguApk: ZipArchive): List<Pair<String, InputStream>> {
-        val srcDexList = jiaguApk.listEntries().filter {
+
+    fun getApkSrcDexList(apk: ZipArchive): List<Pair<String, InputStream>> {
+        val srcDexList = apk.listEntries().filter {
             it.endsWith("dex")
         }.sortedBy {
             (it.replace("classes", "").replace(".dex", "").ifEmpty { "1" }).toInt()
         }
         return srcDexList.map {
-            it to jiaguApk.getInputStream(it)
+            it to apk.getInputStream(it)
         }
+    }
+
+    fun dealAllFunctionInNopInDex(
+        dexBytes: ByteArray,
+        whiteList: Array<String>? = null,
+        blackList: Array<String>? = null,
+        maxDealSize: Int = Integer.MAX_VALUE,
+    ): ByteArray {
+        val parseDexHelper = ParseDexUtils()
+        parseDexHelper.parseAll(dexBytes)
+        val allFunctionMap = mutableMapOf<String, CodeItem>().apply {
+            putAll(parseDexHelper.directMethodCodeItemMap)
+            putAll(parseDexHelper.virtualMethodCodeItemMap)
+        }
+        val byteBuffer = ByteArrayOutputStream()
+        var count = 0
+        allFunctionMap.forEach { (funName, codeItem) ->
+            if (count++ < maxDealSize) {
+                if (!whiteList.isNullOrEmpty() && whiteList.find { funName.contains(it, false) } == null) {
+                    return@forEach
+                }
+                if (!blackList.isNullOrEmpty() && blackList.find { funName.contains(it, false) } != null) {
+                    return@forEach
+                }
+                val nopBytes = ByteArray(codeItem.insns_size * 2)
+                repeat(codeItem.insns_size * 2) {
+                    nopBytes[it] = 0
+                }
+                val oldData = Utils.replaceBytes(dexBytes, nopBytes, codeItem.insnsOffset)
+                byteBuffer.write(EncryptUtils.intToByteArray(codeItem.insnsOffset))
+                byteBuffer.write(EncryptUtils.intToByteArray(nopBytes.size))
+                byteBuffer.write(oldData)
+            }
+
+        }
+//        fixDex(dexBytes)
+        return byteBuffer.toByteArray()
     }
 
     fun mergeDex(mainDex: ByteArray, mergeDex: ByteArray): ByteArray {
@@ -54,18 +96,18 @@ object DexHelper {
     /**
      * 处理dex
      *
-     * @param newdex
+     * @param newDex
      *
      * @throws NoSuchAlgorithmException
      */
     @Throws(NoSuchAlgorithmException::class)
-    private fun fixDex(newdex: ByteArray) {
+    private fun fixDex(newDex: ByteArray) {
         //修改DEX file size文件头
-        fixFileSizeHeader(newdex)
+        fixFileSizeHeader(newDex)
         //修改DEX SHA1 文件头
-        fixSHA1Header(newdex)
+        fixSHA1Header(newDex)
         //修改DEX CheckSum文件头
-        fixCheckSumHeader(newdex)
+        fixCheckSumHeader(newDex)
     }
 
     /**

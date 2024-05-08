@@ -9,13 +9,13 @@ import java.io.*;
 import java.util.Objects;
 
 public class AssetsUtil {
-    public static String copyJiagu(Context context) {
+    public static String copyJiaGu(Context context) {
         String absolutePath = Objects.requireNonNull(context.getFilesDir().getParentFile()).getAbsolutePath();
-        File jiaguDir = new File(absolutePath, ".jiagu");
-        if (jiaguDir.exists()) {
-            jiaguDir.delete();
+        File jiaGuDir = new File(absolutePath, ".jiagu");
+        if (jiaGuDir.exists()) {
+            boolean result = jiaGuDir.delete();
         }
-        jiaguDir.mkdir();
+        boolean result = jiaGuDir.mkdir();
 
         String destSo = absolutePath + "/.jiagu/libjiagu" + StubApp.VERSION +".so";
 
@@ -37,46 +37,29 @@ public class AssetsUtil {
     }
 
     private static void writeFile(Context context, String in, String out) {
-        if (new File(out).exists())
+        File outFile = new File(out);
+        if (outFile.exists()) {
             return;
+        }
 
-        File jiaguDir = new File(out).getParentFile();
-        if (jiaguDir != null) {
-            File[] files = jiaguDir.listFiles();
+        File jiaGuDir = outFile.getParentFile();
+        if (jiaGuDir != null) {
+            File[] files = jiaGuDir.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    file.delete();
+                    boolean result = file.delete();
+                    if (!result) continue;
                 }
             }
         }
 
-        InputStream is = null;
-        OutputStream os = null;
-        try {
-            is = context.getAssets().open(in);
-            os = new FileOutputStream(out);
+        try (InputStream is = context.getAssets().open(in); OutputStream os = new FileOutputStream(out)) {
             byte[] buffer = new byte[1024 * 8];
             int read;
             while ((read = is.read(buffer)) != -1) {
                 os.write(buffer, 0, read);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (os != null) {
-                try {
-                    os.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        } catch (IOException ignore) {
         }
     }
 }

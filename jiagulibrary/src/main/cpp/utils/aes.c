@@ -630,7 +630,6 @@ char* tiny_aes_decrypt_cbc(char* in, int inLen, int* outLen)
   //获取pad的值
   int padValue = in[padLen - 1];
   //LOGD("[+]padValue:%d\n", padValue);
-
   if ((padValue == 0) || (padValue > AES_BLOCK_SIZE))
   {
     //错误的padding，解密失败

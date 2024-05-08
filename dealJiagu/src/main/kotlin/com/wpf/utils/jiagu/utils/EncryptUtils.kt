@@ -4,8 +4,8 @@ object EncryptUtils {
     /**
      * dex头(也就是前112位进行异或)
      */
-    fun encryptXor(data: ByteArray): ByteArray {
-        for (i in 0..111) {
+    fun encryptXor(data: ByteArray, len: Int = 112): ByteArray {
+        for (i in 0 until len) {
             data[i] = (data[i].toInt() xor 0x66).toByte()
         }
 

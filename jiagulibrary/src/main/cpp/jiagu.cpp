@@ -254,9 +254,22 @@ static void hook_application(jobject app, jstring name) {
     CallObjectMethod(app,  "invoke2", "(Landroid/app/Application;Ljava/lang/String;)V", app, name);
 }
 
+
+void restoreDexData(char *dexData, char *srcData, int srcDataLength) {
+    int index = 0;
+    while (index < srcDataLength) {
+        int insnsOffset = byte2Int(srcData, index);
+        index += 4;
+        int srcDataSize = byte2Int(srcData, index);
+        index += 4;
+        memcpy(dexData + insnsOffset, srcData + index, srcDataSize);
+        index += srcDataSize;
+    }
+}
+
 /**
  * Dex加密格式
- * 壳dex + (1字节application名长度 + app的application名 + 4字节源dex大小 + 源dex) + 4字节源dex2大小 + [源dex2] + 4字节源dex3大小 + [源dex3] + ... + 4字节壳dex大小
+ * 壳dex + (1字节application名长度 + app的application名 + 4字节源dex大小 + 源dex + 4字节源dex抽取代码大小 + 源dex抽取代码) + 4字节源dex2大小 + [源dex2] + 4字节源dex2抽取代码大小 + 源dex2抽取代码+ 4字节源dex3大小 + [源dex3] + ... + 4字节壳dex大小
  * 小括号的数据前512字节进行AES加密
  * 中括号的数据的dex头(也就是前112位进行异或)
  */
@@ -264,22 +277,16 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
 
     jbyte* dexData = env->GetByteArrayElements(dexArray, NULL);
     jint dexlen = env->GetArrayLength(dexArray);
-
     // 4字节壳dex大小
     int shell_len = byte2Int(reinterpret_cast<char *>(dexData), dexlen - 4);
-
-    // 前512字节进行AES加密
+    // 前512字节进行AES解密
     int tmp;
-    int decryptdex_len = dexlen - shell_len - 16 - 4; // AES加密后数据长度会增加16字节，这里要去掉
-
+    int decryptdex_len = dexlen - 4 - shell_len - 16; // AES加密后数据长度会增加16字节，这里要去掉
     char *decryptdex = (char *) malloc(decryptdex_len * sizeof(char));
-
     char *temp = tiny_aes_decrypt_cbc(reinterpret_cast<char *>(dexData + shell_len), 512 + 16, &tmp);
-
+    int tempSize = strlen(temp);
     memcpy(decryptdex, temp, tmp);
-
     memcpy(decryptdex + tmp, dexData + shell_len + 512 + 16, decryptdex_len - tmp);
-
 
     // 获取application name
     int app_len = decryptdex[0];
@@ -328,6 +335,12 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
         }
 
         index += dexLength;
+        int oldDexDataLength = byte2Int((char *) decryptdex, index);
+        index += 4;
+        char *oldDexData = (char *) malloc(oldDexDataLength * sizeof(char));
+        memcpy(oldDexData, decryptdex + index, oldDexDataLength);
+        restoreDexData(decryptdex + (index - dexLength - 4), oldDexData, oldDexDataLength);
+        index += oldDexDataLength;
         count++;
     }
 

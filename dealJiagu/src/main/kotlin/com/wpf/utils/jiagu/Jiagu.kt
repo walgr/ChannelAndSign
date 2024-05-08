@@ -85,7 +85,7 @@ object Jiagu {
             }
             val process = ProcessBuilder(cmd).directory(File(projectRootPath)).start()
             LogStreamThread(process.inputStream, false).start()
-            LogStreamThread(process.errorStream).start()
+            LogStreamThread(process.errorStream, false).start()
             val result = process.waitFor()
             if (showLog) {
                 println(if (result == 0) "AAR打包成功" else "AAR打包失败")
@@ -160,6 +160,7 @@ object Jiagu {
             if (showLog) {
                 println("合并原始apk中dex并加密")
             }
+            //1字节application名长度 + app的application名
             var tempDex = ByteArray(1 + srcApplicationName.length)
             tempDex[0] = srcApplicationName.length.toByte()
             System.arraycopy(
@@ -173,31 +174,56 @@ object Jiagu {
             var encryptData: ByteArray? = null
             srcDexList.forEachIndexed { index, pair ->
                 val dexByteArray = pair.second.readBytes()
+                val oldDataArray = DexHelper.dealAllFunctionInNopInDex(
+                    dexByteArray,
+                    whiteList = arrayOf(
+                        (ApplicationHelper.getPackageName(srcApkFile)
+                            ?: srcApplicationName.substring(0, srcApplicationName.lastIndexOf("."))).replace(".", "/")
+                    ),
+                    blackList = arrayOf("databinding")
+                )
+//                File(cachePathFile.path + File.separator + pair.first).createCheck(true, dexByteArray.clone())
                 if (index == 0) {
-                    tempDex =
-                        tempDex.copyOf(tempDex.size + 4 + dexByteArray.size) // 扩容 1字节application名长度 + app的application名 + 4字节源dex大小 + 源dex
+                    // 扩容 4字节源dex大小 + 源dex + 4字节源dex抽取代码大小 + 源dex抽取代码
+                    tempDex = tempDex.copyOf(tempDex.size + 4 + dexByteArray.size + 4 + oldDataArray.size)
                     System.arraycopy(
                         EncryptUtils.intToByteArray(dexByteArray.size),
                         0,
                         tempDex,
-                        tempDex.size - 4 - dexByteArray.size,
+                        tempDex.size - dexByteArray.size - 4 - oldDataArray.size - 4,
                         4
                     ) // 4字节源dex大小
                     System.arraycopy(
                         dexByteArray,
                         0,
                         tempDex,
-                        tempDex.size - dexByteArray.size,
+                        tempDex.size - dexByteArray.size - oldDataArray.size - 4,
                         dexByteArray.size
                     ) // 源dex
+                    System.arraycopy(
+                        EncryptUtils.intToByteArray(oldDataArray.size),
+                        0,
+                        tempDex,
+                        tempDex.size - oldDataArray.size - 4,
+                        4
+                    ) // 4字节源dex抽取代码大小
+                    System.arraycopy(
+                        oldDataArray,
+                        0,
+                        tempDex,
+                        tempDex.size - oldDataArray.size,
+                        oldDataArray.size
+                    ) // 源dex抽取代码
                     encryptData = encrypt(tempDex, 512)
                 } else {
-                    encryptData = encryptData!!.copyOf(encryptData!!.size + 4 + dexByteArray.size) // 扩容
+                    // 扩容 4字节源dex大小 + 源dex + 4字节源dex抽取代码大小 + 源dex抽取代码
+                    encryptData =
+                        encryptData!!.copyOf(encryptData!!.size + 4 + dexByteArray.size + 4 + oldDataArray.size)
                     System.arraycopy(
                         EncryptUtils.intToByteArray(dexByteArray.size),
                         0,
                         encryptData!!,
-                        encryptData!!.size - 4 - dexByteArray.size,
+                        encryptData!!.size - dexByteArray.size - 4 - oldDataArray.size - 4,
                         4
                     ) // 4字节源dex大小
                     tempDex = EncryptUtils.encryptXor(dexByteArray)
@@ -205,15 +231,30 @@ object Jiagu {
                         tempDex,
                         0,
                         encryptData!!,
-                        encryptData!!.size - dexByteArray.size,
+                        encryptData!!.size - dexByteArray.size - oldDataArray.size - 4,
                         dexByteArray.size
-                    )
+                    ) // 源dex
+                    System.arraycopy(
+                        EncryptUtils.intToByteArray(oldDataArray.size),
+                        0,
+                        encryptData!!,
+                        encryptData!!.size - oldDataArray.size - 4,
+                        4
+                    ) // 4字节源dex抽取代码大小
+                    System.arraycopy(
+                        oldDataArray,
+                        0,
+                        encryptData!!,
+                        encryptData!!.size - oldDataArray.size,
+                        oldDataArray.size
+                    ) // 源dex抽取代码
                 }
             }
             // 合并dex
             if (showLog) {
-                println("合并加密dex到壳dex")
+                println("合并加密dex(${encryptData!!.size})到壳dex(${keDexByteArray.size})")
             }
+
             val mergeDex = DexHelper.mergeDex(keDexByteArray, encryptData!!)
             //添加壳Dex
             val mainDexName = "classes.dex"
@@ -226,10 +267,9 @@ object Jiagu {
                     mergeDex, mainDexName, Deflater.BEST_COMPRESSION
                 )
             )
-
             val stubAppName = "com.wpf.util.jiagulibrary.StubApp"
             if (showLog) {
-                println("修改AndroidManifest中Android:name=${stubAppName}")
+                println("修改AndroidManifest为壳App${stubAppName}")
             }
             //修改manifest的Application为解密的
             val androidManifest = "AndroidManifest.xml"
@@ -241,7 +281,7 @@ object Jiagu {
             jiaguApkZip.delete(androidManifest)
             jiaguApkZip.add(
                 BytesSource(
-                    fixManifestFile.toPath(), androidManifest, Deflater.DEFAULT_COMPRESSION
+                    fixManifestFile.toPath(), androidManifest, Deflater.BEST_COMPRESSION
                 )
             )
             fixManifestFile.delete()
@@ -266,10 +306,13 @@ object Jiagu {
             }
             cachePathFile.deleteRecursively()
             if (showLog) {
-                println("加固完成：${srcApkPath}")
+                println("加固完成：${srcApkPath},加固包：${jiaguApkFile.path}")
             }
         }.getOrElse {
             File(File(srcApkPath).parent + File.separator + "cache").deleteRecursively()
+            if (showLog) {
+                it.printStackTrace()
+            }
             throw it
         }
     }
