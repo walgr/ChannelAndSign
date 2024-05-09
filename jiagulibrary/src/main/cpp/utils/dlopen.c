@@ -4,13 +4,14 @@
  *  https://github.com/rrrfff/ndk_dlopen
  *
  */
-#include "dlopen.h"
 #include <stdlib.h>
 #include <limits.h>
 #include <sys/mman.h>
 #include <sys/system_properties.h>
 #include <sys/user.h>
 #include <string.h>
+
+#include "dlopen.h"
 #include "plog.h"
 
 static volatile int SDK_INT = 0;

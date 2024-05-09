@@ -1,9 +1,6 @@
 //
 // Created by zhouming on 2021/9/18.
 //
-
-#include "memload.h"
-
 #include <android/log.h>
 #include <string.h>
 #include <cstdlib>
@@ -12,8 +9,9 @@
 #include <map>
 
 #include "dex_header.h"
-#include "utils/dlopen.h"
-#include "utils/plog.h"
+#include "memload.h"
+#include "dlopen.h"
+#include "plog.h"
 
 typedef void *(*org_artDexFileOpenMemory21)(const uint8_t *base, size_t size,
                                             const std::string &location, uint32_t location_checksum,

@@ -15,7 +15,7 @@
 #include "utils/invoke_java.h"
 #include "utils/aes.h"
 #include "utils/dlopen.h"
-#include "memload.h"
+#include "utils/memload.h"
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 

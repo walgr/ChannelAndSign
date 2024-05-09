@@ -11,10 +11,12 @@ add_library(
         jiagu
         SHARED
         jiagu.cpp
-        memload.cpp
+        utils/And64InlineHook.cpp
+        utils/memload.cpp
         utils/aes.c
         utils/dlopen.c
-        utils/invoke_java.cpp)
+        utils/invoke_java.cpp
+)
 
 include_directories(
         utils
