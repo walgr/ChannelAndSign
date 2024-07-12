@@ -302,7 +302,7 @@ object Jiagu {
                 )
                 if (signOutFile.isNotEmpty()) {
                     if (showLog) {
-                        println("签名完成： ${signOutFile}")
+                        println("签名完成：$signOutFile")
                     }
                 } else {
                     if (showLog) {
@@ -314,9 +314,10 @@ object Jiagu {
             if (showLog) {
                 println("加固完成：${srcApkPath},加固包：${jiaguApkFile.path}")
             }
-        }.getOrElse {
+        }.onFailure {
             File(File(srcApkPath).parent + File.separator + "cache").deleteRecursively()
             if (showLog) {
+                println(it.message)
                 it.printStackTrace()
             }
             throw it

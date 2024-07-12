@@ -18,6 +18,7 @@ fun main(args: Array<String>? = null) {
     var keyStorePassword = ""
     var keyPassword = ""
     var cachePath = ""
+    var isDebug = false
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
         if (arg.startsWith("-") && nextInput.startsWith("-")) {
@@ -57,6 +58,9 @@ fun main(args: Array<String>? = null) {
         if ("-cachePath" == arg) {
             cachePath = nextInput
         }
+        if ("-isDebug" == arg) {
+            isDebug = nextInput == "1"
+        }
     }
     ResourceManager.serverBaseUrl = serviceBaseUrl
     ResourceManager.cachePath = cachePath
@@ -71,7 +75,8 @@ fun main(args: Array<String>? = null) {
         signFilePath = signFilePath,
         signAlias = signAlias,
         keyStorePassword = keyStorePassword,
-        keyPassword = keyPassword
+        keyPassword = keyPassword,
+        showLog = isDebug
     )
-    println("加固结束，用时:${System.currentTimeMillis() - startTime}")
+    println("加固结束，用时:${System.currentTimeMillis() - startTime}毫秒")
 }

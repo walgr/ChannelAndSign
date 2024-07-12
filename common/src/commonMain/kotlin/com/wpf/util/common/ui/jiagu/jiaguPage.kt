@@ -219,7 +219,7 @@ fun jiaguPage() {
                                                                 androidSdkPath = inputAndroidSdkPath.value,
                                                                 showLog = true
                                                             )
-                                                        }.getOrElse {
+                                                        }.onFailure {
                                                             println("加固失败：${it.message}")
                                                         }
                                                     }
