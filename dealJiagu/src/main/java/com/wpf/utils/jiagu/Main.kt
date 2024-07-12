@@ -1,10 +1,13 @@
 package com.wpf.utils.jiagu
 
+import com.wpf.utils.ResourceManager
+
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
         println("参数异常，请检查输入")
         return
     }
+    var serviceBaseUrl = "http://0.0.0.0:8080/"
     var srcApkPath = ""
     var secretKey = ""
     var secretKeyVi = ""
@@ -14,11 +17,15 @@ fun main(args: Array<String>? = null) {
     var signAlias = ""
     var keyStorePassword = ""
     var keyPassword = ""
+    var cachePath = ""
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
         if (arg.startsWith("-") && nextInput.startsWith("-")) {
             println("参数异常，请检查输入:$arg")
             return
+        }
+        if ("-serviceBaseUrl" == arg) {
+            serviceBaseUrl = nextInput
         }
         if ("-srcApk" == arg) {
             srcApkPath = nextInput
@@ -47,7 +54,12 @@ fun main(args: Array<String>? = null) {
         if ("-keyPassword" == arg) {
             keyPassword = nextInput
         }
+        if ("-cachePath" == arg) {
+            cachePath = nextInput
+        }
     }
+    ResourceManager.serverBaseUrl = serviceBaseUrl
+    ResourceManager.cachePath = cachePath
     println("开始加固")
     val startTime = System.currentTimeMillis()
     Jiagu.deal(

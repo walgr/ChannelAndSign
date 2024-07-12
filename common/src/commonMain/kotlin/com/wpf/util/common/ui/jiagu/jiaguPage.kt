@@ -32,7 +32,7 @@ import com.wpf.util.common.ui.widget.common.InputView
 import com.wpf.util.common.ui.widget.common.ItemView
 import com.wpf.util.common.ui.widget.common.SelectFileAddTitle
 import com.wpf.util.common.ui.widget.common.Title
-import com.wpf.utils.jiagu.Jiagu
+import jiagu.Jiagu
 import com.wpf.utils.jiagu.utils.AES128Helper
 import com.wpf.utils.jiagu.utils.AES128Helper.KEY_VI
 import kotlinx.coroutines.CoroutineScope
@@ -212,7 +212,7 @@ fun jiaguPage() {
                                                 CoroutineScope(Dispatchers.Default).launch {
                                                     apkPathList.forEach {
                                                         runCatching {
-                                                            Jiagu.deal(
+                                                            jiagu.Jiagu.deal(
                                                                 it,
                                                                 secretKey = inputAes128Key.value,
                                                                 keyVi = inputAes128KeyIV.value,

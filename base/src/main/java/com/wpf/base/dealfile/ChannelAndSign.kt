@@ -238,7 +238,6 @@ object ChannelAndSign {
         } else {
             logList.add("获取渠道apk内渠道信息:失败，请排查问题!!!")
         }
-        logList.add("")
         return logList
     }
 
@@ -281,20 +280,26 @@ object ChannelAndSign {
         if (noSignApkList.contains(inputFile.path) && !outputNew) return arrayListOf("原始Apk文件:${inputFile.path}，不处理")
         if (!inputFile.isFile || "apk" != inputFile.extension) return arrayListOf("非Apk文件，未处理")
         val logList = arrayListOf<String>()
-        if (SignHelper.sign(
-                signFile = signFile,
-                signAlias = signAlias,
-                keyStorePassword = signPassword,
-                keyPassword = signAliasPassword,
-                outApkPath = if (outputNew) inputFile.path.replace(
-                    inputFile.nameWithoutExtension,
-                    inputFile.nameWithoutExtension + "_sign"
-                ) else "",
-                inputApkPath = inputFile.path,
-                reserveInput = noSignApkList.contains(inputFile.path)
-            )
-        ) {
-            logList.add("签名成功：$inputFile")
+        logList.add("正在签名：${inputFile}...")
+        val newApkFileName = if (outputNew) inputFile.path.replace(
+            inputFile.nameWithoutExtension,
+            inputFile.nameWithoutExtension + "_sign"
+        ) else ""
+        val signOutFile = SignHelper.sign(
+            signFile = signFile,
+            signAlias = signAlias,
+            keyStorePassword = signPassword,
+            keyPassword = signAliasPassword,
+            outApkPath = newApkFileName,
+            inputApkPath = inputFile.path,
+            reserveInput = noSignApkList.contains(inputFile.path)
+        )
+        if (signOutFile.isNotEmpty()) {
+            if (outputNew) {
+                logList.add("签名成功：${signOutFile}")
+            } else {
+                logList.add("签名成功：$inputFile")
+            }
         } else {
             logList.add("签名失败：$inputFile")
         }

@@ -291,7 +291,7 @@ object Jiagu {
                 if (showLog) {
                     println("正在对加固包签名")
                 }
-                SignHelper.sign(
+                val signOutFile = SignHelper.sign(
                     signFilePath.checkWinPath(),
                     signAlias,
                     keyStorePassword,
@@ -300,8 +300,14 @@ object Jiagu {
                     jiaguApkFile.path.checkWinPath(),
                     true
                 )
-                if (showLog) {
-                    println("签名完成： ${jiaguApkFile.path.replace(".apk", "_sign.apk")}")
+                if (signOutFile.isNotEmpty()) {
+                    if (showLog) {
+                        println("签名完成： ${signOutFile}")
+                    }
+                } else {
+                    if (showLog) {
+                        println("签名失败")
+                    }
                 }
             }
             cachePathFile.deleteRecursively()
