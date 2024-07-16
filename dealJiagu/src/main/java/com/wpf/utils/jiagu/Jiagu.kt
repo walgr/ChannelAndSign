@@ -84,8 +84,8 @@ object Jiagu {
                 cmd.addAll(arrayOf("-D", "org.gradle.java.home=${jdkPath}"))
             }
             val process = ProcessBuilder(cmd).directory(File(projectRootPath)).start()
-            LogStreamThread(process.inputStream, false).start()
-            LogStreamThread(process.errorStream, false).start()
+            LogStreamThread(process.inputStream, showLog).start()
+            LogStreamThread(process.errorStream, showLog).start()
             val result = process.waitFor()
             if (showLog) {
                 println(if (result == 0) "AAR打包成功" else "AAR打包失败")
@@ -286,6 +286,9 @@ object Jiagu {
             )
             fixManifestFile.delete()
             jiaguApkZip.close()
+            if (showLog) {
+                println("加固完成：${srcApkPath},加固包：${jiaguApkFile.path}")
+            }
             //签名
             if (signFilePath.isNotEmpty()) {
                 if (showLog) {
@@ -311,9 +314,6 @@ object Jiagu {
                 }
             }
             cachePathFile.deleteRecursively()
-            if (showLog) {
-                println("加固完成：${srcApkPath},加固包：${jiaguApkFile.path}")
-            }
         }.onFailure {
             File(File(srcApkPath).parent + File.separator + "cache").deleteRecursively()
             if (showLog) {
