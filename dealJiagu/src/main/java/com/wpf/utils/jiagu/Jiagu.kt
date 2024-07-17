@@ -299,9 +299,9 @@ object Jiagu {
                     signAlias,
                     keyStorePassword,
                     keyPassword,
-                    "",
-                    jiaguApkFile.path.checkWinPath(),
-                    true
+                    outApkPath = "",
+                    inputApkPath = jiaguApkFile.path.checkWinPath(),
+                    false
                 )
                 if (signOutFile.isNotEmpty()) {
                     if (showLog) {
