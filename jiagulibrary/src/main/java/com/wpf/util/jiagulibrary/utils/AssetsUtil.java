@@ -12,10 +12,10 @@ public class AssetsUtil {
     public static String copyJiaGu(Context context) {
         String absolutePath = Objects.requireNonNull(context.getFilesDir().getParentFile()).getAbsolutePath();
         File jiaGuDir = new File(absolutePath, ".jiagu");
-        if (jiaGuDir.exists()) {
-            boolean result = jiaGuDir.delete();
+        if (!jiaGuDir.exists()) {
+            boolean result = jiaGuDir.mkdir();
         }
-        boolean result = jiaGuDir.mkdir();
+//        boolean result = jiaGuDir.mkdir();
 
         String destSo = absolutePath + "/.jiagu/libjiagu" + StubApp.VERSION +".so";
 
@@ -29,10 +29,7 @@ public class AssetsUtil {
         }
 
         Log.w("NDK_JIAGU", "soName:" + soName);
-
-
         writeFile(context, soName, destSo);
-
         return destSo;
     }
 
@@ -52,7 +49,6 @@ public class AssetsUtil {
                 }
             }
         }
-
         try (InputStream is = context.getAssets().open(in); OutputStream os = new FileOutputStream(out)) {
             byte[] buffer = new byte[1024 * 8];
             int read;

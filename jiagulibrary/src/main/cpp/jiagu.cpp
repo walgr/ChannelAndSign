@@ -283,7 +283,9 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
     int tmp;
     int decryptdex_len = dexlen - 4 - shell_len - 16; // AES加密后数据长度会增加16字节，这里要去掉
     char *decryptdex = (char *) malloc(decryptdex_len * sizeof(char));
+    LOGD("decrypt start");
     char *temp = tiny_aes_decrypt_cbc(reinterpret_cast<char *>(dexData + shell_len), 512 + 16, &tmp);
+    LOGD("decrypt end");
     int tempSize = strlen(temp);
     memcpy(decryptdex, temp, tmp);
     memcpy(decryptdex + tmp, dexData + shell_len + 512 + 16, decryptdex_len - tmp);

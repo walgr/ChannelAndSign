@@ -16,6 +16,9 @@ import com.wpf.utils.jiagu.utils.EncryptUtils
 import com.wpf.utils.tools.DXUtil
 import com.wpf.utils.tools.LogStreamThread
 import com.wpf.utils.tools.SignHelper
+import net.lingala.zip4j.ZipFile
+import net.lingala.zip4j.model.ZipParameters
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.zip.Deflater
 
@@ -45,12 +48,11 @@ object Jiagu {
             if (showLog) {
                 println("开始加固：${srcApkPath}")
             }
-            val cachePathFile = File(srcApkFile.parent + File.separator + "cache").createCheck(false)
+            val cachePathFile = File(srcApkFile.parent + File.separator + "tmp").createCheck(false)
             val jiaguApkFile =
                 File(srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_jiagu." + srcApkFile.extension)
             srcApkFile.copyTo(jiaguApkFile, true)
-            val jiaguApkZip = ZipArchive(jiaguApkFile.toPath())
-            val srcDexList = DexHelper.getApkSrcDexList(jiaguApkZip)
+            var jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
 
             val jiaguLibraryZip = ResourceManager.getResourceFile("jiaguLibrary.zip")
             val projectRootPath = cachePathFile.path + File.separator + "jiaguLibrary" + File.separator
@@ -126,17 +128,17 @@ object Jiagu {
             val soFileList = mutableMapOf(
                 "libjiagu_64.so" to File(jiaguReleaseAARPath + File.separator + "jni/arm64-v8a/libjiagu.so"),
             )
-            if (jiaguApkZip.getInputStream("lib/armeabi-v7a") != null) {
+            if (jiaguApkZipArchive.getInputStream("lib/armeabi-v7a") != null) {
                 soFileList["libjiagu.so"] = File(jiaguReleaseAARPath + File.separator + "jni/armeabi-v7a/libjiagu.so")
             }
-            if (jiaguApkZip.getInputStream("lib/x86") != null) {
+            if (jiaguApkZipArchive.getInputStream("lib/x86") != null) {
                 soFileList["libjiagu.so"] = File(jiaguReleaseAARPath + File.separator + "jni/x86/libjiagu.so")
             }
-            if (jiaguApkZip.getInputStream("lib/x86_64") != null) {
+            if (jiaguApkZipArchive.getInputStream("lib/x86_64") != null) {
                 soFileList["libjiagu.so"] = File(jiaguReleaseAARPath + File.separator + "jni/x86_64/libjiagu.so")
             }
             soFileList.forEach {
-                jiaguApkZip.add(
+                jiaguApkZipArchive.add(
                     BytesSource(
                         it.value.toPath(), "assets/" + it.key, Deflater.BEST_COMPRESSION
                     )
@@ -172,6 +174,7 @@ object Jiagu {
             ) // app的application名
 
             var encryptData: ByteArray? = null
+            val srcDexList = DexHelper.getApkSrcDexList(jiaguApkZipArchive)
             srcDexList.forEachIndexed { index, pair ->
                 val dexByteArray = pair.second.readBytes()
                 val oldDataArray = DexHelper.dealAllFunctionInNopInDex(
@@ -182,7 +185,6 @@ object Jiagu {
                     ),
                     blackList = arrayOf("databinding")
                 )
-//                File(cachePathFile.path + File.separator + pair.first).createCheck(true, dexByteArray.clone())
                 if (index == 0) {
                     // 扩容 4字节源dex大小 + 源dex + 4字节源dex抽取代码大小 + 源dex抽取代码
                     tempDex = tempDex.copyOf(tempDex.size + 4 + dexByteArray.size + 4 + oldDataArray.size)
@@ -256,17 +258,30 @@ object Jiagu {
             }
 
             val mergeDex = DexHelper.mergeDex(keDexByteArray, encryptData!!)
+
             //添加壳Dex
             val mainDexName = "classes.dex"
-            //删除原包内所有dex
-            srcDexList.forEach {
-                jiaguApkZip.delete(it.first)
+            if (showLog) {
+                println("合并后${mainDexName}:${mergeDex.size}")
             }
-            jiaguApkZip.add(
+            //删除原包内所有dex
+            val srcDexNameList = srcDexList.map {
+                it.first
+            }
+            srcDexList.forEach {
+                it.second.close()
+            }
+            jiaguApkZipArchive.close()
+            var jiaguApkZip = ZipFile(jiaguApkFile)
+            jiaguApkZip.removeFiles(srcDexNameList)
+            jiaguApkZip.close()
+            jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
+            jiaguApkZipArchive.add(
                 BytesSource(
                     mergeDex, mainDexName, Deflater.BEST_COMPRESSION
                 )
             )
+
             val stubAppName = "com.wpf.util.jiagulibrary.StubApp"
             if (showLog) {
                 println("修改AndroidManifest为壳App${stubAppName}")
@@ -275,17 +290,22 @@ object Jiagu {
             val androidManifest = "AndroidManifest.xml"
             val fixManifestFile = ApplicationHelper.setNewName(
                 srcApkFile.parent,
-                jiaguApkZip.getInputStream(androidManifest),
+                jiaguApkZipArchive.getInputStream(androidManifest),
                 stubAppName
             )
-            jiaguApkZip.delete(androidManifest)
-            jiaguApkZip.add(
+            jiaguApkZipArchive.close()
+            jiaguApkZip = ZipFile(jiaguApkFile)
+            jiaguApkZip.removeFile(androidManifest)
+            jiaguApkZip.close()
+            jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
+//            jiaguApkZipArchive.delete(androidManifest)
+            jiaguApkZipArchive.add(
                 BytesSource(
                     fixManifestFile.toPath(), androidManifest, Deflater.BEST_COMPRESSION
                 )
             )
             fixManifestFile.delete()
-            jiaguApkZip.close()
+            jiaguApkZipArchive.close()
             if (showLog) {
                 println("加固完成：${srcApkPath},加固包：${jiaguApkFile.path}")
             }
@@ -315,7 +335,7 @@ object Jiagu {
             }
             cachePathFile.deleteRecursively()
         }.onFailure {
-            File(File(srcApkPath).parent + File.separator + "cache").deleteRecursively()
+            File(File(srcApkPath).parent + File.separator + "tmp").deleteRecursively()
             if (showLog) {
                 println(it.message)
                 it.printStackTrace()

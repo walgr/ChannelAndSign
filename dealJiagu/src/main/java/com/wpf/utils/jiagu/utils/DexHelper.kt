@@ -4,6 +4,7 @@ import com.android.zipflinger.ZipArchive
 import com.wpf.utils.jiagu.utils.parsedex.ParseDexUtils
 import com.wpf.utils.jiagu.utils.parsedex.Utils
 import com.wpf.utils.jiagu.utils.parsedex.struct.CodeItem
+import net.lingala.zip4j.ZipFile
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
@@ -11,6 +12,17 @@ import java.security.NoSuchAlgorithmException
 import java.util.zip.Adler32
 
 object DexHelper {
+
+    fun getApkSrcDexList(apk: ZipFile): List<Pair<String, InputStream>> {
+        val srcDexList = apk.fileHeaders.filter {
+            it.fileName.endsWith("dex")
+        }.sortedBy {
+            (it.fileName.replace("classes", "").replace(".dex", "").ifEmpty { "1" }).toInt()
+        }
+        return srcDexList.map {
+            it.fileName to apk.getInputStream(it)
+        }
+    }
 
     fun getApkSrcDexList(apk: ZipArchive): List<Pair<String, InputStream>> {
         val srcDexList = apk.listEntries().filter {

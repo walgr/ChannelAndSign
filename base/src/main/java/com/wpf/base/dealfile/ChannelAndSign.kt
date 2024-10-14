@@ -277,7 +277,7 @@ object ChannelAndSign {
     }
 
     private fun signApk(inputFile: File, outputNew: Boolean = false): List<String> {
-        if (noSignApkList.contains(inputFile.path) && !outputNew) return arrayListOf("原始Apk文件:${inputFile.path}，不处理")
+        if (noSignApkList.contains(inputFile.path) && !outputNew) return arrayListOf("不处理过滤Apk:${inputFile.path}")
         if (!inputFile.isFile || "apk" != inputFile.extension) return arrayListOf("非Apk文件，未处理")
         val logList = arrayListOf<String>()
         logList.add("正在签名：${inputFile}...")
