@@ -17,8 +17,6 @@ import com.wpf.utils.tools.DXUtil
 import com.wpf.utils.tools.LogStreamThread
 import com.wpf.utils.tools.SignHelper
 import net.lingala.zip4j.ZipFile
-import net.lingala.zip4j.model.ZipParameters
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.zip.Deflater
 
