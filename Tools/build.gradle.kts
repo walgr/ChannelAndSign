@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.wpf.utils"
-val versionName = "1.1.14"
+val versionName = "1.1.15"
 version = versionName
 
 dependencies {

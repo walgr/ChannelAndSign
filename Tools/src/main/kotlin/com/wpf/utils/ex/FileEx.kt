@@ -22,6 +22,18 @@ fun File.createCheck(isFile: Boolean = false, data: ByteArray? = null): File {
     return this
 }
 
+fun File.getChildFileList(): List<File>? {
+    if (!exists()) return null
+    if (isFile) return listOf(this)
+    val childFileList = mutableListOf<File>()
+    listFiles()?.forEach {
+        it.getChildFileList()?.let { childList ->
+            childFileList.addAll(childList)
+        }
+    }
+    return childFileList
+}
+
 fun File.md5(): String {
     return DigestUtils.md5Hex(inputStream())
 }
