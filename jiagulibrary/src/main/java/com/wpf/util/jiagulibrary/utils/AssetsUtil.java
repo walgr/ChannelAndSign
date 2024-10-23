@@ -19,10 +19,12 @@ public class AssetsUtil {
 
         String destSo = absolutePath + "/.jiagu/libjiagu" + StubApp.VERSION +".so";
 
-        boolean is64 = Build.CPU_ABI.contains("64") || Build.CPU_ABI2.contains("64");
-        String soName = is64 ? "libjiagu_64.so" : "libjiagu.so";
-
-        if ("x86".equals(Build.CPU_ABI)) {
+        String soName = "libjiagu.so";
+        if ("arm64-v8a".equals(Build.CPU_ABI)) {
+            soName = "libjiagu_v8a.so";
+        } else if ("armeabi-v7a".equals(Build.CPU_ABI)) {
+            soName = "libjiagu_v7a.so";
+        } else if ("x86".equals(Build.CPU_ABI)) {
             soName = "libjiagu_x86.so";
         } else if ("x86_64".equals(Build.CPU_ABI)) {
             soName = "libjiagu_x86_64.so";

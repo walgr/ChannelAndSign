@@ -15,6 +15,9 @@ object ApplicationHelper {
         return "(?<=package=\")(.*?)(?=\")".toRegex().find(applicationStr)?.value
     }
 
+    /**
+     * 带包名
+     */
     fun getName(srcApkFile: File): String? {
         val srcManifestFileStr = ApkParsers.getManifestXml(srcApkFile)
         val applicationStr = "(?<=<application)(.*?)(?=>)".toRegex().find(srcManifestFileStr)!!.value

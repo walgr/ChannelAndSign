@@ -8,9 +8,12 @@ import java.io.File
 
 object ResourceManager {
 
-    fun getTempPath() = curPath + "temp" + File.separator
+    fun getTempPath() = curPath + File.separator + "temp" + File.separator
     var serverBaseUrl = "http://0.0.0.0:8080/"
     var cachePath = ""
+        get() {
+            return field.ifEmpty { rootPath }
+        }
 
     fun getResourceFile(
         resource: String,
@@ -24,7 +27,7 @@ object ResourceManager {
             return runBlocking {
                 CacheFile.downloadFileSuspend(
                     "${serverBaseUrl}getResources?name=$resource",
-                    outFilePath = outPath.ifEmpty { cachePath.ifEmpty { rootPath } + File.separator + "cache" + File.separator + resource.checkWinPath() })!!
+                    outFilePath = outPath.ifEmpty { cachePath + File.separator + "cache" + File.separator + resource.checkWinPath() })!!
             }
         } else {
             val outFile = File(outPath.ifEmpty { getTempPath() + resource })

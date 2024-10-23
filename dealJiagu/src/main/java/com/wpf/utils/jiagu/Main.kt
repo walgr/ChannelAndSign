@@ -66,7 +66,7 @@ fun main(args: Array<String>? = null) {
     ResourceManager.cachePath = cachePath
     println("开始加固")
     val startTime = System.currentTimeMillis()
-    Jiagu.deal(
+    JiaGu.deal(
         srcApkPath = srcApkPath,
         secretKey = secretKey,
         keyVi = secretKeyVi,
