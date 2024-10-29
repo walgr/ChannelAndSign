@@ -6,6 +6,7 @@ import com.wpf.utils.ResourceManager
 import com.wpf.utils.ex.FileUtil
 import com.wpf.utils.ex.checkWinPath
 import com.wpf.utils.ex.createCheck
+import com.wpf.utils.ex.md5
 import com.wpf.utils.isLinuxRuntime
 import com.wpf.utils.isMacRuntime
 import com.wpf.utils.isWinRuntime
@@ -48,13 +49,16 @@ object JiaGu {
             }
             val packageName = ApplicationHelper.getPackageName(srcApkFile)
             val srcApplicationName = ApplicationHelper.getName(srcApkFile) ?: ""
+            val jiaguApkFile =
+                File(srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_jiagu." + srcApkFile.extension)
             val jiaGuHashKey = arrayOf(
                 srcApplicationName,
                 ApkParsers.getMetaInfo(srcApkFile).versionName,
                 secretKey,
                 keyVi,
                 androidSdkPath,
-                jdkPath
+                jdkPath,
+                jiaguApkFile.md5(),
             ).joinToString()
             if (showLog) {
                 println("加固HashKey:$jiaGuHashKey")
@@ -72,8 +76,6 @@ object JiaGu {
                 println("开始加固：${srcApkPath}")
             }
             val cachePathFile = File(srcApkFile.parent + File.separator + "tmp").createCheck(false)
-            val jiaguApkFile =
-                File(srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_jiagu." + srcApkFile.extension)
             srcApkFile.copyTo(jiaguApkFile, true)
             var jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
             val jiaguCachePath =
