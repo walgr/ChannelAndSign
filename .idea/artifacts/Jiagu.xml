@@ -6,11 +6,14 @@
         <element id="file-copy" path="$PROJECT_DIR$/dealJiagu/src/main/META-INF/MANIFEST.MF" />
       </element>
       <element id="module-output" name="ChannelAndSign.dealJiagu.main" />
+      <element id="dir-copy" path="$PROJECT_DIR$/dealJiagu/src/main/resources" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-classic/1.2.13/e9f3458e7354fe4917081237c01fa4999f4e1b86/logback-classic-1.2.13.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-core/1.2.13/8ae4a32ed4937b5ebff6891a93c5e957f4e81655/logback-core-1.2.13.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.android.tools/annotations/30.3.1/bf7c0de4844ebdce4eec08b202d24d8f1f7ac520/annotations-30.3.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.android/zipflinger/7.3.1/16999dcec6ec960f9dc53c76081936bd545b4dc9/zipflinger-7.3.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/b3add478d4382b78ea20b1671390a858002feb6c/gson-2.10.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.m2/repository/com/wpf/utils/tools/1.1.16/tools-1.1.16.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.16.0/4e3eb3d79888d76b54e28b350915b5dc3919c9de/commons-codec-1.16.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-cio-jvm/2.3.7/ae282ac05f077d74e41e6c3723b7ddab289020a7/ktor-client-cio-jvm-2.3.7.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-core-jvm/2.3.7/4f6ad3be8d4c35d3075f4a6f28fa80b9e20674d5/ktor-client-core-jvm-2.3.7.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-events-jvm/2.3.7/a0d00d60f13b5dd647954a7858c486eff75a2898/ktor-events-jvm-2.3.7.jar" path-in-jar="/" />
@@ -34,8 +37,6 @@
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-slf4j/1.7.1/19000bdfff969d1c7019d3a4ef66fb27b687e7e9/kotlinx-coroutines-slf4j-1.7.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/23.0.0/8cc20c07506ec18e0834947b84a864bfc094484e/annotations-23.0.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.36/6c62681a2f655b49963a5983b8b0950a6120ae14/slf4j-api-1.7.36.jar" path-in-jar="/" />
-      <element id="dir-copy" path="$PROJECT_DIR$/dealJiagu/src/main/resources" />
-      <element id="extracted-dir" path="$USER_HOME$/.m2/repository/com/wpf/utils/tools/1.1.16/tools-1.1.16.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

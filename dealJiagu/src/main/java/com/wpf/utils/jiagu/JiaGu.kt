@@ -49,8 +49,7 @@ object JiaGu {
             }
             val packageName = ApplicationHelper.getPackageName(srcApkFile)
             val srcApplicationName = ApplicationHelper.getName(srcApkFile) ?: ""
-            val jiaguApkFile =
-                File(srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_jiagu." + srcApkFile.extension)
+            val jiaguLibraryZip = ResourceManager.getResourceFile("jiaguLibrary.zip")
             val jiaGuHashKey = arrayOf(
                 srcApplicationName,
                 ApkParsers.getMetaInfo(srcApkFile).versionName,
@@ -58,7 +57,7 @@ object JiaGu {
                 keyVi,
                 androidSdkPath,
                 jdkPath,
-                jiaguApkFile.md5(),
+                jiaguLibraryZip.md5(),
             ).joinToString()
             if (showLog) {
                 println("加固HashKey:$jiaGuHashKey")
@@ -76,6 +75,8 @@ object JiaGu {
                 println("开始加固：${srcApkPath}")
             }
             val cachePathFile = File(srcApkFile.parent + File.separator + "tmp").createCheck(false)
+            val jiaguApkFile =
+                File(srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_jiagu." + srcApkFile.extension)
             srcApkFile.copyTo(jiaguApkFile, true)
             var jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
             val jiaguCachePath =
@@ -98,7 +99,7 @@ object JiaGu {
                 if (showLog) {
                     println("加固壳不存在，正在处理生成加固壳")
                 }
-                val jiaguLibraryZip = ResourceManager.getResourceFile("jiaguLibrary.zip")
+
                 val projectRootPath = cachePathFile.path + File.separator + "jiaguLibrary" + File.separator
                 FileUtil.unZipFiles(jiaguLibraryZip, projectRootPath)
                 ResourceManager.delResourceByPath(jiaguLibraryZip.path)
