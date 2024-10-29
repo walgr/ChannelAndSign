@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.wpf.utils"
-val versionName = "1.1.15"
+val versionName = "1.1.16"
 version = versionName
 
 dependencies {
@@ -13,6 +13,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:2.3.7")
     api("ch.qos.logback:logback-classic:1.2.13")
     api("commons-codec:commons-codec:1.16.0")
+    api("com.google.code.gson:gson:2.10.1")
 }
 
 java {

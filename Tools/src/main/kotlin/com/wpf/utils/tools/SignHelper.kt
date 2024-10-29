@@ -33,7 +33,12 @@ object SignHelper {
         } else {
             outSignPathTemp = inputApkPath
         }
-        val outSignPath = outApkPath.ifEmpty { srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_sign." + srcApkFile.extension }
+        val outSignPath = outApkPath.ifEmpty {
+            srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension.replace(
+                "_sign",
+                ""
+            ) + "_sign." + srcApkFile.extension
+        }
         ApkSignerUtil.sign(
             signFile,
             signAlias,

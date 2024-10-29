@@ -64,23 +64,22 @@ fun main(args: Array<String>? = null) {
         if (it == true) {
             Upload.getUploadResult(apiKey, buildType) { apkInfo ->
                 if (apkInfo != null) {
-                    if (uploadResultSavePath.isEmpty()) {
-                        PGYHtml.deal(apk.parent.replace("\\", "\\\\"), test, host, release, basePgyHtmlPath, apkInfo)
-                        println("获取发布状态完成，App蒲公英信息如下：")
-                        println(
-                            Gson().toJson(apkInfo)
-                                .replace("{", "")
-                                .replace("}", "")
-                                .replace("\"", "")
-                                .replace(",", "\n")
-                                .trim()
-                        )
-                    } else {
+                    println("获取发布状态完成，App蒲公英信息如下：")
+                    val apkInfoJson = Gson().toJson(apkInfo)
+                    val apkInfoStr = apkInfoJson
+                        .replace("{", "")
+                        .replace("}", "")
+                        .replace("\"", "")
+                        .replace(",", "\n")
+                        .trim()
+                    println(apkInfoStr)
+                    PGYHtml.deal(apk.parent.replace("\\", "\\\\"), test, host, release, basePgyHtmlPath, apkInfo)
+                    if (uploadResultSavePath.isNotEmpty()) {
                         val outFile = File(uploadResultSavePath)
                         if (!outFile.exists()) {
                             outFile.createNewFile()
                         }
-                        outFile.writeText(Gson().toJson(apkInfo))
+                        outFile.writeText(apkInfoJson)
                     }
                     if (delUploadApk) {
                         apk.delete()

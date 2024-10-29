@@ -58,7 +58,7 @@ fun main(args: Array<String>? = null) {
             delApkAfterSign = "1" == nextInput
         }
     }
-    println("开始处理...")
+    println("开始处理打渠道包...")
     ResourceManager.serverBaseUrl = serviceBaseUrl
     ResourceManager.cachePath = cachePath
     if (cachePath.isNotEmpty()) {

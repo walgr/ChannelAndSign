@@ -1,11 +1,12 @@
 package com.wpf.utils.pgyupload.pgy
 
+import com.google.gson.Gson
 import com.wpf.utils.pgyupload.pgy.data.ApkInfo
 import com.wpf.utils.pgyupload.pgy.data.BaseResponse
+import com.wpf.utils.pgyupload.pgy.data.CheckResponseInfo
 import com.wpf.utils.pgyupload.pgy.data.TokenResponse
 import com.wpf.utils.pgyupload.pgy.http.HttpHelper
 import com.wpf.utils.pgyupload.pgy.http.HttpHelper.apkHeader
-import com.wpf.utils.pgyupload.pgy.http.HttpHelper.get
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -17,6 +18,7 @@ object Upload {
     private const val baseUrl = "https://www.pgyer.com/apiv2/app/"
     private const val getToken = "getCOSToken"
     private const val buildInfo = "buildInfo"
+    private const val check = "check"
 
     private var tokenResponse: TokenResponse? = null
     private fun getToken(apiKey: String, buildType: String, callback: (TokenResponse) -> Unit) {
@@ -83,7 +85,7 @@ object Upload {
     fun getUploadResult(apiKey: String, buildType: String, requestTime: Int = 0, callback: (ApkInfo?) -> Unit) {
         getToken(apiKey, buildType) { token ->
             println("正在获取发布状态......")
-            get<BaseResponse<ApkInfo>>(baseUrl + buildInfo, {
+            HttpHelper.get<BaseResponse<ApkInfo>>(baseUrl + buildInfo, {
                 headers {
                     append(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded)
                 }
@@ -106,6 +108,32 @@ object Upload {
                     tokenResponse = null
                 }
             }
+        }
+    }
+
+    /**
+     * 检测App是否有更新
+     */
+    fun checkNewVersion(
+        apiKey: String,
+        appKey: String,
+        buildVersion: String = "",
+        buildBuildVersion: String = "",
+        callback: (CheckResponseInfo?) -> Unit
+    ) {
+        HttpHelper.post<BaseResponse<CheckResponseInfo>>(baseUrl + check, {
+            url {
+                parameters.append("_api_key", apiKey)
+                parameters.append("appKey", appKey)
+                if (buildVersion.isNotEmpty()) {
+                    parameters.append("buildVersion", buildVersion)
+                }
+                if (buildBuildVersion.isNotEmpty()) {
+                    parameters.append("buildBuildVersion", buildBuildVersion)
+                }
+            }
+        }) {
+            callback.invoke(it?.data)
         }
     }
 }
