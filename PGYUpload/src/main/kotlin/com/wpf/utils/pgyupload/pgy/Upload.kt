@@ -84,7 +84,7 @@ object Upload {
                 var lastProcess = 0L
                 onUpload { bytesSentTotal, contentLength ->
                     val curProcess = bytesSentTotal * 100 / contentLength
-                    if (curProcess != lastProcess) {
+                    if (curProcess > lastProcess) {
                         lastProcess = curProcess
                         println("上传进度:${curProcess}%")
                     }
