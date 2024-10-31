@@ -12,6 +12,8 @@ fun main(args: Array<String>? = null) {
         return
     }
     var apiKey = ""
+    var channel = ""
+    var description = ""
     var buildType = "android"
     var apkPath = ""
     var uploadResultSavePath = ""
@@ -50,6 +52,12 @@ fun main(args: Array<String>? = null) {
         if ("-release" == arg) {
             release = nextInput
         }
+        if ("-channel" == arg) {
+            channel = nextInput
+        }
+        if ("-description" == arg) {
+            description = nextInput
+        }
         if ("-delUploadApk" == arg) {
             delUploadApk = nextInput == "1"
         }
@@ -60,9 +68,9 @@ fun main(args: Array<String>? = null) {
         exitProcess(-1)
     }
     println("开始上传蒲公英")
-    Upload.uploadApk(apiKey, buildType, apk) {
+    Upload.uploadApk(apiKey, buildType, description, channel, apk) {
         if (it == true) {
-            Upload.getUploadResult(apiKey, buildType) { apkInfo ->
+            Upload.getUploadResult(apiKey, buildType, description, channel) { apkInfo ->
                 if (apkInfo != null) {
                     println("获取发布状态完成，App蒲公英信息如下：")
                     val apkInfoJson = Gson().toJson(apkInfo)

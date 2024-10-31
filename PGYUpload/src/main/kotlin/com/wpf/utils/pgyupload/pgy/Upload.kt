@@ -1,6 +1,5 @@
 package com.wpf.utils.pgyupload.pgy
 
-import com.google.gson.Gson
 import com.wpf.utils.pgyupload.pgy.data.ApkInfo
 import com.wpf.utils.pgyupload.pgy.data.BaseResponse
 import com.wpf.utils.pgyupload.pgy.data.CheckResponseInfo
@@ -21,7 +20,13 @@ object Upload {
     private const val check = "check"
 
     private var tokenResponse: TokenResponse? = null
-    private fun getToken(apiKey: String, buildType: String, callback: (TokenResponse) -> Unit) {
+    private fun getToken(
+        apiKey: String,
+        buildType: String,
+        description: String,
+        channel: String,
+        callback: (TokenResponse) -> Unit
+    ) {
         if (tokenResponse != null) {
             callback.invoke(tokenResponse!!)
             return
@@ -33,6 +38,12 @@ object Upload {
             url {
                 parameters.append("_api_key", apiKey)
                 parameters.append("buildType", buildType)
+                if (description.isNotEmpty()) {
+                    parameters.append("buildUpdateDescription", description)
+                }
+                if (channel.isNotEmpty()) {
+                    parameters.append("buildChannelShortcut", channel)
+                }
             }
         }) {
             if (it?.data == null) {
@@ -47,11 +58,13 @@ object Upload {
     fun uploadApk(
         apiKey: String,
         buildType: String,
+        description: String,
+        channel: String,
         apk: File,
         uploadFileName: Boolean = true,
         callback: (Boolean?) -> Unit
     ) {
-        getToken(apiKey, buildType) { token ->
+        getToken(apiKey, buildType, description, channel) { token ->
             println("正在上传文件:${apk.name},大小:${apk.length()}")
             HttpHelper.post<String>(token.endpoint, request = {
                 timeout {
@@ -82,8 +95,15 @@ object Upload {
         }
     }
 
-    fun getUploadResult(apiKey: String, buildType: String, requestTime: Int = 0, callback: (ApkInfo?) -> Unit) {
-        getToken(apiKey, buildType) { token ->
+    fun getUploadResult(
+        apiKey: String,
+        buildType: String,
+        description: String,
+        channel: String,
+        requestTime: Int = 0,
+        callback: (ApkInfo?) -> Unit
+    ) {
+        getToken(apiKey, buildType, description, channel) { token ->
             println("正在获取发布状态......")
             HttpHelper.get<BaseResponse<ApkInfo>>(baseUrl + buildInfo, {
                 headers {
@@ -98,7 +118,7 @@ object Upload {
                     if (requestTime < 20) {
                         runBlocking {
                             Thread.sleep(1000)
-                            getUploadResult(apiKey, buildType, requestTime + 1, callback)
+                            getUploadResult(apiKey, buildType, description, channel, requestTime + 1, callback)
                         }
                     } else {
                         callback.invoke(null)
@@ -119,6 +139,7 @@ object Upload {
         appKey: String,
         buildVersion: String = "",
         buildBuildVersion: String = "",
+        channelKey: String = "",
         callback: (CheckResponseInfo?) -> Unit
     ) {
         HttpHelper.post<BaseResponse<CheckResponseInfo>>(baseUrl + check, {
@@ -130,6 +151,9 @@ object Upload {
                 }
                 if (buildBuildVersion.isNotEmpty()) {
                     parameters.append("buildBuildVersion", buildBuildVersion)
+                }
+                if (channelKey.isNotEmpty()) {
+                    parameters.append("channelKey", channelKey)
                 }
             }
         }) {
