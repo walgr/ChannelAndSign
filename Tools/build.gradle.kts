@@ -9,6 +9,7 @@ val versionName = "1.1.16"
 version = versionName
 
 dependencies {
+    api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     api("io.ktor:ktor-client-core:2.3.7")
     implementation("io.ktor:ktor-client-cio:2.3.7")
     api("ch.qos.logback:logback-classic:1.2.13")
