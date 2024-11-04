@@ -353,7 +353,7 @@ object JiaGu {
 
             val stubAppName = "com.wpf.util.jiagulibrary.StubApp"
             if (showLog) {
-                println("修改AndroidManifest为壳App${stubAppName}")
+                println("修改AndroidManifest为壳Application:${stubAppName}")
             }
             //修改manifest的Application为解密的
             val androidManifest = "AndroidManifest.xml"
