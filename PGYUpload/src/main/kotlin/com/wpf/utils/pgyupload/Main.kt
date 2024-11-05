@@ -64,7 +64,7 @@ fun main(args: Array<String>? = null) {
     }
     val apk = File(apkPath)
     if (apkPath.isEmpty() || !apk.exists() || apk.length() == 0L) {
-        println("未发现上传的apk")
+        println("未发现上传的apk:${apkPath}")
         exitProcess(-1)
     }
     println("开始上传蒲公英")
