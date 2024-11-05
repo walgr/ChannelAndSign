@@ -40,7 +40,7 @@ object HttpHelper {
             runCatching {
                 client.get(serverUrl, request).callbackResponse<T>(callback)
             }.onFailure {
-                println(it.message)
+                println("请求接口出错${it.message}")
                 callback?.invoke(null)
             }
         }
@@ -55,7 +55,7 @@ object HttpHelper {
             runCatching {
                 client.post(serverUrl, request).callbackResponse<T>(callback)
             }.onFailure {
-                println(it.message)
+                println("请求接口出错${it.message}")
                 callback?.invoke(null)
             }
         }
