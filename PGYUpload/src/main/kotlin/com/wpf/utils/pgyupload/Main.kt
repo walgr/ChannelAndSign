@@ -97,6 +97,8 @@ fun main(args: Array<String>? = null) {
                     println("上传蒲公英失败")
                 }
             }
+        } else {
+            println("上传蒲公英失败")
         }
     }
 }

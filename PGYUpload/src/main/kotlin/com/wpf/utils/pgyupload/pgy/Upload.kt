@@ -62,6 +62,7 @@ object Upload {
         channel: String,
         apk: File,
         uploadFileName: Boolean = true,
+        requestTime: Int = 0,
         callback: (Boolean?) -> Unit
     ) {
         getToken(apiKey, buildType, description, channel) { token ->
@@ -90,7 +91,12 @@ object Upload {
                     }
                 }
             }) {
-                callback.invoke(it != null)
+                if (it == null && requestTime < 3) {
+                    println("上传失败，正在重试...")
+                    uploadApk(apiKey, buildType, description, channel, apk, uploadFileName, requestTime + 1, callback)
+                } else {
+                    callback.invoke(it != null)
+                }
             }
         }
     }
