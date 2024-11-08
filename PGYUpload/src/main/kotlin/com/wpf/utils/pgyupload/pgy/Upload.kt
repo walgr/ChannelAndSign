@@ -123,7 +123,7 @@ object Upload {
                 if (it?.data == null) {
                     if (requestTime < 20) {
                         runBlocking {
-                            Thread.sleep(1000)
+                            Thread.sleep(3000)
                             getUploadResult(apiKey, buildType, description, channel, requestTime + 1, callback)
                         }
                     } else {
