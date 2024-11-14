@@ -24,8 +24,8 @@ object CacheFile {
             return
         }
         cacheFile.createCheck(true)
-        println("开始下载工具:${ResourceManager.serverBaseUrl}getResources?name=${cacheFile.name}")
-        HttpClient.downloadFile(serverUrl, request, cacheFile, 0, callback)
+        println("开始下载工具:${cacheFile.name}, 地址:$serverUrl")
+        HttpClient.downloadFile(serverUrl, request, cacheFile.parent, "", true, callback)
     }
 
     suspend fun downloadFileSuspend(

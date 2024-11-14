@@ -5,12 +5,14 @@ plugins {
 }
 
 group = "com.wpf.utils"
-val versionName = "1.1.17"
+val versionName = "1.1.18"
 version = versionName
 
 dependencies {
     api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     api("io.ktor:ktor-client-core:2.3.7")
+    api("com.taobao.sophix:patch:3.0.1")
+    api("com.reandroid.arsc:ARSCLib:1.3.5")
     implementation("io.ktor:ktor-client-cio:2.3.7")
     api("ch.qos.logback:logback-classic:1.2.13")
     api("commons-codec:commons-codec:1.16.0")
@@ -28,11 +30,12 @@ kotlin {
 afterEvaluate {
     publishing {
         publications {
-            register("aliyun", MavenPublication::class.java) {
+            create<MavenPublication>("aliyun") {
                 from(components["java"])
                 groupId = "com.wpf.utils"
                 artifactId = "tools"
                 version = versionName
+                artifact(tasks["kotlinSourcesJar"])
             }
         }
         repositories {

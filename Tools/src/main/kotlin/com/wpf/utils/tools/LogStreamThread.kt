@@ -1,8 +1,10 @@
 package com.wpf.utils.tools
 
+import com.wpf.utils.isWinRuntime
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.nio.charset.Charset
 
 class LogStreamThread(
     private val inputStream: InputStream,
@@ -11,7 +13,7 @@ class LogStreamThread(
 ) : Thread() {
     override fun run() {
         super.run()
-        val reader = InputStreamReader(inputStream)
+        val reader = InputStreamReader(inputStream, Charset.forName(if (isWinRuntime) "GBK" else "utf-8"))
         val bf = BufferedReader(reader)
         var line: String?
         val showAll = showAllLog != null

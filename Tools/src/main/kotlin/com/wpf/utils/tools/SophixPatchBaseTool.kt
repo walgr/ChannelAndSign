@@ -11,10 +11,6 @@ abstract class SophixPatchBaseTool {
             } else field
         }
 
-    open val sophixPatchFile: File by lazy {
-        File(ResourceManager.getTempPath() + "sophix-patch.jar")
-    }
-
     open fun delJar() {
         profilesJsonFile?.path?.let {
             ResourceManager.delResourceByPath(it)

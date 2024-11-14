@@ -9,7 +9,7 @@ import java.io.File
 
 object SophixPatchTool : SophixPatchBaseTool() {
 
-    private val showLog = false
+    var showLog = false
     private val sophixPatchRunPath: String = ""
         get() {
             return if (field.isEmpty() || !File(field).exists()) {
@@ -56,6 +56,7 @@ object SophixPatchTool : SophixPatchBaseTool() {
             }
         }
 
+    var process: Process? = null
     override fun deal(configPath: String): Boolean {
         runCatching {
             if (sophixPatchRunPath.isEmpty()) return false
@@ -73,12 +74,12 @@ object SophixPatchTool : SophixPatchBaseTool() {
             if (showLog) {
                 processB.inheritIO()
             }
-            val process = processB.start()
-            LogStreamThread(process.inputStream, false).start()
-            LogStreamThread(process.errorStream, false).start()
-            process.waitFor()
-            process.destroy()
-            return sophixPatchFile.exists() && sophixPatchFile.length() != 0L
+            process = processB.start()
+            LogStreamThread(process!!.inputStream, showLog).start()
+            LogStreamThread(process!!.errorStream, showLog).start()
+            process!!.waitFor()
+            process!!.destroy()
+            return true
         }.getOrElse {
             println("运行SophixPatchTool失败:${it.message}")
             if (it.message?.contains("CreateProcess error=740") == true) {

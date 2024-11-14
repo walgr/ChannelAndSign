@@ -2,6 +2,7 @@ package com.wpf.utils.http
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.wpf.utils.ex.createCheck
 import com.wpf.utils.isWinRuntime
 import io.ktor.client.HttpClient
 import io.ktor.client.call.*
@@ -11,7 +12,8 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
+import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.min
@@ -68,6 +70,62 @@ object HttpClient {
             }
         } else {
             callback?.invoke(null)
+        }
+    }
+
+    fun downloadFile(
+        serverUrl: String,
+        request: HttpRequestBuilder.() -> Unit = {},
+        savePath: String,
+        saveName: String = "",
+        backCache: Boolean = true,
+        callback: ((File?) -> Unit)?
+    ): Job {
+        return CoroutineScope(Dispatchers.IO).launch {
+            runCatching {
+                val responseData = client.get(serverUrl, request)
+                if (responseData.status == HttpStatusCode.OK) {
+                    val contentDisposition =
+                        responseData.headers[HttpHeaders.ContentDisposition]
+                    var saveFileName = saveName.ifEmpty { "download" }
+                    if (saveName.isEmpty() && contentDisposition?.isNotEmpty() == true && contentDisposition.contains(
+                            ContentDisposition.Parameters.FileName + "="
+                        )
+                    ) {
+                        contentDisposition.split(";").find {
+                            it.contains(ContentDisposition.Parameters.FileName + "=")
+                        }?.substringAfterLast(ContentDisposition.Parameters.FileName + "=")?.let {
+                            saveFileName = it
+                        }
+                    }
+                    val realSaveFile = File(
+                        savePath + File.separator + saveFileName
+                    ).createCheck(true)
+                    if (backCache) {
+                        if (realSaveFile.exists() && realSaveFile.length() != 0L) {
+                            CoroutineScope(Dispatchers.Default).launch {
+                                callback?.invoke(realSaveFile)
+                            }
+                            return@launch
+                        }
+                    }
+                    val fileOs = realSaveFile.outputStream()
+                    responseData.bodyAsChannel().toInputStream().copyTo(fileOs)
+                    fileOs.flush()
+                    fileOs.close()
+                    CoroutineScope(Dispatchers.Default).launch {
+                        callback?.invoke(realSaveFile)
+                    }
+                } else {
+                    CoroutineScope(Dispatchers.Default).launch {
+                        callback?.invoke(null)
+                    }
+                }
+            }.onFailure {
+                CoroutineScope(Dispatchers.Default).launch {
+                    callback?.invoke(null)
+                }
+            }
         }
     }
 

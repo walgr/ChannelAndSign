@@ -32,6 +32,7 @@ afterEvaluate {
                 groupId = "com.wpf.utils"
                 artifactId = "pgyupload"
                 version = versionName
+                artifact(tasks["kotlinSourcesJar"])
             }
         }
         repositories {

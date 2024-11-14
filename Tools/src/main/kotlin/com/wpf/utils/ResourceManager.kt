@@ -3,12 +3,14 @@ package com.wpf.utils
 import com.wpf.utils.ex.checkWinPath
 import com.wpf.utils.ex.createCheck
 import com.wpf.utils.http.CacheFile
+import io.ktor.client.plugins.*
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
 object ResourceManager {
+    var tempFolderPath: String? = null
 
-    fun getTempPath() = curPath + File.separator + "temp" + File.separator
+    fun getTempPath() = tempFolderPath?.ifEmpty { curPath + File.separator + "temp" + File.separator }
     var serverBaseUrl = "http://0.0.0.0:8080/"
     var cachePath = ""
         get() {
@@ -27,6 +29,16 @@ object ResourceManager {
             return runBlocking {
                 CacheFile.downloadFileSuspend(
                     "${serverBaseUrl}getResources?name=$resource",
+                    {
+                        var oldProgress = 0
+                        onDownload { bytesSentTotal, contentLength ->
+                            val curProgress = (bytesSentTotal * 100 / contentLength).toInt()
+                            if (curProgress > oldProgress) {
+                                oldProgress = curProgress
+                                println("正在下载:${resource}, 进度:${curProgress}%")
+                            }
+                        }
+                    },
                     outFilePath = outPath.ifEmpty { cachePath + File.separator + "cache" + File.separator + resource.checkWinPath() })!!
             }
         } else {
