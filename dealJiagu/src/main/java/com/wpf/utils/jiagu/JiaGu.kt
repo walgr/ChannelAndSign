@@ -52,7 +52,6 @@ object JiaGu {
             val jiaguLibraryZip = ResourceManager.getResourceFile("jiaguLibrary.zip")
             val jiaGuHashKey = arrayOf(
                 srcApplicationName,
-                ApkParsers.getMetaInfo(srcApkFile).versionName,
                 secretKey,
                 keyVi,
                 androidSdkPath,

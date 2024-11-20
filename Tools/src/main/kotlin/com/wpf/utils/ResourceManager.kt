@@ -8,9 +8,9 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 
 object ResourceManager {
-    var tempFolderPath: String? = null
+    var tempFolderPath: String = ""
 
-    fun getTempPath() = tempFolderPath?.ifEmpty { curPath + File.separator + "temp" + File.separator }
+    fun getTempPath() = tempFolderPath.ifEmpty { curPath + File.separator + "temp" + File.separator }
     var serverBaseUrl = "http://0.0.0.0:8080/"
     var cachePath = ""
         get() {
@@ -57,7 +57,7 @@ object ResourceManager {
     }
 
     fun delResourceByName(name: String) {
-        File(curPath + "temp" + File.separator + name).deleteRecursively()
+        File(getTempPath() + File.separator + name).deleteRecursively()
     }
 
     fun delResourceByPath(path: String) {
