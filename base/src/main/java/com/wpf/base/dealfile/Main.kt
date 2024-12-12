@@ -1,6 +1,7 @@
 package com.wpf.base.dealfile
 
 import com.wpf.utils.ResourceManager
+import com.wpf.utils.formatTime
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
@@ -66,7 +67,7 @@ fun main(args: Array<String>? = null) {
     }
     val startTime = System.currentTimeMillis()
     ChannelAndSign.scanFile(inputFilePath = filePath, fileFilter = fileFilter, dealSign = dealSign) {
-        println("处理完毕... 用时：${System.currentTimeMillis() - startTime}毫秒")
+        println("处理完毕... 用时:${(System.currentTimeMillis() - startTime).formatTime()}")
     }
     ResourceManager.delTemp()
 }

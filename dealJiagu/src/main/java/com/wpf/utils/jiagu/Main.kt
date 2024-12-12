@@ -1,6 +1,7 @@
 package com.wpf.utils.jiagu
 
 import com.wpf.utils.ResourceManager
+import com.wpf.utils.formatTime
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
@@ -78,5 +79,5 @@ fun main(args: Array<String>? = null) {
         keyPassword = keyPassword,
         showLog = isDebug
     )
-    println("加固结束，用时:${System.currentTimeMillis() - startTime}毫秒")
+    println("加固结束，用时:${(System.currentTimeMillis() - startTime).formatTime()}")
 }
