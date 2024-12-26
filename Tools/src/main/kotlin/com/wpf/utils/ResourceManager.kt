@@ -32,6 +32,7 @@ object ResourceManager {
                     {
                         var oldProgress = 0
                         onDownload { bytesSentTotal, contentLength ->
+                            if (contentLength == null) return@onDownload
                             val curProgress = (bytesSentTotal * 100 / contentLength).toInt()
                             if (curProgress > oldProgress) {
                                 oldProgress = curProgress

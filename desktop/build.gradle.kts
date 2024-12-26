@@ -3,6 +3,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 group = "com.wpf.compose.desktop"
@@ -11,7 +12,7 @@ version = "1.0-SNAPSHOT"
 
 kotlin {
     jvm {
-        jvmToolchain(17)
+//        jvmToolchain(17)
         withJava()
     }
     sourceSets {
@@ -19,7 +20,7 @@ kotlin {
             dependencies {
                 api(project(":common"))
                 api(compose.desktop.currentOs)
-                api("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.7.85.4")
+                api("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.8.18")
             }
         }
     }

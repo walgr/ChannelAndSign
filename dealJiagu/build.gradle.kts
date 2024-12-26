@@ -11,9 +11,9 @@ repositories {
 
 dependencies {
     implementation("com.wpf.utils:tools:+")
-    implementation("com.android:zipflinger:7.3.1")              //Apk操作
+    implementation("com.android:zipflinger:8.7.3")              //Apk操作
     implementation("net.lingala.zip4j:zip4j:2.11.5")            //压缩包操作
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.11.0")
     implementation("net.dongliu:apk-parser:2.6.10")             //获取apk信息
 }
 

@@ -1,8 +1,8 @@
 plugins {
     id("java-library")
     id("org.jetbrains.kotlin.jvm")
-    kotlin("plugin.serialization") version "1.9.21"
     id("maven-publish")
+    kotlin("plugin.serialization") version "2.1.0"
 }
 
 group = "com.wpf.utils"
@@ -10,10 +10,10 @@ val versionName = "1.0.0"
 version = versionName
 
 dependencies {
-    implementation("io.ktor:ktor-client-core:2.3.7")
-    implementation("io.ktor:ktor-client-cio:2.3.7")
-    implementation("ch.qos.logback:logback-classic:1.2.13")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("io.ktor:ktor-client-core:3.0.3")
+    implementation("io.ktor:ktor-client-cio:3.0.3")
+    implementation("ch.qos.logback:logback-classic:1.5.15")
+    implementation("com.google.code.gson:gson:2.11.0")
 }
 
 java {

@@ -267,6 +267,7 @@ data class HuaweiMarket(
                     }))
                     var lastProcess = 0L
                     onUpload { bytesSentTotal, contentLength ->
+                        if (contentLength == null) return@onUpload
                         val curProcess = bytesSentTotal * 100 / contentLength
                         if (curProcess != lastProcess) {
                             lastProcess = curProcess
