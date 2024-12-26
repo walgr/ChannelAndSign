@@ -22,9 +22,8 @@ val platform = when {
 val jdkVersion = "17"
 
 kotlin {
-    jvm("desktop") {
-//        jvmToolchain(17)
-    }
+    jvmToolchain(17)
+    jvm("desktop")
     sourceSets {
         val commonMain by getting {
             dependencies {

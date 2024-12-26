@@ -25,6 +25,6 @@ fun main() = application {
         onCloseRequest = ::exitApplication // 关闭请求时退出应用程序
     ) {
         // 在窗口中显示主视图
-//        MainView(this, this@application)
+        MainView(this, this@application)
     }
 }

@@ -9,9 +9,8 @@ group = "com.wpf.compose.common"
 version = "1.0-SNAPSHOT"
 
 kotlin {
-    jvm("desktop") {
-//        jvmToolchain(17)
-    }
+    jvmToolchain(17)
+    jvm("desktop")
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -19,7 +18,7 @@ kotlin {
                 api(compose.foundation)
                 api(compose.material)
                 api(project(":base"))
-                api(project(":WebView"))
+//                api(project(":WebView"))
                 api(project(":dealJiagu"))
                 api("org.apache.directory.studio:org.apache.commons.codec:1.8")
                 api("org.bouncycastle:bcprov-jdk18on:1.77")

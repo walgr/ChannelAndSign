@@ -9,10 +9,9 @@ plugins {
 group = "com.wpf.compose.desktop"
 version = "1.0-SNAPSHOT"
 
-
 kotlin {
+    jvmToolchain(17)
     jvm {
-//        jvmToolchain(17)
         withJava()
     }
     sourceSets {
