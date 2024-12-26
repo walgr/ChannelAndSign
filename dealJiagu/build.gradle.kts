@@ -46,3 +46,27 @@ tasks.register("zipJiaguLibrary", Zip::class) {
         "../gradlew.bat"
     )
 }
+
+task("打包", Jar::class) {
+    group = "jiagu"
+//    dependsOn("zipJiaguLibrary")
+    archiveFileName = "加固.jar"
+    destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))
+    manifest {
+        attributes["Main-Class"] = "com.wpf.utils.jiagu.MainKt"
+        attributes["Manifest-Version"] = "1.0.0"
+    }
+    from(
+        sourceSets.main.get().output,
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    )
+    exclude(
+        "META-INF/*.RSA",
+        "META-INF/*.SF",
+        "META-INF/*.DSA",
+        "META-INF/LICENSE.txt",
+        "META-INF/versions/9/module-info.class",
+        "module-info.class",
+        "META-INF/INDEX.LIST"
+    )
+}
