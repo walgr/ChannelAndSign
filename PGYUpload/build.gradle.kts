@@ -46,7 +46,7 @@ afterEvaluate {
     }
 }
 
-task("打包", Jar::class) {
+tasks.register("打包", Jar::class) {
     group = "jar"
     archiveFileName = "上传蒲公英.jar"
     destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))

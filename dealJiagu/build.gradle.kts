@@ -47,7 +47,7 @@ tasks.register("zipJiaguLibrary", Zip::class) {
     )
 }
 
-task("打包", Jar::class) {
+tasks.register("打包", Jar::class) {
     group = "jiagu"
 //    dependsOn("zipJiaguLibrary")
     archiveFileName = "加固.jar"

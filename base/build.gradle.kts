@@ -26,7 +26,7 @@ kotlin {
     jvmToolchain(8)
 }
 
-task("打包", Jar::class) {
+tasks.register("打包", Jar::class) {
     group = "jar"
     archiveFileName = "打渠道包并签名.jar"
     destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))
