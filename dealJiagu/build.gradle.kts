@@ -33,16 +33,44 @@ tasks.register("zipJiaguLibrary", Zip::class) {
         include("src/**", "build.gradle")
         into("jiagulibrary")
     }
-    from(
-        "../gradle") {
+    from("../jiagulibrary") {
+        include("app/**")
+        into("")
+    }
+    from("../gradle") {
         into("gradle")
     }
     from(
         "../jiagulibrary/settings.gradle.kts",
         "../jiagulibrary/build.gradle.kts",
         "../jiagulibrary/local.properties",
+        "../jiagulibrary/gradle.properties",
+        "../jiagulibrary/jiagu.jks",
         "../gradlew",
-        "../gradle.properties",
-        "../gradlew.bat"
+        "../gradlew.bat",
+    )
+}
+
+tasks.register("打包", Jar::class) {
+    group = "jiagu"
+//    dependsOn("zipJiaguLibrary")
+    archiveFileName = "加固.jar"
+    destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))
+    manifest {
+        attributes["Main-Class"] = "com.wpf.utils.jiagu.MainKt"
+        attributes["Manifest-Version"] = "1.0.0"
+    }
+    from(
+        sourceSets.main.get().output,
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    )
+    exclude(
+        "META-INF/*.RSA",
+        "META-INF/*.SF",
+        "META-INF/*.DSA",
+        "META-INF/LICENSE.txt",
+        "META-INF/versions/9/module-info.class",
+        "module-info.class",
+        "META-INF/INDEX.LIST"
     )
 }

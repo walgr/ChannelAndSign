@@ -1,7 +1,7 @@
 package com.wpf.base.dealfile
 
+import com.wpf.base.dealfile.util.formatTime
 import com.wpf.utils.ResourceManager
-import com.wpf.utils.formatTime
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {

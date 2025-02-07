@@ -105,9 +105,9 @@ static void init(JNIEnv *env, jobject application) {
         env->DeleteLocalRef(dexDir);
         env->DeleteLocalRef(path);
 
-//        char vm_path[128];
-//        sprintf(vm_path, "%s/vm.dex", g_jiagu_path);
-//        write_vm_dex(vm_path);
+        char vm_path[128];
+        sprintf(vm_path, "%s/vm.dex", g_jiagu_path);
+        write_vm_dex(vm_path);
     }
 }
 
@@ -293,8 +293,10 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
     // 获取application name
     int app_len = decryptdex[0];
     char app_name[app_len + 1];
-    memset(app_name, 0, app_len + 1);
-    memcpy(app_name, decryptdex + 1, app_len);
+    if (app_len != 0) {
+       memset(app_name, 0, app_len + 1);
+       memcpy(app_name, decryptdex + 1, app_len);
+    }
     LOGD("app name: %s", app_name);
 
     void *art_handle;
