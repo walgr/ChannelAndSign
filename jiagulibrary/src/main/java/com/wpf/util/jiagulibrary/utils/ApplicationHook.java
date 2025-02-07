@@ -22,6 +22,7 @@ public class ApplicationHook {
      * jni层回调创建真实Application
      */
     public static void hook(Application application, String delegateApplicationName) {
+        Log.w("NDK_JIAGU", "-" + delegateApplicationName);
         if (TextUtils.isEmpty(delegateApplicationName) || StubApp.class.getName().equals(delegateApplicationName)) {
             sDelegateApplication = application;
             return;

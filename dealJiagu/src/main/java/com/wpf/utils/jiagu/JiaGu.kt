@@ -14,14 +14,10 @@ import com.wpf.utils.jiagu.utils.AES128Helper.encrypt
 import com.wpf.utils.jiagu.utils.ApplicationHelper
 import com.wpf.utils.jiagu.utils.DexHelper
 import com.wpf.utils.jiagu.utils.EncryptUtils
-import com.wpf.utils.tools.DXUtil
 import com.wpf.utils.tools.LogStreamThread
 import com.wpf.utils.tools.SignHelper
-import net.dongliu.apk.parser.ApkParsers
 import net.lingala.zip4j.ZipFile
-import org.apache.commons.codec.digest.Md5Crypt
 import java.io.File
-import java.util.Base64
 import java.util.zip.Deflater
 
 object JiaGu {
@@ -48,7 +44,7 @@ object JiaGu {
                 return
             }
             val packageName = ApplicationHelper.getPackageName(srcApkFile)
-            val srcApplicationName = ApplicationHelper.getName(srcApkFile) ?: ""
+            var srcApplicationName = ApplicationHelper.getName(srcApkFile) ?: ""
             val jiaguLibraryZip = ResourceManager.getResourceFile("jiaguLibrary.zip")
             val jiaGuHashKey = arrayOf(
                 srcApplicationName,
@@ -61,19 +57,13 @@ object JiaGu {
             if (showLog) {
                 println("加固HashKey:$jiaGuHashKey")
             }
-            if (srcApplicationName.isEmpty()) {
-                if (showLog) {
-                    println("获取原始ApplicationName失败")
-                }
-                return
-            }
             if (showLog) {
                 println("获取原始ApplicationName：${srcApplicationName}")
             }
             if (showLog) {
                 println("开始加固：${srcApkPath}")
             }
-            val cachePathFile = File(srcApkFile.parent + File.separator + "tmp").createCheck(false)
+            val tmpPathFile = File(srcApkFile.parent + File.separator + "tmp").createCheck(false)
             val jiaguApkFile =
                 File(srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_jiagu." + srcApkFile.extension)
             srcApkFile.copyTo(jiaguApkFile, true)
@@ -93,19 +83,17 @@ object JiaGu {
                         || jiaguSoV7CacheHashFile.exists()
                         || jiaguSoCacheHashFile.exists()
                         || jiaguSoX86CacheHashFile.exists())
-                        || jiaguSoX8664CacheHashFile.exists())
-            ) {
+                        || jiaguSoX8664CacheHashFile.exists())) {
                 if (showLog) {
                     println("加固壳不存在，正在处理生成加固壳")
                 }
 
-                val projectRootPath = cachePathFile.path + File.separator + "jiaguLibrary" + File.separator
+                val projectRootPath = tmpPathFile.path + File.separator + "jiaguLibrary" + File.separator
+                File(projectRootPath).deleteRecursively()
                 FileUtil.unZipFiles(jiaguLibraryZip, projectRootPath)
                 ResourceManager.delResourceByPath(jiaguLibraryZip.path)
-                if (androidSdkPath.isNotEmpty()) {
-                    val localPropertiesFile = File(projectRootPath + File.separator + "local.properties")
-                    localPropertiesFile.writeText("sdk.dir=${androidSdkPath.checkWinPath()}")
-                }
+
+                //设置加固加密秘钥
                 val aesCFile =
                     File(projectRootPath + "/jiagulibrary/src/main/cpp/utils/aes.c".replace("/", File.separator))
                 var aesCFileStr = aesCFile.readText()
@@ -117,80 +105,77 @@ object JiaGu {
                     aesCFileStr.replace("const char\\* AES_IV = \".*\";".toRegex(), "const char* AES_IV = \"$keyVi\";")
                 aesCFile.writeText(aesCFileStr)
 
+                if (androidSdkPath.isNotEmpty()) {
+                    val localPropertiesFile = File(projectRootPath + File.separator + "local.properties")
+                    localPropertiesFile.writeText("sdk.dir=${androidSdkPath.checkWinPath()}")
+                }
                 if (isLinuxRuntime || isMacRuntime) {
                     Runtime.getRuntime().exec(arrayOf("chmod", "-R", "+x", "${projectRootPath}gradlew")).waitFor()
                 }
-                val cmd =
-                    mutableListOf(
-                        "${projectRootPath}gradlew" + if (isWinRuntime) ".bat" else "",
-                        ":jiagulibrary:assembleRelease"
-                    )
+                if (showLog) {
+                    println("正在打加固壳Apk")
+                }
+                val cmdApk =
+                    mutableListOf("${projectRootPath}gradlew" + if (isWinRuntime) ".bat" else "", ":app:assembleRelease")
                 if (jdkPath.isNotEmpty()) {
-                    cmd.addAll(arrayOf("-D", "org.gradle.java.home=${jdkPath}"))
+                    cmdApk.addAll(arrayOf("-D", "org.gradle.java.home=${jdkPath}"))
                 }
-                val process = ProcessBuilder(cmd).directory(File(projectRootPath)).start()
-                LogStreamThread(process.inputStream, showLog).start()
-                LogStreamThread(process.errorStream, showLog).start()
-                val result = process.waitFor()
-                if (showLog) {
-                    println(if (result == 0) "AAR打包成功" else "AAR打包失败")
-                }
-                if (result != 0) return
+                val processApk = ProcessBuilder(cmdApk).directory(File(projectRootPath)).start()
+                LogStreamThread(processApk.inputStream, showLog).start()
+                LogStreamThread(processApk.errorStream, showLog).start()
+                val resultApk = processApk.waitFor()
+                println(if (resultApk == 0) "Apk打包成功" else "Apk打包失败")
+                if (resultApk != 0) return
 
-                val jiaguReleaseAAR = File(
-                    projectRootPath + "jiagulibrary/build/outputs/aar/".replace("/", File.separator)
-                ).listFiles()?.first { it.extension == "aar" }
-                if (jiaguReleaseAAR == null) {
-                    if (showLog) {
-                        println("打包aar失败")
-                    }
-                    File(projectRootPath).deleteRecursively()
-                    return
+                val jiaguAppFile = File(
+                    projectRootPath + "app/build/outputs/apk/release/".replace("/", File.separator)
+                ).listFiles()?.first {
+                    it.extension == "apk"
+                } ?: return
+                val jiaguAppZip = ZipArchive(jiaguAppFile.toPath())
+                val jiaguReleaseDexFile = File(jiaguAppFile.parent + File.separator + "classes.dex")
+                jiaguAppZip.getInputStream("classes.dex")?.let {
+                    FileUtil.save2File(it, jiaguReleaseDexFile)
+                    it.close()
                 }
-                if (showLog) {
-                    println("正在aar转dex")
-                }
-                val jiaguReleaseAARPath = cachePathFile.path + File.separator + "jiaguReleaseAAR"
-                FileUtil.unZipFiles(jiaguReleaseAAR, jiaguReleaseAARPath)
-                jiaguReleaseAAR.delete()
-                val jiaguReleaseJarPath = jiaguReleaseAARPath + File.separator + "classes.jar"
-                val jiaguReleaseDexPath = jiaguReleaseAARPath + File.separator + "classes.dex"
-                DXUtil.jar2Dex(jiaguReleaseJarPath.checkWinPath(), jiaguReleaseDexPath.checkWinPath())
-                val jiaguReleaseDexFile = File(jiaguReleaseDexPath)
                 if (!jiaguReleaseDexFile.exists() || jiaguReleaseDexFile.length() == 0L) {
                     if (showLog) {
-                        println("未找到壳Dex")
+                        println("打加固壳失败")
                     }
-                    File(jiaguReleaseAARPath).deleteRecursively()
+                    tmpPathFile.deleteRecursively()
                     return
                 }
+
+                jiaguAppZip.getInputStream("lib/arm64-v8a/libjiagu.so")?.let {
+                    FileUtil.save2File(it, File(jiaguAppFile.parent + File.separator + "jni/arm64-v8a/libjiagu.so").createCheck(true))
+                    it.close()
+                }
                 jiaguReleaseDexFile.copyTo(jiaguDexCacheHashFile, true)
-                File(jiaguReleaseAARPath + File.separator + "jni/arm64-v8a/libjiagu.so").apply {
+                File(jiaguAppFile.parent + File.separator + "jni/arm64-v8a/libjiagu.so").apply {
                     if (exists()) {
                         this.copyTo(jiaguSoV8CacheHashFile, true)
                     }
                 }
-                File(jiaguReleaseAARPath + File.separator + "jni/armeabi-v7a/libjiagu.so").apply {
+                File(jiaguAppFile.parent + File.separator + "jni/armeabi-v7a/libjiagu.so").apply {
                     if (exists()) {
                         this.copyTo(jiaguSoV7CacheHashFile, true)
                     }
                 }
-                File(jiaguReleaseAARPath + File.separator + "jni/armeabi/libjiagu.so").apply {
+                File(jiaguAppFile.parent + File.separator + "jni/armeabi/libjiagu.so").apply {
                     if (exists()) {
                         this.copyTo(jiaguSoCacheHashFile, true)
                     }
                 }
-                File(jiaguReleaseAARPath + File.separator + "jni/x86/libjiagu.so").apply {
+                File(jiaguAppFile.parent + File.separator + "jni/x86/libjiagu.so").apply {
                     if (exists()) {
                         this.copyTo(jiaguSoX86CacheHashFile, true)
                     }
                 }
-                File(jiaguReleaseAARPath + File.separator + "jni/x86_64/libjiagu.so").apply {
+                File(jiaguAppFile.parent + File.separator + "jni/x86_64/libjiagu.so").apply {
                     if (exists()) {
                         this.copyTo(jiaguSoX8664CacheHashFile, true)
                     }
                 }
-                File(jiaguReleaseAARPath).deleteRecursively()
                 File(projectRootPath).deleteRecursively()
             } else {
                 if (showLog) {
@@ -231,13 +216,15 @@ object JiaGu {
             //1字节application名长度 + app的application名
             var tempDex = ByteArray(1 + srcApplicationName.length)
             tempDex[0] = srcApplicationName.length.toByte()
-            System.arraycopy(
-                srcApplicationName.toByteArray(),
-                0,
-                tempDex,
-                1,
-                srcApplicationName.length
-            ) // app的application名
+            if (srcApplicationName.isNotEmpty()) {
+                System.arraycopy(
+                    srcApplicationName.toByteArray(),
+                    0,
+                    tempDex,
+                    1,
+                    srcApplicationName.length
+                ) // app的application名
+            }
 
             var encryptData: ByteArray? = null
             val srcDexList = DexHelper.getApkSrcDexList(jiaguApkZipArchive)
@@ -400,7 +387,7 @@ object JiaGu {
                     }
                 }
             }
-            cachePathFile.deleteRecursively()
+            tmpPathFile.deleteRecursively()
         }.onFailure {
             File(File(srcApkPath).parent + File.separator + "tmp").deleteRecursively()
             if (showLog) {

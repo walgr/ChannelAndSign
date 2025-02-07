@@ -33,17 +33,21 @@ tasks.register("zipJiaguLibrary", Zip::class) {
         include("src/**", "build.gradle")
         into("jiagulibrary")
     }
-    from(
-        "../gradle") {
+    from("../jiagulibrary") {
+        include("app/**")
+        into("")
+    }
+    from("../gradle") {
         into("gradle")
     }
     from(
         "../jiagulibrary/settings.gradle.kts",
         "../jiagulibrary/build.gradle.kts",
         "../jiagulibrary/local.properties",
+        "../jiagulibrary/gradle.properties",
+        "../jiagulibrary/jiagu.jks",
         "../gradlew",
-        "../gradle.properties",
-        "../gradlew.bat"
+        "../gradlew.bat",
     )
 }
 
