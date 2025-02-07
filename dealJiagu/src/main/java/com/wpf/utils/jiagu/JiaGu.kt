@@ -45,7 +45,7 @@ object JiaGu {
             }
             val packageName = ApplicationHelper.getPackageName(srcApkFile)
             val srcApplicationName = ApplicationHelper.getName(srcApkFile) ?: ""
-            val jiaguLibraryZip = ResourceManager.getResourceFile("jiaguLibrary.zip")
+            val jiaguLibraryZip = ResourceManager.getResourceFile("jiaguLibrary.zip", overwrite = true)
             val jiaGuHashKey = arrayOf(
                 srcApplicationName,
                 secretKey,
