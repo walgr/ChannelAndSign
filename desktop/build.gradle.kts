@@ -19,7 +19,7 @@ kotlin {
             dependencies {
                 api(project(":common"))
                 api(compose.desktop.currentOs)
-                api("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.8.18")
+                api("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.7.85.4")
             }
         }
     }
