@@ -14,6 +14,7 @@ fun main(args: Array<String>? = null) {
     var apiKey = ""
     var channel = ""
     var description = ""
+    var updateMsg = ""
     var buildType = "android"
     var apkPath = ""
     var uploadResultSavePath = ""
@@ -58,6 +59,9 @@ fun main(args: Array<String>? = null) {
         if ("-description" == arg) {
             description = nextInput
         }
+        if ("-updateMsg" == arg) {
+            updateMsg = nextInput
+        }
         if ("-delUploadApk" == arg) {
             delUploadApk = nextInput == "1"
         }
@@ -73,6 +77,7 @@ fun main(args: Array<String>? = null) {
             Upload.getUploadResult(apiKey, buildType, description, channel) { apkInfo ->
                 if (apkInfo != null) {
                     println("获取发布状态完成，App蒲公英信息如下：")
+                    apkInfo.updateMsg = updateMsg
                     val apkInfoJson = Gson().toJson(apkInfo)
                     val apkInfoStr = apkInfoJson
                         .replace("{", "")
