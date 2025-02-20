@@ -28,25 +28,12 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "MainKt"
-        buildTypes.release.proguard.isEnabled = false
+        buildTypes.release.proguard {
+            configurationFiles.from("rules.pro")
+        }
         nativeDistributions {
             //配置需要的模块
-            modules(
-                "java.instrument",
-                "java.net.http",
-                "jdk.jfr",
-                "jdk.jsobject",
-                "jdk.unsupported",
-                "jdk.unsupported.desktop",
-                "jdk.xml.dom"
-            )
-            windows {
-                iconFile.set(project.file("icon.png"))
-                dirChooser = true
-            }
-            macOS {
-                iconFile.set(project.file("icon.png"))
-            }
+            modules("java.instrument", "java.management", "java.naming", "java.prefs", "java.sql", "jdk.unsupported")
             targetFormats(TargetFormat.Exe, TargetFormat.Dmg)
             packageName = "ChannelAndSign"
             packageVersion = "1.0.0"
