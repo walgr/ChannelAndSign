@@ -6,18 +6,18 @@ import com.wpf.utils.isWinRuntime
 import java.io.File
 
 fun String.marketType(): MarketType {
-    return MarketType.values().find { market ->
+    return MarketType.entries.find { market ->
         this.contains(market.channelName, ignoreCase = true)
     } ?: MarketType.未知
 }
 fun String.channelName(): String? {
-    return MarketType.values().find { market ->
+    return MarketType.entries.find { market ->
         this.contains(market.channelName, ignoreCase = true)
     }?.channelName
 }
 
 fun String.abiType(): AbiType {
-    return AbiType.values().find { abi ->
+    return AbiType.entries.find { abi ->
         this.contains(abi.type)
     } ?: AbiType.Abi32_64
 }

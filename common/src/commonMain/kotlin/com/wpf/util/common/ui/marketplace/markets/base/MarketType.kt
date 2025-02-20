@@ -28,7 +28,7 @@ enum class MarketType(val channelName: String, val market: KClass<out Market> = 
 
 object MarketTypeHelper {
     fun find(channelName: String): MarketType? {
-        return MarketType.values().find {
+        return MarketType.entries.find {
             it.channelName == channelName
         }
     }

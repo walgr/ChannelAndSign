@@ -49,7 +49,7 @@ object MarketPlaceViewModel {
     fun getCanApiMarketList(): List<Market> {
         if (getDefaultSelectClientList().isEmpty()) return arrayListOf()
         if (canApiMarketList == null) {
-            canApiMarketList = MarketType.values().filter { marketType ->
+            canApiMarketList = MarketType.entries.filter { marketType ->
                 marketType.isApi()
             }.map { marketType ->
                 gson.fromJson("{}", marketType.market.java)
@@ -62,7 +62,7 @@ object MarketPlaceViewModel {
     }
 
     fun getCanApiMarketTypeList(): List<MarketType> {
-        val marketList = MarketType.values().filter { marketType ->
+        val marketList = MarketType.entries.filter { marketType ->
             marketType.isApi()
         }
         return marketList
