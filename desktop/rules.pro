@@ -1,5 +1,11 @@
 -dontwarn net.dongliu.**
+-dontwarn net.bytebuddy.**
 -dontwarn ch.qos.logback.**
+-dontwarn io.netty.**
+-dontwarn io.ktor.client.**
+-dontwarn io.ktor.**
+-dontwarn io.opentelemetry.**
+-dontwarn com.wpf.util.common.ui.**
 
 -keep class org.bouncycastle.** { *; }
 -keep class kotlinx.coroutines.** { *; }
