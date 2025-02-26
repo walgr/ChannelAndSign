@@ -119,9 +119,9 @@ object JiaGu {
                             "implementation(\"androidx.annotation:annotation:1.7.0\")",
                             "implementation(\"com.android.support:support-annotations:28.0.0\")"
                         )
-                        if (showLog) {
-                            println("修改后AppBuild配置：\n${desText}")
-                        }
+//                        if (showLog) {
+//                            println("修改后AppBuild配置：\n${desText}")
+//                        }
                         writeText(desText)
                     }
                 }
