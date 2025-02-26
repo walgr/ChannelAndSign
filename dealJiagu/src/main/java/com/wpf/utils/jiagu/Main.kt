@@ -19,6 +19,7 @@ fun main(args: Array<String>? = null) {
     var keyStorePassword = ""
     var keyPassword = ""
     var cachePath = ""
+    var isAndroidX = true
     var isDebug = false
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
@@ -59,6 +60,9 @@ fun main(args: Array<String>? = null) {
         if ("-cachePath" == arg) {
             cachePath = nextInput
         }
+        if ("-isAndroidX" == arg) {
+            isAndroidX = nextInput == "1"
+        }
         if ("-isDebug" == arg) {
             isDebug = nextInput == "1"
         }
@@ -77,6 +81,7 @@ fun main(args: Array<String>? = null) {
         signAlias = signAlias,
         keyStorePassword = keyStorePassword,
         keyPassword = keyPassword,
+        isAndroidX = isAndroidX,
         showLog = isDebug
     )
     println("加固结束，用时:${(System.currentTimeMillis() - startTime).formatTime()}")

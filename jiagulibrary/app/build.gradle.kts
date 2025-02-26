@@ -58,6 +58,7 @@ android {
 }
 
 dependencies {
+    //修改annotation版本需要同步修改JiaGu.kt替换代码
     implementation("androidx.annotation:annotation:1.7.0")
     implementation(project(":jiagulibrary"))
 }

@@ -31,6 +31,7 @@ object JiaGu {
         signAlias: String = "",
         keyStorePassword: String = "",
         keyPassword: String = "",
+        isAndroidX: Boolean = true,
         showLog: Boolean = false,
     ) {
         kotlin.runCatching {
@@ -99,6 +100,35 @@ object JiaGu {
                 FileUtil.unZipFiles(jiaguLibraryZip, projectRootPath)
                 ResourceManager.delResourceByPath(jiaguLibraryZip.path)
 
+                if (isAndroidX) {
+                    if (showLog) {
+                        println("是AndroidX,删除Android的CoreComponentFactory")
+                    }
+                    File("$projectRootPath/app/src/main/java/android".replace("/", File.separator)).deleteRecursively()
+                } else {
+                    if (showLog) {
+                        println("非AndroidX,删除AndroidX的CoreComponentFactory")
+                    }
+                    File("$projectRootPath/app/src/main/java/androidx".replace("/", File.separator)).deleteRecursively()
+                    File("$projectRootPath/app/build.gradle.kts".replace("/", File.separator)).apply {
+                        val srcText = readText()
+//                        if (showLog) {
+//                            println("原始AppBuild配置：\n${srcText}")
+//                        }
+                        val desText = srcText.replace(
+                            "implementation(\"androidx.annotation:annotation:1.7.0\")",
+                            "implementation(\"com.android.support:support-annotations:28.0.0\")"
+                        )
+                        if (showLog) {
+                            println("修改后AppBuild配置：\n${desText}")
+                        }
+                        writeText(desText)
+                    }
+                }
+
+                if (showLog) {
+                    println("修改秘钥")
+                }
                 //设置加固加密秘钥
                 val aesCFile =
                     File(projectRootPath + "/jiagulibrary/src/main/cpp/utils/aes.c".replace("/", File.separator))
@@ -110,7 +140,13 @@ object JiaGu {
                 aesCFileStr =
                     aesCFileStr.replace("const char\\* AES_IV = \".*\";".toRegex(), "const char* AES_IV = \"$keyVi\";")
                 aesCFile.writeText(aesCFileStr)
+//                if (showLog) {
+//                    println("修改后秘钥代码:${aesCFileStr}")
+//                }
 
+                if (showLog) {
+                    println("正在打加固壳Apk")
+                }
                 if (androidSdkPath.isNotEmpty()) {
                     val localPropertiesFile = File(projectRootPath + File.separator + "local.properties")
                     localPropertiesFile.writeText("sdk.dir=${androidSdkPath.checkWinPath()}")
@@ -118,11 +154,11 @@ object JiaGu {
                 if (isLinuxRuntime || isMacRuntime) {
                     Runtime.getRuntime().exec(arrayOf("chmod", "-R", "+x", "${projectRootPath}gradlew")).waitFor()
                 }
-                if (showLog) {
-                    println("正在打加固壳Apk")
-                }
                 val cmdApk =
-                    mutableListOf("${projectRootPath}gradlew" + if (isWinRuntime) ".bat" else "", ":app:assembleRelease")
+                    mutableListOf(
+                        "${projectRootPath}gradlew" + if (isWinRuntime) ".bat" else "",
+                        ":app:assembleRelease"
+                    )
                 if (jdkPath.isNotEmpty()) {
                     cmdApk.addAll(arrayOf("-D", "org.gradle.java.home=${jdkPath}"))
                 }
@@ -131,7 +167,11 @@ object JiaGu {
                 LogStreamThread(processApk.errorStream, showLog).start()
                 val resultApk = processApk.waitFor()
                 println(if (resultApk == 0) "Apk打包成功" else "Apk打包失败")
-                if (resultApk != 0) return
+                if (resultApk != 0) {
+                    jiaguApkFile.deleteRecursively()
+                    File(File(srcApkPath).parent + File.separator + "tmp").deleteRecursively()
+                    return
+                }
 
                 val jiaguAppFile = File(
                     projectRootPath + "app/build/outputs/apk/release/".replace("/", File.separator)
@@ -153,7 +193,10 @@ object JiaGu {
                 }
 
                 jiaguAppZip.getInputStream("lib/arm64-v8a/libjiagu.so")?.let {
-                    FileUtil.save2File(it, File(jiaguAppFile.parent + File.separator + "jni/arm64-v8a/libjiagu.so").createCheck(true))
+                    FileUtil.save2File(
+                        it,
+                        File(jiaguAppFile.parent + File.separator + "jni/arm64-v8a/libjiagu.so").createCheck(true)
+                    )
                     it.close()
                 }
                 jiaguReleaseDexFile.copyTo(jiaguDexCacheHashFile, true)
@@ -222,6 +265,9 @@ object JiaGu {
             //1字节application名长度 + app的application名
             var tempDex = ByteArray(1 + srcApplicationName.length)
             tempDex[0] = srcApplicationName.length.toByte()
+            if (showLog) {
+                println("写入原始apk中ApplicationName:${srcApplicationName}, 长度:${srcApplicationName.length}")
+            }
             if (srcApplicationName.isNotEmpty()) {
                 System.arraycopy(
                     srcApplicationName.toByteArray(),
