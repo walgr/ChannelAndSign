@@ -11,9 +11,8 @@ repositories {
 
 dependencies {
     implementation("net.dongliu:apk-parser:2.6.10")
-//    api("com.wpf.utils:tools:1.1.18")
-    api(project(":Tools"))
-    api("com.android:zipflinger:7.3.1")              //压缩包操作
+    api("com.wpf.utils:tools:+")
+    api("com.android:zipflinger:8.7.3")              //压缩包操作
 //    implementation(project(":AXMLEditor3"))
 //    implementation("co.touchlab:kermit:2.0.0-RC4")            //日志保存
     implementation(kotlin("stdlib-jdk8"))
@@ -33,7 +32,7 @@ tasks.register("打包", Jar::class) {
     destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))
     manifest {
         attributes["Main-Class"] = "com.wpf.base.dealfile.MainKt"
-        attributes["Manifest-Version"] = "1.0.1"
+        attributes["Manifest-Version"] = "1.0.0"
     }
     from(
         sourceSets.main.get().output,
@@ -44,7 +43,6 @@ tasks.register("打包", Jar::class) {
         "META-INF/*.SF",
         "META-INF/*.DSA",
         "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt",
         "META-INF/versions/9/module-info.class",
         "module-info.class",
         "META-INF/INDEX.LIST"

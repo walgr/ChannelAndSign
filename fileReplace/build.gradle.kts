@@ -27,7 +27,7 @@ tasks.register("打包", Jar::class) {
     destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))
     manifest {
         attributes["Main-Class"] = "com.wpf.utils.MainKt"
-        attributes["Manifest-Version"] = "1.0.1"
+        attributes["Manifest-Version"] = "1.0.0"
     }
     from(
         sourceSets.main.get().output,

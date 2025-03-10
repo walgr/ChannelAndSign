@@ -1,11 +1,12 @@
 pluginManagement {
     repositories {
-        maven("https://maven.aliyun.com/repository/public")
-        maven("https://maven.aliyun.com/repository/central")
-        maven("https://maven.aliyun.com/repository/gradle-plugin")
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         google()
         gradlePluginPortal()
         mavenCentral()
+        maven("https://maven.aliyun.com/repository/public")
+        maven("https://maven.aliyun.com/repository/central")
+        maven("https://maven.aliyun.com/repository/gradle-plugin")
     }
 
     plugins {
@@ -14,7 +15,8 @@ pluginManagement {
         id("org.jetbrains.compose").version(extra["compose.version"] as String)
         id("com.android.application") version "7.4.2"
         id("com.android.library") version "7.4.2"
-        id("org.jetbrains.kotlin.android") version "1.9.21"
+        id("org.jetbrains.kotlin.android") version "2.1.0"
+        id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
     }
 }
 

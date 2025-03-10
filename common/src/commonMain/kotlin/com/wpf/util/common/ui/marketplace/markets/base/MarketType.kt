@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
  * 支持平台
  */
 enum class MarketType(val channelName: String, val market: KClass<out Market> = UnknownMarket::class) {
-    qh360("360", market = QH360Market::class),
+//    qh360("360", market = QH360Market::class),
     百度("Baidu"),
     应用宝("QQ"),
     魅族("Meizu"),
@@ -23,7 +23,8 @@ enum class MarketType(val channelName: String, val market: KClass<out Market> = 
         return market != UnknownMarket::class
     }
 
-    fun isBrowser() = market is BrowserMarket
+    fun isBrowser() = false
+//    market is BrowserMarket
 }
 
 object MarketTypeHelper {

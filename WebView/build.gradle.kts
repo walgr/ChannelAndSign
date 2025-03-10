@@ -1,9 +1,9 @@
 import org.gradle.internal.os.OperatingSystem
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
 //    id("multiplatform-compose-setup")
 }
 
@@ -22,9 +22,8 @@ val platform = when {
 val jdkVersion = "17"
 
 kotlin {
-    jvm("desktop") {
-        jvmToolchain(17)
-    }
+    jvmToolchain(17)
+    jvm("desktop")
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -43,8 +42,8 @@ kotlin {
                 api("org.openjfx:javafx-media:$jdkVersion:${platform}")
                 api("org.openjfx:javafx-web:$jdkVersion:${platform}")
                 api("org.openjfx:javafx-swing:$jdkVersion:${platform}")
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.7.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.9.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
                 //selenium-自动化测试
                 api("org.seleniumhq.selenium:selenium-java:4.11.0")
 

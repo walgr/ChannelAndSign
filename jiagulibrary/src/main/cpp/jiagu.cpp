@@ -293,12 +293,11 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
     // 获取application name
     int app_len = decryptdex[0];
     char app_name[app_len + 1];
-
     if (app_len != 0) {
        memset(app_name, 0, app_len + 1);
        memcpy(app_name, decryptdex + 1, app_len);
     }
-    LOGD("app name len: %d", app_len);
+    LOGD("app name: %s", app_name);
 
     void *art_handle;
     if (g_sdk_int < 26) {

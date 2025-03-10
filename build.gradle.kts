@@ -4,6 +4,10 @@ version = "1.0-SNAPSHOT"
 allprojects {
     repositories {
         mavenLocal()
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        google()
+        mavenCentral()
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         maven("https://maven.aliyun.com/repository/public")
         maven("https://maven.aliyun.com/repository/central")
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
@@ -14,8 +18,6 @@ allprojects {
                 password = "ZwOcLGu7St6N"
             }
         }
-        google()
-        mavenCentral()
     }
 }
 
@@ -24,4 +26,5 @@ plugins {
     kotlin("multiplatform") apply false
     kotlin("plugin.serialization") apply false
     id("org.jetbrains.compose") apply false
+    id("org.jetbrains.kotlin.plugin.compose") apply false
 }

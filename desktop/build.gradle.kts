@@ -3,15 +3,15 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 group = "com.wpf.compose.desktop"
 version = "1.0-SNAPSHOT"
 
-
 kotlin {
+    jvmToolchain(17)
     jvm {
-        jvmToolchain(17)
         withJava()
     }
     sourceSets {
@@ -19,7 +19,7 @@ kotlin {
             dependencies {
                 api(project(":common"))
                 api(compose.desktop.currentOs)
-                api("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.7.85.4")
+                api("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:0.8.18")
             }
         }
     }
@@ -33,21 +33,7 @@ compose.desktop {
         }
         nativeDistributions {
             //配置需要的模块
-            modules(
-                "java.compiler",
-                "java.instrument",
-                "java.management",
-                "java.naming",
-                "java.net.http",
-                "java.prefs",
-                "java.security.jgss",
-                "java.sql",
-                "jdk.jfr",
-                "jdk.jsobject",
-                "jdk.unsupported",
-                "jdk.unsupported.desktop",
-                "jdk.xml.dom"
-            )
+            modules("java.instrument", "java.management", "java.naming", "java.prefs", "java.sql", "jdk.unsupported")
             targetFormats(TargetFormat.Exe, TargetFormat.Dmg)
             packageName = "ChannelAndSign"
             packageVersion = "1.0.0"
