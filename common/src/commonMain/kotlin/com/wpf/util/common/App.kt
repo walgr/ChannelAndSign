@@ -12,10 +12,12 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,6 +27,7 @@ import com.wpf.util.common.ui.base.Menu
 import com.wpf.util.common.ui.channelset.channelPage
 import com.wpf.util.common.ui.configset.configPage
 import com.wpf.util.common.ui.dosign.doSignPage
+import com.wpf.util.common.ui.hm.hmPage
 import com.wpf.util.common.ui.jiagu.jiaguPage
 import com.wpf.util.common.ui.mainBgColor
 import com.wpf.util.common.ui.marketplace.marketPlacePage
@@ -36,16 +39,10 @@ import kotlin.system.exitProcess
 @Preview
 @Composable
 fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
-//    LaunchedEffect(window) {
-//        println("文件服务已开启")
-//        FileServer.serverBasePath = settings.getString("serverBasePath", "")
-//        withContext(Dispatchers.IO) {
-//            FileServer.start()
-//        }
-//    }
     val menuList = remember {
         mutableStateListOf(
-            Menu("加固", true),
+            Menu("鸿蒙", true),
+            Menu("加固"),
             Menu("渠道打包"),
             Menu("签名打包"),
             Menu("市场配置"),
@@ -101,7 +98,7 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                             exitProcess(0)
                         }
                     }) {
-                        Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White, modifier = Modifier)
+                        Icon(Icons.Default.ExitToApp, "关闭", tint = Color.White, modifier = Modifier.rotate(180f))
                     }
                 }
             }
@@ -110,16 +107,18 @@ fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
                     .background(color = Color(226, 228, 246))
             ) {
                 if (menuList[0].isSelectState.value) {
-                    jiaguPage()
+                    hmPage()
                 } else if (menuList[1].isSelectState.value) {
-                    channelPage()
+                    jiaguPage()
                 } else if (menuList[2].isSelectState.value) {
-                    doSignPage()
+                    channelPage()
                 } else if (menuList[3].isSelectState.value) {
-                    marketPlacePage()
+                    doSignPage()
                 } else if (menuList[4].isSelectState.value) {
-                    signPage()
+                    marketPlacePage()
                 } else if (menuList[5].isSelectState.value) {
+                    signPage()
+                } else if (menuList[6].isSelectState.value) {
                     configPage()
                 }
             }

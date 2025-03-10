@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -20,7 +21,13 @@ import javax.swing.JFileChooser
 
 @Preview
 @Composable
-fun Title(title: String, modifier: Modifier? = null, onClick: (() -> Unit)? = null) {
+fun Title(
+    title: String,
+    modifier: Modifier? = null,
+    rightIcon: ImageVector = Icons.Default.AddCircle,
+    rightContentDescription: String? = "添加",
+    onClick: (() -> Unit)? = null
+) {
     Box(
         modifier = modifier ?: Modifier.fillMaxWidth().height(44.dp),
         contentAlignment = Alignment.Center
@@ -36,9 +43,7 @@ fun Title(title: String, modifier: Modifier? = null, onClick: (() -> Unit)? = nu
                 modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd
             ) {
                 IconButton(onClick = onClick) {
-                    Icon(
-                        Icons.Default.AddCircle, "添加", modifier = Modifier.size(18.dp)
-                    )
+                    Icon(rightIcon, rightContentDescription, modifier = Modifier.size(18.dp))
                 }
             }
         }
