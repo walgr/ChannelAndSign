@@ -132,6 +132,9 @@ object HmVM {
         }
     }
 
+    private var curDownloadServerBaseUrl = ""
+    private var curDownloadPackageName = ""
+    private var curDownloadAppVersion = ""
     fun setDownloadData(
         serverBaseUrl: String,
         packageName: String,
@@ -157,12 +160,15 @@ object HmVM {
         forceDownload: Boolean = false,
         callback: (file: ServerHapInfo) -> Unit
     ) {
-        if (timer != null) {
+        if (timer != null && curDownloadServerBaseUrl == serverBaseUrl && curDownloadPackageName == packageName && curDownloadAppVersion == appVersion) {
             return
         }
-//        timer?.cancel()
+        timer?.cancel()
         timer = Timer()
         println("开始定时获取新包，间隔:${time}")
+        curDownloadServerBaseUrl = serverBaseUrl
+        curDownloadPackageName = packageName
+        curDownloadAppVersion = appVersion
         timer?.schedule(object : TimerTask() {
             override fun run() {
                 getNewHmHap(serverBaseUrl, packageName, appVersion, forceDownload, callback)
