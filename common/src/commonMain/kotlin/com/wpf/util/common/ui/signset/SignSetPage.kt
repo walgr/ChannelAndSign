@@ -180,7 +180,7 @@ fun signPage() {
                                             }
                                         }
                                         Icon(Icons.Default.Close, "删除",
-                                            modifier = Modifier.align(Alignment.TopEnd)
+                                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                                                 .onClick {
                                                     signList.remove(it)
                                                     signList.saveData()

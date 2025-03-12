@@ -33,8 +33,7 @@ val client = HttpClient(CIO) {
     install(ContentNegotiation) {
         json()
     }
-    install(HttpCookies) {
-    }
+    install(HttpCookies)
     install(Logging) {
         logger = Logger.SIMPLE
         level = LogLevel.ALL

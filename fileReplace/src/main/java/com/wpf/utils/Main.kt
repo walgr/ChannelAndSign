@@ -4,7 +4,7 @@ import java.io.File
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
-        println("参数异常:${args.contentToString()}")
+        println("参数异常:请输入参数")
         return
     }
     var filePath = ""

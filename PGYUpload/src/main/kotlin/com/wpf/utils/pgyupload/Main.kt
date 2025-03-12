@@ -8,7 +8,7 @@ import kotlin.system.exitProcess
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
-        println("参数异常，请检查输入参数")
+        println("参数异常，请检查输入")
         return
     }
     var apiKey = ""

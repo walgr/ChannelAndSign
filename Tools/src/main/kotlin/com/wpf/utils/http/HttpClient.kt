@@ -83,7 +83,18 @@ object HttpClient {
     ): Job {
         return CoroutineScope(Dispatchers.IO).launch {
             runCatching {
-                val responseData = client.get(serverUrl, request)
+                val responseData = client.get(serverUrl) {
+                    request.invoke(this)
+                    var oldProgress = 0
+                    onDownload { bytesSentTotal, contentLength ->
+                        if (contentLength == null) return@onDownload
+                        val curProgress = (bytesSentTotal * 100 / contentLength).toInt()
+                        if (curProgress > oldProgress) {
+                            oldProgress = curProgress
+                            println("正在下载:${saveName}, 进度:${curProgress}%")
+                        }
+                    }
+                }
                 if (responseData.status == HttpStatusCode.OK) {
                     val contentDisposition =
                         responseData.headers[HttpHeaders.ContentDisposition]
@@ -129,6 +140,7 @@ object HttpClient {
         }
     }
 
+    @Deprecated("废弃")
     fun downloadFile(
         serverUrl: String,
         request: HttpRequestBuilder.() -> Unit = {},

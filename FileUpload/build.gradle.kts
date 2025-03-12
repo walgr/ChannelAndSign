@@ -2,7 +2,7 @@ plugins {
     id("kotlin")
 }
 
-group = "com.wpf.util"
+group = "com.wpf.tools.fileupload"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -10,13 +10,9 @@ repositories {
 }
 
 dependencies {
-    implementation("net.dongliu:apk-parser:2.6.10")
-//    api("com.wpf.utils:tools:+")
-    api(project(":Tools"))
-    api("com.android:zipflinger:8.7.3")              //压缩包操作
-//    implementation(project(":AXMLEditor3"))
-//    implementation("co.touchlab:kermit:2.0.0-RC4")            //日志保存
     implementation(kotlin("stdlib-jdk8"))
+    implementation("com.wpf.utils:tools:+")
+    implementation("net.dongliu:apk-parser:2.6.10")
 }
 
 java {
@@ -29,10 +25,10 @@ kotlin {
 
 tasks.register("打包", Jar::class) {
     group = "jar"
-    archiveFileName = "打渠道包并签名.jar"
+    archiveFileName = "FileUpload.jar"
     destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))
     manifest {
-        attributes["Main-Class"] = "com.wpf.base.dealfile.MainKt"
+        attributes["Main-Class"] = "com.wpf.tools.fileupload.MainKt"
         attributes["Manifest-Version"] = "1.0.0"
     }
     from(

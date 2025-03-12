@@ -5,17 +5,20 @@ plugins {
 }
 
 group = "com.wpf.utils"
-val versionName = "1.1.20"
+val versionName = "1.1.21"
 version = versionName
 
 dependencies {
     api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    api("ohos.tools:unpack:1.0.0")
     api("com.reandroid.arsc:ARSCLib:1.3.5")
     api("io.ktor:ktor-client-core:3.0.3")
     implementation("io.ktor:ktor-client-cio:3.0.3")
     api("ch.qos.logback:logback-classic:1.5.15")
     api("commons-codec:commons-codec:1.16.0")
     api("com.google.code.gson:gson:2.11.0")
+    api("com.alibaba:fastjson:2.0.56")
+
 }
 
 java {

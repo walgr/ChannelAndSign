@@ -8,8 +8,8 @@ import com.wpf.utils.isWinRuntime
 import java.io.File
 
 class HMClientInfo {
-    val name: String = ""
-    val connectInfo: String = ""
+    var name: String = ""
+    var connectInfo: String = ""
 }
 
 object HDCUtil {
@@ -29,21 +29,102 @@ object HDCUtil {
             }
         }
 
-    fun dealCommand(commands: MutableList<String>): Boolean {
+    fun dealCommand(commands: MutableList<String>): String {
         if (isLinuxRuntime || isMacRuntime) {
             Runtime.getRuntime().exec(arrayOf("chmod", "-R", "777", toolPath)).waitFor()
         }
         commands.add(0, toolPath)
         val process = Runtime.getRuntime().exec(commands.toTypedArray())
-        LogStreamThread(process.inputStream).start()
+        var logs = ""
+        LogStreamThread(process.inputStream, true, showAllLog = {
+            logs = it
+            false
+        }).start()
         LogStreamThread(process.errorStream).start()
-        val result = process.waitFor()
+        process.waitFor()
         process.destroy()
-        return result == 0
+        return logs
     }
 
     fun getClientList(): List<HMClientInfo> {
-        dealCommand(mutableListOf("list", "targets", "-v"))
-        return emptyList()
+        val clientsLog = dealCommand(mutableListOf("list", "targets"))
+        val clientsLogs = clientsLog.split("\n").filter { it.isNotEmpty() }
+        if (clientsLogs.size == 1 && clientsLogs[0] == "[Empty]") return emptyList()
+        return clientsLogs.map {
+            HMClientInfo().apply {
+                name = it.split(" ")[0]
+                connectInfo = it
+            }
+        }
+    }
+
+    fun connectClient(clientAddress: String): Boolean {
+        println("开始连接鸿蒙设备:$clientAddress")
+        var isSuccess = false
+        val connectLog = dealCommand(mutableListOf("tconn", clientAddress))
+        println(connectLog)
+        isSuccess = connectLog.contains("OK")
+        println("连接鸿蒙设备:${if (isSuccess) "成功" else "失败"}")
+        return isSuccess
+    }
+
+    fun installHap(hapFile: File, appBundleId: String, abilityName: String, connectKey: String = ""): Boolean {
+        println("开始安装到鸿蒙设备" + (if (connectKey.isEmpty()) "" else ":$connectKey"))
+        var isSuccess = false
+        println(dealCommand(mutableListOf("shell", "aa", "force-stop", appBundleId).apply {
+            if (connectKey.isNotEmpty()) {
+                addAll(0, listOf("-t", connectKey))
+            }
+        }))
+        val tmpDir = (appBundleId + System.currentTimeMillis()).hashCode()
+        println(dealCommand(mutableListOf("shell", "mkdir", "data/local/tmp/${tmpDir}").apply {
+            if (connectKey.isNotEmpty()) {
+                addAll(0, listOf("-t", connectKey))
+            }
+        }))
+        println(dealCommand(mutableListOf("file", "send", hapFile.path, "data/local/tmp/${tmpDir}").apply {
+            if (connectKey.isNotEmpty()) {
+                addAll(0, listOf("-t", connectKey))
+            }
+        }))
+        val installLog = dealCommand(mutableListOf("shell", "bm", "install", "-p", "data/local/tmp/${tmpDir}").apply {
+            if (connectKey.isNotEmpty()) {
+                addAll(0, listOf("-t", connectKey))
+            }
+        })
+        println(installLog)
+        isSuccess = installLog.contains("successfully")
+        println(dealCommand(mutableListOf("shell", "rm", "-rf", "data/local/tmp/${tmpDir}").apply {
+            if (connectKey.isNotEmpty()) {
+                addAll(0, listOf("-t", connectKey))
+            }
+        }))
+        println(dealCommand(mutableListOf("shell", "aa", "start", "-a", abilityName, "-b", appBundleId).apply {
+            if (connectKey.isNotEmpty()) {
+                addAll(0, listOf("-t", connectKey))
+            }
+        }))
+        println("安装到鸿蒙设备${connectKey}:${if (isSuccess) "成功" else "失败"}")
+        return isSuccess
+    }
+
+    fun changeToUsb(): Boolean {
+        println("开始切换")
+        var isSuccess = false
+        val installLog = dealCommand(mutableListOf("tmode", "usb"))
+        println(installLog)
+        isSuccess = installLog.contains("successful")
+        println("切换:${if (isSuccess) "成功" else "失败"}")
+        return isSuccess
+    }
+
+    fun changeToPort(port: String = "5555"): Boolean {
+        println("开始切换")
+        var isSuccess = false
+        val installLog = dealCommand(mutableListOf("tmode", "port", port))
+        println(installLog)
+        isSuccess = installLog.contains("successful")
+        println("切换:${if (isSuccess) "成功" else "失败"}")
+        return isSuccess
     }
 }

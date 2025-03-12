@@ -21,10 +21,13 @@ class LogStreamThread(
         kotlin.runCatching {
             do {
                 line = bf.readLine()
-                if (showAll) {
-                    allLogBuilder.append(line)
-                }
                 if (line != null) {
+                    if (showAll) {
+                        if (allLogBuilder.isNotEmpty()) {
+                            allLogBuilder.append("\n")
+                        }
+                        allLogBuilder.append(line)
+                    }
                     if (showLogInLine) {
                         println(line)
                     }
@@ -33,7 +36,7 @@ class LogStreamThread(
             inputStream.close()
             if (showAll) {
                 val allLog = allLogBuilder.toString()
-                if (showAllLog?.invoke(allLog) == true) {
+                if (showAllLog.invoke(allLog) == true) {
                     println(allLog)
                 }
             }
