@@ -97,7 +97,7 @@ fun hmPage() {
                                         hmClientConnectAddress.value = it
                                     }
                                     Button({
-                                        if (HDCUtil.connectClient(hmClientConnectAddress.value)) {
+                                        HDCUtil.connectClient(hmClientConnectAddress.value) {
                                             hmClientList.clear()
                                             hmClientList.addAll(hmVM.getClientList())
                                         }

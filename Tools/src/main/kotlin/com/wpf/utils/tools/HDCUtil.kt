@@ -5,6 +5,13 @@ import com.wpf.utils.ex.FileUtil
 import com.wpf.utils.isLinuxRuntime
 import com.wpf.utils.isMacRuntime
 import com.wpf.utils.isWinRuntime
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class HMClientInfo {
@@ -29,7 +36,7 @@ object HDCUtil {
             }
         }
 
-    fun dealCommand(commands: MutableList<String>): String {
+    fun dealCommand(commands: MutableList<String>, logCallback: ((log: String) -> Unit)? = null): String {
         if (isLinuxRuntime || isMacRuntime) {
             Runtime.getRuntime().exec(arrayOf("chmod", "-R", "777", toolPath)).waitFor()
         }
@@ -38,10 +45,11 @@ object HDCUtil {
         var logs = ""
         LogStreamThread(process.inputStream, true, showAllLog = {
             logs = it
+            logCallback?.invoke(logs)
             false
         }).start()
         LogStreamThread(process.errorStream).start()
-        process.waitFor()
+        if (logCallback == null) process.waitFor()
         process.destroy()
         return logs
     }
@@ -58,14 +66,17 @@ object HDCUtil {
         }
     }
 
-    fun connectClient(clientAddress: String): Boolean {
+    fun connectClient(clientAddress: String, callbackInSuccess: () -> Unit) {
         println("开始连接鸿蒙设备:$clientAddress")
         var isSuccess = false
-        val connectLog = dealCommand(mutableListOf("tconn", clientAddress))
-        println(connectLog)
-        isSuccess = connectLog.contains("OK")
-        println("连接鸿蒙设备:${if (isSuccess) "成功" else "失败"}")
-        return isSuccess
+        dealCommand(mutableListOf("tconn", clientAddress)) { connectLog ->
+            println(connectLog)
+            isSuccess = connectLog.contains("OK")
+            println("连接鸿蒙设备:${if (isSuccess) "成功" else "失败"}")
+            if (isSuccess) {
+                callbackInSuccess()
+            }
+        }
     }
 
     fun installHap(hapFile: File, appBundleId: String, abilityName: String, connectKey: String = ""): Boolean {
