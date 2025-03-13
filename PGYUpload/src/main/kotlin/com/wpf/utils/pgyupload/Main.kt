@@ -100,10 +100,12 @@ fun main(args: Array<String>? = null) {
                     println("上传蒲公英成功")
                 } else {
                     println("上传蒲公英失败")
+                    exitProcess(255)
                 }
             }
         } else {
             println("上传蒲公英失败")
+            exitProcess(255)
         }
     }
 }

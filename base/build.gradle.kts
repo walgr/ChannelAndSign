@@ -11,8 +11,8 @@ repositories {
 
 dependencies {
     implementation("net.dongliu:apk-parser:2.6.10")
-//    api("com.wpf.utils:tools:+")
-    api(project(":Tools"))
+    api("com.wpf.utils:tools:+")
+//    api(project(":Tools"))
     api("com.android:zipflinger:8.7.3")              //压缩包操作
 //    implementation(project(":AXMLEditor3"))
 //    implementation("co.touchlab:kermit:2.0.0-RC4")            //日志保存
