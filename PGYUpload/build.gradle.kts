@@ -46,7 +46,7 @@ afterEvaluate {
     }
 }
 
-tasks.register("打包", Jar::class) {
+tasks.register("上传蒲公英打包", Jar::class) {
     group = "jar"
     archiveFileName = "上传蒲公英.jar"
     destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))
@@ -63,6 +63,7 @@ tasks.register("打包", Jar::class) {
         "META-INF/*.SF",
         "META-INF/*.DSA",
         "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt",
         "META-INF/versions/9/module-info.class",
         "module-info.class",
         "META-INF/INDEX.LIST"

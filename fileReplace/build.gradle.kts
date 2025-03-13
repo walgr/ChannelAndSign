@@ -21,7 +21,7 @@ kotlin {
     jvmToolchain(8)
 }
 
-tasks.register("打包", Jar::class) {
+tasks.register("FileReplace打包", Jar::class) {
     group = "jar"
     archiveFileName = "FileReplace.jar"
     destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))

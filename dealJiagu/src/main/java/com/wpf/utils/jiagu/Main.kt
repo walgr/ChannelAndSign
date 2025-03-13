@@ -1,7 +1,7 @@
 package com.wpf.utils.jiagu
 
 import com.wpf.utils.ResourceManager
-import com.wpf.utils.formatTime
+import com.wpf.utils.jiagu.utils.formatTime
 
 fun main(args: Array<String>? = null) {
     if (args.isNullOrEmpty()) {
