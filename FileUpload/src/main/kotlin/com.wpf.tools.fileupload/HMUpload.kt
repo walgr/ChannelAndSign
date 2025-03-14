@@ -8,6 +8,8 @@ object HMUpload {
 
     val filterExtension = arrayOf("hap", "app", "hsp")
 
+    const val RETRY_TIME = 3
+    private var curRetryTime = 0
     fun upload(serviceBaseUrl: String, hapFile: File) {
         val hapInfo = HMUnpackingUtil.getHapInfo(hapFile)
         if (hapInfo != null && !hapInfo.bundleName.isNullOrEmpty()) {
@@ -22,6 +24,10 @@ object HMUpload {
                     println("上传成功")
                 } else {
                     println("上传失败")
+                    if (curRetryTime++ < RETRY_TIME) {
+                        println("第${curRetryTime + 1}次重试")
+                        upload(serviceBaseUrl, hapFile)
+                    }
                 }
             }
         }

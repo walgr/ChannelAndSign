@@ -16,7 +16,7 @@ object HDCUtil {
     private val toolPath: String = ""
         get() {
             if (field.isEmpty() || !File(field).exists()) {
-                val zipFile = ResourceManager.getResourceFile("tools/hdc/hdc.zip", isFile = true)
+                val zipFile = ResourceManager.getResourceFile("tools/hdc.zip", isFile = true)
                 val outPath = zipFile.parent + File.separator + "hdc"
                 val outFile = File(outPath)
                 if (!outFile.exists() || outFile.listFiles()?.isEmpty() != false) {
@@ -29,21 +29,27 @@ object HDCUtil {
             }
         }
 
-    fun dealCommand(commands: MutableList<String>, logCallback: ((log: String) -> Unit)? = null): String {
+    fun dealCommand(commands: MutableList<String>, showLogInEnd: Boolean = true, logCallback: ((log: String) -> Unit)? = null): String {
         if (isLinuxRuntime || isMacRuntime) {
             Runtime.getRuntime().exec(arrayOf("chmod", "-R", "777", toolPath)).waitFor()
         }
         commands.add(0, toolPath)
+        println("执行命令:${commands.joinToString(" ")}")
         val process = Runtime.getRuntime().exec(commands.toTypedArray())
         var logs = ""
         LogStreamThread(process.inputStream, true, showAllLog = {
             logs = it
             logCallback?.invoke(logs)
+            if (showLogInEnd) {
+                println("执行命令结果日志:${logs}")
+            }
             false
         }).start()
         LogStreamThread(process.errorStream).start()
-        if (logCallback == null) process.waitFor()
-        process.destroy()
+        if (logCallback == null) {
+            process.waitFor()
+            process.destroy()
+        }
         return logs
     }
 
@@ -59,15 +65,15 @@ object HDCUtil {
         }
     }
 
-    fun connectClient(clientAddress: String, callbackInSuccess: () -> Unit) {
+    fun connectClient(clientAddress: String, callbackInSuccess: (() -> Unit)? = null) {
         println("开始连接鸿蒙设备:$clientAddress")
         var isSuccess = false
         dealCommand(mutableListOf("tconn", clientAddress)) { connectLog ->
             println(connectLog)
-            isSuccess = connectLog.contains("OK")
+            isSuccess = connectLog.contains("OK") || connectLog.contains("Target is connected")
             println("连接鸿蒙设备:${if (isSuccess) "成功" else "失败"}")
             if (isSuccess) {
-                callbackInSuccess()
+                callbackInSuccess?.invoke()
             }
         }
     }
@@ -75,39 +81,38 @@ object HDCUtil {
     fun installHap(hapFile: File, appBundleId: String, abilityName: String, connectKey: String = ""): Boolean {
         println("开始安装到鸿蒙设备" + (if (connectKey.isEmpty()) "" else ":$connectKey"))
         var isSuccess = false
-        println(dealCommand(mutableListOf("shell", "aa", "force-stop", appBundleId).apply {
+        dealCommand(mutableListOf("shell", "aa", "force-stop", appBundleId).apply {
             if (connectKey.isNotEmpty()) {
                 addAll(0, listOf("-t", connectKey))
             }
-        }))
+        })
         val tmpDir = (appBundleId + System.currentTimeMillis()).hashCode()
-        println(dealCommand(mutableListOf("shell", "mkdir", "data/local/tmp/${tmpDir}").apply {
+        dealCommand(mutableListOf("shell", "mkdir", "data/local/tmp/${tmpDir}").apply {
             if (connectKey.isNotEmpty()) {
                 addAll(0, listOf("-t", connectKey))
             }
-        }))
-        println(dealCommand(mutableListOf("file", "send", hapFile.path, "data/local/tmp/${tmpDir}").apply {
+        })
+        dealCommand(mutableListOf("file", "send", hapFile.path, "data/local/tmp/${tmpDir}").apply {
             if (connectKey.isNotEmpty()) {
                 addAll(0, listOf("-t", connectKey))
             }
-        }))
+        })
         val installLog = dealCommand(mutableListOf("shell", "bm", "install", "-p", "data/local/tmp/${tmpDir}").apply {
             if (connectKey.isNotEmpty()) {
                 addAll(0, listOf("-t", connectKey))
             }
         })
-        println(installLog)
         isSuccess = installLog.contains("successfully")
-        println(dealCommand(mutableListOf("shell", "rm", "-rf", "data/local/tmp/${tmpDir}").apply {
+        dealCommand(mutableListOf("shell", "rm", "-rf", "data/local/tmp/${tmpDir}").apply {
             if (connectKey.isNotEmpty()) {
                 addAll(0, listOf("-t", connectKey))
             }
-        }))
-        println(dealCommand(mutableListOf("shell", "aa", "start", "-a", abilityName, "-b", appBundleId).apply {
+        })
+        dealCommand(mutableListOf("shell", "aa", "start", "-a", abilityName, "-b", appBundleId).apply {
             if (connectKey.isNotEmpty()) {
                 addAll(0, listOf("-t", connectKey))
             }
-        }))
+        })
         println("安装到鸿蒙设备${connectKey}:${if (isSuccess) "成功" else "失败"}")
         return isSuccess
     }

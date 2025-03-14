@@ -6,6 +6,8 @@ import java.io.File
 
 object ApkUpload {
     val filterExtension = arrayOf("apk")
+    const val RETRY_TIME = 3
+    private var curRetryTime = 0
 
     fun upload(serviceBaseUrl: String, apkFile: File) {
         val apkMetaData = ApkParsers.getMetaInfo(apkFile)
@@ -24,6 +26,10 @@ object ApkUpload {
                 println("上传成功")
             } else {
                 println("上传失败")
+                if (curRetryTime++ < RETRY_TIME) {
+                    println("第${curRetryTime + 1}次重试")
+                    upload(serviceBaseUrl, apkFile)
+                }
             }
         }
     }
