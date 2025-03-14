@@ -16,7 +16,7 @@ object HDCUtil {
     private val toolPath: String = ""
         get() {
             if (field.isEmpty() || !File(field).exists()) {
-                val zipFile = ResourceManager.getResourceFile("tools/hdc/win/hdc.zip", isFile = true)
+                val zipFile = ResourceManager.getResourceFile("tools/hdc/hdc.zip", isFile = true)
                 val outPath = zipFile.parent + File.separator + "hdc"
                 val outFile = File(outPath)
                 if (!outFile.exists() || outFile.listFiles()?.isEmpty() != false) {
