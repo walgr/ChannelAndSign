@@ -24,6 +24,11 @@ object FileUtil {
         }
     }
 
+    fun save2File(inputStream: ByteArray, outputFile: File) {
+        println("保存数据到${outputFile.name},路径:${outputFile.path}, 大小:${inputStream.size}")
+        outputFile.writeBytes(inputStream)
+    }
+
     /**
      * 解压文件
      *
