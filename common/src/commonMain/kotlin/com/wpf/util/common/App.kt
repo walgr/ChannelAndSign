@@ -31,18 +31,13 @@ import com.wpf.util.common.ui.marketplace.marketPlacePage
 import com.wpf.util.common.ui.signset.signPage
 import com.wpf.util.common.ui.utils.OnApplicationExit
 import com.wpf.util.common.ui.utils.WindowDraggableArea
+import com.wpf.utils.ResourceManager
 import kotlin.system.exitProcess
 
 @Preview
 @Composable
 fun MainView(window: WindowScope, applicationScope: ApplicationScope) {
-//    LaunchedEffect(window) {
-//        println("文件服务已开启")
-//        FileServer.serverBasePath = settings.getString("serverBasePath", "")
-//        withContext(Dispatchers.IO) {
-//            FileServer.start()
-//        }
-//    }
+    ResourceManager.tempFolderPath = ""
     val menuList = remember {
         mutableStateListOf(
             Menu("加固", true),

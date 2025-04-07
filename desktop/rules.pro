@@ -6,6 +6,13 @@
 -dontwarn io.ktor.**
 -dontwarn io.opentelemetry.**
 -dontwarn com.wpf.util.common.ui.**
+-dontwarn com.alibaba.fastjson.**
+-dontwarn com.google.common.**
+-dontwarn com.taobao.sophix.**
+-dontwarn org.apache.commons.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openqa.selenium.**
+-dontwarn org.slf4j.**
 
 -keep class org.bouncycastle.** { *; }
 -keep class kotlinx.coroutines.** { *; }
