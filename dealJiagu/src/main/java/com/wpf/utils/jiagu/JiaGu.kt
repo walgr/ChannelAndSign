@@ -285,10 +285,7 @@ object JiaGu {
                 val oldDataArray = DexHelper.dealAllFunctionInNopInDex(
                     dexByteArray,
                     whiteList = arrayOf(
-                        (packageName ?: srcApplicationName.substring(
-                            0,
-                            srcApplicationName.lastIndexOf(".")
-                        )).replace(".", "/")
+                        (packageName ?: srcApplicationName.take(srcApplicationName.lastIndexOf("."))).replace(".", "/")
                     ),
                     blackList = arrayOf("databinding")
                 )
