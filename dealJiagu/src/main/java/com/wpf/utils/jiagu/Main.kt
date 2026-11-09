@@ -21,6 +21,7 @@ fun main(args: Array<String>? = null) {
     var cachePath = ""
     var isAndroidX = true
     var isDebug = false
+    var d2cConfigPath = ""
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
         if (arg.startsWith("-") && nextInput.startsWith("-")) {
@@ -66,6 +67,9 @@ fun main(args: Array<String>? = null) {
         if ("-isDebug" == arg) {
             isDebug = nextInput == "1"
         }
+        if ("-d2cConfig" == arg) {
+            d2cConfigPath = nextInput
+        }
     }
     ResourceManager.serverBaseUrl = serviceBaseUrl
     ResourceManager.cachePath = cachePath
@@ -82,7 +86,8 @@ fun main(args: Array<String>? = null) {
         keyStorePassword = keyStorePassword,
         keyPassword = keyPassword,
         isAndroidX = isAndroidX,
-        showLog = isDebug
+        showLog = isDebug,
+        d2cConfigPath = d2cConfigPath,
     )
     println("加固结束，用时:${(System.currentTimeMillis() - startTime).formatTime()}")
 }

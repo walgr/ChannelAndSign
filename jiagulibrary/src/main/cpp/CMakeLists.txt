@@ -27,6 +27,7 @@ add_library(
         jiagu
         SHARED
         jiagu.cpp
+        utils/d2c_generated.cpp
         utils/class_restore.cpp
         utils/art_symbol.cpp
         utils/xz/xz_crc32.c

@@ -14,6 +14,8 @@ import com.wpf.utils.jiagu.utils.AES128Helper.encrypt
 import com.wpf.utils.jiagu.utils.ApplicationHelper
 import com.wpf.utils.jiagu.utils.DexHelper
 import com.wpf.utils.jiagu.utils.EncryptUtils
+import com.wpf.utils.jiagu.d2c.D2cCompiler
+import com.wpf.utils.jiagu.d2c.D2cRules
 import com.wpf.utils.tools.LogStreamThread
 import com.wpf.utils.tools.SignHelper
 import net.lingala.zip4j.ZipFile
@@ -33,6 +35,7 @@ object JiaGu {
         keyPassword: String = "",
         isAndroidX: Boolean = true,
         showLog: Boolean = false,
+        d2cConfigPath: String = "",
     ) {
         kotlin.runCatching {
             require(secretKey.toByteArray(Charsets.UTF_8).size == 16 &&
@@ -50,6 +53,30 @@ object JiaGu {
             }
             val packageName = ApplicationHelper.getPackageName(srcApkFile)
             val srcApplicationName = ApplicationHelper.getName(srcApkFile) ?: ""
+            // Explicit exact-method rules override automatic selection under the manifest package.
+            val rulesFile = if (d2cConfigPath.isNotBlank()) File(d2cConfigPath)
+                else File(srcApkFile.parentFile, srcApkFile.nameWithoutExtension + ".d2c.txt")
+            require(d2cConfigPath.isBlank() || rulesFile.isFile) { "D2C config not found: $rulesFile" }
+            val d2c = run {
+                val explicitRules = if (rulesFile.isFile) D2cRules.read(rulesFile) else null
+                val original = ZipArchive(srcApkFile.toPath())
+                val inputs = try {
+                    DexHelper.getApkSrcDexList(original).associate { (name, stream) -> name to stream.use { it.readBytes() } }
+                } finally { original.close() }
+                val rules = explicitRules ?: D2cCompiler.selectDefaults(inputs,
+                    requireNotNull(packageName?.takeIf { it.isNotBlank() }) { "无法获取 APK 主包名，不能生成默认 D2C 白名单" }
+                ).also { selection ->
+                    println("D2C 默认白名单：$packageName 及其子包；可转换 ${selection.methods.size} 个方法，跳过 ${selection.skipped.size} 个不支持的方法")
+                    if (showLog) selection.skipped.values.forEach { println("D2C 跳过：$it") }
+                }.methods
+                D2cCompiler.compile(inputs, rules).also {
+                    println("D2C 已转换 ${it.methods.size} 个方法；其余方法继续使用第三代方法抽离")
+                }.takeIf { it.methods.isNotEmpty() }
+            }
+            val d2cHash = d2c?.let {
+                java.security.MessageDigest.getInstance("SHA-256").digest(it.source.toByteArray(Charsets.UTF_8))
+                    .joinToString("") { value -> "%02x".format(value.toInt() and 255) }
+            } ?: ""
             val jiaguLibraryZip = ResourceManager.getResourceFile("jiaguLibrary.zip", overwrite = true)
             val jiaGuHashKey = arrayOf(
                 srcApplicationName,
@@ -58,6 +85,7 @@ object JiaGu {
                 androidSdkPath,
                 jdkPath,
                 jiaguLibraryZip.md5(),
+                d2cHash,
             ).joinToString()
             if (showLog) {
                 println("加固缓存ID:${jiaGuHashKey.hashCode()}")
@@ -81,7 +109,8 @@ object JiaGu {
             var jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
             val jiaguCachePath =
                 ResourceManager.cachePath + File.separator + "cache/jiagu/".replace("/", File.separator)
-            val jiaguCacheHashPath = jiaguCachePath + File.separator + jiaGuHashKey.hashCode()
+            val jiaguCacheHashPath = jiaguCachePath + File.separator + jiaGuHashKey.hashCode() +
+                if (d2cHash.isEmpty()) "" else "_d2c_$d2cHash"
             File(jiaguCacheHashPath).createCheck(false)
             val jiaguDexCacheHashFile = File(jiaguCacheHashPath + File.separator + "classes.dex")
             val shellSoFiles = mapOf(
@@ -100,6 +129,10 @@ object JiaGu {
                 val projectRootPath = tmpPathFile.path + File.separator + "jiaguLibrary" + File.separator
                 File(projectRootPath).deleteRecursively()
                 FileUtil.unZipFiles(jiaguLibraryZip, projectRootPath)
+                if (d2c != null) {
+                    File(projectRootPath, "jiagulibrary/src/main/cpp/utils/d2c_generated.cpp")
+                        .writeText(d2c.source, Charsets.UTF_8)
+                }
                 ResourceManager.delResourceByPath(jiaguLibraryZip.path)
 
                 if (isAndroidX) {
@@ -255,7 +288,7 @@ object JiaGu {
             var encryptData: ByteArray? = null
             val srcDexList = DexHelper.getApkSrcDexList(jiaguApkZipArchive)
             srcDexList.forEachIndexed { index, pair ->
-                val dexByteArray = pair.second.readBytes()
+                val dexByteArray = d2c?.dexFiles?.get(pair.first) ?: pair.second.readBytes()
                 val oldDataArray = DexHelper.dealAllFunctionInNopInDex(
                     dexByteArray,
                     whiteList = arrayOf(
