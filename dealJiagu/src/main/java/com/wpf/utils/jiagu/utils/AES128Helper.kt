@@ -11,15 +11,19 @@ object AES128Helper {
     var DEFAULT_SECRET_KEY = "183ehypp8zaokmvf"
     var KEY_VI = "7dtu4vzwdwosceej"
 
-    private fun getEncryptCipher(model: Int): Cipher {
-        val key: SecretKey = SecretKeySpec(DEFAULT_SECRET_KEY.toByteArray(), "AES")
+    private fun getEncryptCipher(model: Int, secretKey: String, keyIv: String): Cipher {
+        val keyBytes = secretKey.toByteArray(Charsets.UTF_8)
+        val ivBytes = keyIv.toByteArray(Charsets.UTF_8)
+        require(keyBytes.size == 16 && ivBytes.size == 16) { "AES-128 key and IV must each contain 16 UTF-8 bytes" }
+        val key: SecretKey = SecretKeySpec(keyBytes, "AES")
         val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        cipher.init(model, key, IvParameterSpec(KEY_VI.toByteArray()))
+        cipher.init(model, key, IvParameterSpec(ivBytes))
         return cipher
     }
 
-    fun encrypt(data: ByteArray, len: Int): ByteArray {
-        val cipher = getEncryptCipher(Cipher.ENCRYPT_MODE)
+    fun encrypt(data: ByteArray, len: Int, secretKey: String = DEFAULT_SECRET_KEY, keyIv: String = KEY_VI): ByteArray {
+        require(len in 0..data.size) { "Encrypted prefix exceeds input length" }
+        val cipher = getEncryptCipher(Cipher.ENCRYPT_MODE, secretKey, keyIv)
         val decrypt = cipher.doFinal(data.copyOf(len))
 
         val temp = ByteArray(decrypt.size + data.size - len)

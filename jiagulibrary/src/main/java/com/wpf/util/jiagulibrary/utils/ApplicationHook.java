@@ -17,11 +17,19 @@ import java.util.Set;
 public class ApplicationHook {
 
     private static Application sDelegateApplication;
+    private static volatile ClassLoader sShellClassLoader;
+
+    /** Framework component creation must use the loader containing business DEX. */
+    public static ClassLoader componentClassLoader(ClassLoader frameworkLoader) {
+        ClassLoader loader = sShellClassLoader;
+        return loader != null ? loader : frameworkLoader;
+    }
 
     /**
      * jni层回调创建真实Application
      */
     public static void hook(Application application, String delegateApplicationName) {
+        sShellClassLoader = application.getClassLoader();
         if (TextUtils.isEmpty(delegateApplicationName) || StubApp.class.getName().equals(delegateApplicationName)) {
             sDelegateApplication = application;
             return;
@@ -34,13 +42,15 @@ public class ApplicationHook {
             // 创建插件中真实的Application且，执行生命周期
             ClassLoader classLoader = application.getClassLoader();
             Class<?> applicationClass = classLoader.loadClass(delegateApplicationName);
-            sDelegateApplication = (Application) applicationClass.newInstance();
+            Application delegate = (Application) applicationClass.newInstance();
 
             // 走DelegateApplication的生命周期
-            Reflect.invokeMethod(Application.class, sDelegateApplication, "attach",
-                    new Object[]{contextImpl}, Context.class);
+            Method attach = Application.class.getDeclaredMethod("attach", Context.class);
+            attach.setAccessible(true);
+            attach.invoke(delegate, contextImpl);
+            sDelegateApplication = delegate;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalStateException("Cannot attach original Application: " + delegateApplicationName, e);
         }
     }
 

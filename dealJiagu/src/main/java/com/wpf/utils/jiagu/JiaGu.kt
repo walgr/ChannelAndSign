@@ -35,6 +35,10 @@ object JiaGu {
         showLog: Boolean = false,
     ) {
         kotlin.runCatching {
+            require(secretKey.toByteArray(Charsets.UTF_8).size == 16 &&
+                    keyVi.toByteArray(Charsets.UTF_8).size == 16) {
+                "AES-128 密钥和 IV 必须各为 16 个 UTF-8 字节"
+            }
             if (srcApkPath.isEmpty()) {
                 println("该文件地址为空！")
                 return
@@ -56,7 +60,7 @@ object JiaGu {
                 jiaguLibraryZip.md5(),
             ).joinToString()
             if (showLog) {
-                println("加固HashKey:$jiaGuHashKey")
+                println("加固缓存ID:${jiaGuHashKey.hashCode()}")
             }
             if (srcApplicationName.isEmpty()) {
                 if (showLog) {
@@ -80,17 +84,15 @@ object JiaGu {
             val jiaguCacheHashPath = jiaguCachePath + File.separator + jiaGuHashKey.hashCode()
             File(jiaguCacheHashPath).createCheck(false)
             val jiaguDexCacheHashFile = File(jiaguCacheHashPath + File.separator + "classes.dex")
-            val jiaguSoV8CacheHashFile = File(jiaguCacheHashPath + File.separator + "libjiagu_v8a.so")
-            val jiaguSoV7CacheHashFile = File(jiaguCacheHashPath + File.separator + "libjiagu_v7a.so")
-            val jiaguSoCacheHashFile = File(jiaguCacheHashPath + File.separator + "libjiagu.so")
-            val jiaguSoX86CacheHashFile = File(jiaguCacheHashPath + File.separator + "libjiagu_x86.so")
-            val jiaguSoX8664CacheHashFile = File(jiaguCacheHashPath + File.separator + "libjiagu_x86_64.so")
+            val shellSoFiles = mapOf(
+                "arm64-v8a" to File(jiaguCacheHashPath, "libjiagu_v8a.so"),
+                "armeabi-v7a" to File(jiaguCacheHashPath, "libjiagu_v7a.so"),
+                "x86" to File(jiaguCacheHashPath, "libjiagu_x86.so"),
+                "x86_64" to File(jiaguCacheHashPath, "libjiagu_x86_64.so"),
+            )
 
-            if (!(jiaguDexCacheHashFile.exists() && (jiaguSoV8CacheHashFile.exists()
-                        || jiaguSoV7CacheHashFile.exists()
-                        || jiaguSoCacheHashFile.exists()
-                        || jiaguSoX86CacheHashFile.exists())
-                        || jiaguSoX8664CacheHashFile.exists())) {
+            if (!jiaguDexCacheHashFile.isFile || jiaguDexCacheHashFile.length() == 0L ||
+                shellSoFiles.values.any { !it.isFile || it.length() == 0L }) {
                 if (showLog) {
                     println("加固壳不存在，正在处理生成加固壳")
                 }
@@ -133,12 +135,14 @@ object JiaGu {
                 val aesCFile =
                     File(projectRootPath + "/jiagulibrary/src/main/cpp/utils/aes.c".replace("/", File.separator))
                 var aesCFileStr = aesCFile.readText()
-                aesCFileStr = aesCFileStr.replace(
-                    "const char\\* AES_KEYCODE = \".*\";".toRegex(),
-                    "const char* AES_KEYCODE = \"$secretKey\";"
-                )
-                aesCFileStr =
-                    aesCFileStr.replace("const char\\* AES_IV = \".*\";".toRegex(), "const char* AES_IV = \"$keyVi\";")
+                fun cBytes(value: String) = value.toByteArray(Charsets.UTF_8)
+                    .joinToString("") { "\\x%02x".format(it.toInt() and 0xff) }
+                aesCFileStr = "const char\\* AES_KEYCODE = \".*\";".toRegex().replace(aesCFileStr) {
+                    "const char* AES_KEYCODE = \"${cBytes(secretKey)}\";"
+                }
+                aesCFileStr = "const char\\* AES_IV = \".*\";".toRegex().replace(aesCFileStr) {
+                    "const char* AES_IV = \"${cBytes(keyVi)}\";"
+                }
                 aesCFile.writeText(aesCFileStr)
 //                if (showLog) {
 //                    println("修改后秘钥代码:${aesCFileStr}")
@@ -192,38 +196,18 @@ object JiaGu {
                     return
                 }
 
-                jiaguAppZip.getInputStream("lib/arm64-v8a/libjiagu.so")?.let {
-                    FileUtil.save2File(
-                        it,
-                        File(jiaguAppFile.parent + File.separator + "jni/arm64-v8a/libjiagu.so").createCheck(true)
-                    )
-                    it.close()
-                }
-                jiaguReleaseDexFile.copyTo(jiaguDexCacheHashFile, true)
-                File(jiaguAppFile.parent + File.separator + "jni/arm64-v8a/libjiagu.so").apply {
-                    if (exists()) {
-                        this.copyTo(jiaguSoV8CacheHashFile, true)
+                try {
+                    // Extract every ABI from the newly built shell APK, including Intel.
+                    shellSoFiles.forEach { (abi, cachedSo) ->
+                        val soStream = requireNotNull(jiaguAppZip.getInputStream("lib/$abi/libjiagu.so")) {
+                            "加固壳缺少 $abi/libjiagu.so"
+                        }
+                        soStream.use { FileUtil.save2File(it, cachedSo) }
+                        check(cachedSo.length() > 0L) { "加固壳 $abi/libjiagu.so 为空" }
                     }
-                }
-                File(jiaguAppFile.parent + File.separator + "jni/armeabi-v7a/libjiagu.so").apply {
-                    if (exists()) {
-                        this.copyTo(jiaguSoV7CacheHashFile, true)
-                    }
-                }
-                File(jiaguAppFile.parent + File.separator + "jni/armeabi/libjiagu.so").apply {
-                    if (exists()) {
-                        this.copyTo(jiaguSoCacheHashFile, true)
-                    }
-                }
-                File(jiaguAppFile.parent + File.separator + "jni/x86/libjiagu.so").apply {
-                    if (exists()) {
-                        this.copyTo(jiaguSoX86CacheHashFile, true)
-                    }
-                }
-                File(jiaguAppFile.parent + File.separator + "jni/x86_64/libjiagu.so").apply {
-                    if (exists()) {
-                        this.copyTo(jiaguSoX8664CacheHashFile, true)
-                    }
+                    jiaguReleaseDexFile.copyTo(jiaguDexCacheHashFile, true)
+                } finally {
+                    jiaguAppZip.close()
                 }
                 File(projectRootPath).deleteRecursively()
             } else {
@@ -235,29 +219,19 @@ object JiaGu {
             if (showLog) {
                 println("添加so到apk中")
             }
-            val soFileList = mutableMapOf(
-                "libjiagu_v8a.so" to jiaguSoV8CacheHashFile,
-            )
-            if (jiaguApkZipArchive.getInputStream("lib/armeabi-v7a") != null) {
-                soFileList["libjiagu_v7a.so"] = jiaguSoV7CacheHashFile
-            }
-            if (jiaguApkZipArchive.getInputStream("lib/armeabi") != null) {
-                soFileList["libjiagu.so"] = jiaguSoCacheHashFile
-            }
-            if (jiaguApkZipArchive.getInputStream("lib/x86") != null) {
-                soFileList["libjiagu_x86.so"] = jiaguSoX86CacheHashFile
-            }
-            if (jiaguApkZipArchive.getInputStream("lib/x86_64") != null) {
-                soFileList["libjiagu_x86_64.so"] = jiaguSoX8664CacheHashFile
-            }
-            soFileList.forEach {
+            // APKs often omit ZIP directory entries. Detect actual native-library files.
+            val apkEntries = jiaguApkZipArchive.listEntries()
+            val nativeAbis = apkEntries.filter { it.startsWith("lib/") && it.endsWith(".so") }
+                .map { it.removePrefix("lib/").substringBefore('/') }.toSet()
+            // Native-bridge emulators can run ARM APKs inside an Intel ART process.
+            val targetAbis = setOf("arm64-v8a", "x86", "x86_64") + nativeAbis
+            val soFileList = shellSoFiles.filterKeys { it in targetAbis }
+            check(soFileList.isNotEmpty()) { "原 APK 没有可用的加固壳 ABI: $targetAbis" }
+            soFileList.values.forEach { soFile ->
                 jiaguApkZipArchive.add(
-                    BytesSource(
-                        it.value.toPath(), "assets/" + it.key, Deflater.BEST_COMPRESSION
-                    )
+                    BytesSource(soFile.toPath(), "assets/" + soFile.name, Deflater.BEST_COMPRESSION)
                 )
             }
-
             val keDexByteArray = jiaguDexCacheHashFile.readBytes()
             if (showLog) {
                 println("合并原始apk中dex并加密")
@@ -320,7 +294,7 @@ object JiaGu {
                         tempDex.size - oldDataArray.size,
                         oldDataArray.size
                     ) // 源dex抽取代码
-                    encryptData = encrypt(tempDex, 512)
+                    encryptData = encrypt(tempDex, 512, secretKey = secretKey, keyIv = keyVi)
                 } else {
                     // 扩容 4字节源dex大小 + 源dex + 4字节源dex抽取代码大小 + 源dex抽取代码
                     encryptData =

@@ -41,14 +41,14 @@ public class CoreComponentFactory extends AppComponentFactory {
     public Activity instantiateActivity(
             @NonNull ClassLoader cl, @NonNull String className, @Nullable Intent intent)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return checkCompatWrapper(super.instantiateActivity(cl, className, intent));
+        return checkCompatWrapper(super.instantiateActivity(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className, intent));
     }
 
     @NonNull
     @Override
     public Application instantiateApplication(@NonNull ClassLoader cl, @NonNull String className)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return checkCompatWrapper(super.instantiateApplication(cl, className));
+        return checkCompatWrapper(super.instantiateApplication(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className));
     }
 
     @NonNull
@@ -56,14 +56,14 @@ public class CoreComponentFactory extends AppComponentFactory {
     public BroadcastReceiver instantiateReceiver(@NonNull ClassLoader cl, @NonNull String className,
                                                  @Nullable Intent intent)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return checkCompatWrapper(super.instantiateReceiver(cl, className, intent));
+        return checkCompatWrapper(super.instantiateReceiver(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className, intent));
     }
 
     @NonNull
     @Override
     public ContentProvider instantiateProvider(@NonNull ClassLoader cl, @NonNull String className)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return checkCompatWrapper(super.instantiateProvider(cl, className));
+        return checkCompatWrapper(super.instantiateProvider(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className));
     }
 
     @NonNull
@@ -71,7 +71,7 @@ public class CoreComponentFactory extends AppComponentFactory {
     public Service instantiateService(
             @NonNull ClassLoader cl, @NonNull String className, @Nullable Intent intent)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return checkCompatWrapper(super.instantiateService(cl, className, intent));
+        return checkCompatWrapper(super.instantiateService(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className, intent));
     }
 
     @SuppressWarnings("unchecked")

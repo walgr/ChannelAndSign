@@ -27,23 +27,23 @@ public class CoreComponentFactory extends AppComponentFactory {
     }
 
     public Activity instantiateActivity(ClassLoader cl, String className, Intent intent) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return (Activity)checkCompatWrapper(super.instantiateActivity(cl, className, intent));
+        return (Activity)checkCompatWrapper(super.instantiateActivity(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className, intent));
     }
 
     public Application instantiateApplication(ClassLoader cl, String className) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return (Application)checkCompatWrapper(super.instantiateApplication(cl, className));
+        return (Application)checkCompatWrapper(super.instantiateApplication(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className));
     }
 
     public BroadcastReceiver instantiateReceiver(ClassLoader cl, String className, Intent intent) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return (BroadcastReceiver)checkCompatWrapper(super.instantiateReceiver(cl, className, intent));
+        return (BroadcastReceiver)checkCompatWrapper(super.instantiateReceiver(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className, intent));
     }
 
     public ContentProvider instantiateProvider(ClassLoader cl, String className) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return (ContentProvider)checkCompatWrapper(super.instantiateProvider(cl, className));
+        return (ContentProvider)checkCompatWrapper(super.instantiateProvider(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className));
     }
 
     public Service instantiateService(ClassLoader cl, String className, Intent intent) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return (Service)checkCompatWrapper(super.instantiateService(cl, className, intent));
+        return (Service)checkCompatWrapper(super.instantiateService(com.wpf.util.jiagulibrary.utils.ApplicationHook.componentClassLoader(cl), className, intent));
     }
 
     static <T> T checkCompatWrapper(T obj) {

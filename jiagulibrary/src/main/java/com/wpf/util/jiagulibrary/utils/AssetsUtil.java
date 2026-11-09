@@ -1,63 +1,57 @@
 package com.wpf.util.jiagulibrary.utils;
 
 import android.content.Context;
-import android.os.Build;
+import android.content.pm.PackageManager;
 import android.util.Log;
 import com.wpf.util.jiagulibrary.StubApp;
-
 import java.io.*;
 import java.util.Objects;
 
 public class AssetsUtil {
-    public static String copyJiaGu(Context context) {
-        String absolutePath = Objects.requireNonNull(context.getFilesDir().getParentFile()).getAbsolutePath();
-        File jiaGuDir = new File(absolutePath, ".jiagu");
-        if (!jiaGuDir.exists()) {
-            boolean result = jiaGuDir.mkdir();
+    public static synchronized String copyJiaGu(Context context) {
+        File dataDir = Objects.requireNonNull(context.getFilesDir().getParentFile());
+        File directory = new File(dataDir, ".jiagu");
+        if (!directory.isDirectory() && !directory.mkdirs() && !directory.isDirectory()) {
+            throw new IllegalStateException("Cannot create shell directory: " + directory);
         }
-//        boolean result = jiaGuDir.mkdir();
-
-        String destSo = absolutePath + "/.jiagu/libjiagu" + StubApp.VERSION +".so";
-
-        String soName = "libjiagu.so";
-        if ("arm64-v8a".equals(Build.CPU_ABI)) {
-            soName = "libjiagu_v8a.so";
-        } else if ("armeabi-v7a".equals(Build.CPU_ABI)) {
-            soName = "libjiagu_v7a.so";
-        } else if ("x86".equals(Build.CPU_ABI)) {
-            soName = "libjiagu_x86.so";
-        } else if ("x86_64".equals(Build.CPU_ABI)) {
-            soName = "libjiagu_x86_64.so";
+        String abi = ShellAbi.detect();
+        String asset = ShellAbi.assetName(abi);
+        long updateTime;
+        try {
+            updateTime = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).lastUpdateTime;
+        } catch (PackageManager.NameNotFoundException error) {
+            throw new IllegalStateException("Cannot identify installed shell APK", error);
         }
+        File target = new File(directory, "libjiagu" + StubApp.VERSION + "_" + updateTime + "_" + abi + ".so");
+        Log.w("NDK_JIAGU", "processAbi=" + abi + ", asset=" + asset + ", target=" + target);
+        if (target.isFile() && target.length() > 0) return target.getAbsolutePath();
 
-        Log.w("NDK_JIAGU", "soName:" + soName);
-        writeFile(context, soName, destSo);
-        return destSo;
-    }
-
-    private static void writeFile(Context context, String in, String out) {
-        File outFile = new File(out);
-        if (outFile.exists()) {
-            return;
-        }
-
-        File jiaGuDir = outFile.getParentFile();
-        if (jiaGuDir != null) {
-            File[] files = jiaGuDir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    boolean result = file.delete();
-                    if (!result) continue;
+        File temporary = null;
+        try {
+            // Publish only complete SOs, including when multiple app processes start.
+            temporary = File.createTempFile("libjiagu-", ".tmp", directory);
+            try (InputStream input = context.getAssets().open(asset);
+                 FileOutputStream output = new FileOutputStream(temporary)) {
+                byte[] buffer = new byte[8192];
+                int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                output.getFD().sync();
+            }
+            if (temporary.length() == 0) throw new IOException("Empty shell SO asset");
+            try (InputStream input = new FileInputStream(temporary)) {
+                byte[] header = new byte[20];
+                new DataInputStream(input).readFully(header);
+                if (!abi.equals(ShellAbi.fromElfHeader(header))) {
+                    throw new IOException("Shell SO ELF does not match process ABI " + abi);
                 }
             }
-        }
-        try (InputStream is = context.getAssets().open(in); OutputStream os = new FileOutputStream(out)) {
-            byte[] buffer = new byte[1024 * 8];
-            int read;
-            while ((read = is.read(buffer)) != -1) {
-                os.write(buffer, 0, read);
-            }
-        } catch (IOException ignore) {
+            if (!temporary.renameTo(target)) throw new IOException("Cannot publish shell SO: " + target);
+            return target.getAbsolutePath();
+        } catch (IOException error) {
+            throw new IllegalStateException("Cannot extract shell SO: ABI=" + abi +
+                    ", asset=assets/" + asset + ", target=" + target, error);
+        } finally {
+            if (temporary != null && temporary.exists()) temporary.delete();
         }
     }
 }

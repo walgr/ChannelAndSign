@@ -39,7 +39,6 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 #include <stdint.h>
 #include <string.h> // CBC mode, for memset
 #include "aes.h"
-#include "plog.h"
 
 /*****************************************************************************/
 /* Defines:                                                                  */
@@ -608,6 +607,9 @@ char* tiny_aes_encrypt_cbc(char* in, int inLen, int* outLen)
 
 char* tiny_aes_decrypt_cbc(char* in, int inLen, int* outLen)
 {
+  if (!outLen) return NULL;
+  *outLen = 0;
+  if (!in || inLen <= 0 || inLen % 16 != 0) return NULL;
 
 #define AES_BLOCK_SIZE 16
   unsigned char Key[AES_BLOCK_SIZE + 1];
@@ -628,13 +630,16 @@ char* tiny_aes_decrypt_cbc(char* in, int inLen, int* outLen)
   //获取padding后的明文长度
   int padLen = inLen;
   //获取pad的值
-  int padValue = in[padLen - 1];
+  int padValue = (unsigned char)in[padLen - 1];
   //LOGD("[+]padValue:%d\n", padValue);
-  if ((padValue == 0) || (padValue > AES_BLOCK_SIZE))
+  if ((padValue == 0) || (padValue > AES_BLOCK_SIZE) || padValue > padLen)
   {
     //错误的padding，解密失败
     printf("[-]decrypt failed");
     return 0;
+  }
+  for (int i = padLen - padValue; i < padLen; ++i) {
+    if ((unsigned char)in[i] != padValue) return NULL;
   }
   int realLen = padLen - padValue;
   *outLen = realLen;

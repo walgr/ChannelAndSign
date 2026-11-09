@@ -48,6 +48,7 @@ object DexHelper {
             putAll(parseDexHelper.virtualMethodCodeItemMap)
         }
         val byteBuffer = ByteArrayOutputStream()
+        val extractedOffsets = mutableSetOf<Int>()
         var count = 0
         allFunctionMap.forEach { (funName, codeItem) ->
             if (count++ < maxDealSize) {
@@ -57,6 +58,8 @@ object DexHelper {
                 if (!blackList.isNullOrEmpty() && blackList.find { funName.contains(it, false) } != null) {
                     return@forEach
                 }
+                // Multiple methods can share one code_item. Preserve its original bytes once.
+                if (!extractedOffsets.add(codeItem.insnsOffset)) return@forEach
                 val nopBytes = ByteArray(codeItem.insns_size * 2)
                 repeat(codeItem.insns_size * 2) {
                     nopBytes[it] = 0
@@ -68,7 +71,7 @@ object DexHelper {
             }
 
         }
-//        fixDex(dexBytes)
+        fixDex(dexBytes)
         return byteBuffer.toByteArray()
     }
 

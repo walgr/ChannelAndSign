@@ -53,7 +53,7 @@ tasks.register("zipJiaguLibrary", Zip::class) {
 
 tasks.register("加固打包", Jar::class) {
     group = "jiagu"
-//    dependsOn("zipJiaguLibrary")
+    dependsOn("zipJiaguLibrary")
     archiveFileName = "加固.jar"
     destinationDirectory.set(file("D:\\Android\\ShareFile\\tools"))
     manifest {
@@ -74,4 +74,16 @@ tasks.register("加固打包", Jar::class) {
         "module-info.class",
         "META-INF/INDEX.LIST"
     )
+}
+
+// JiaGu loads the shell sources from this resource, including in desktop builds.
+tasks.named("processResources") {
+    dependsOn("zipJiaguLibrary")
+}
+
+tasks.register<JavaExec>("verifyAesPayload") {
+    group = "verification"
+    dependsOn("testClasses")
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.utils.AES128HelperRegressionKt")
 }

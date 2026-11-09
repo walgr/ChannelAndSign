@@ -14,9 +14,10 @@ android {
         versionName = "1.0.0"
 
         ndk {
-            this.abiFilters.add("armeabi")
             this.abiFilters.add("armeabi-v7a")
             this.abiFilters.add("arm64-v8a")
+            this.abiFilters.add("x86")
+            this.abiFilters.add("x86_64")
         }
     }
 

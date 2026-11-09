@@ -16,6 +16,8 @@
 #include "utils/aes.h"
 #include "utils/dlopen.h"
 #include "utils/memload.h"
+#include "utils/class_restore.h"
+#include "utils/method_restore.h"
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 
@@ -199,28 +201,47 @@ static jobject openmemory_load_dex(JNIEnv *env, void *art_handle, char *base, in
     return dexFile;
 }
 
-static void make_dex_elements(JNIEnv *env, jobject classLoader, std::vector<jobject> dexFileobjs)
+static bool make_dex_elements(JNIEnv *env, jobject classLoader, std::vector<jobject> dexFileobjs)
 {
-    jclass PathClassLoader = env->GetObjectClass(classLoader);
-    jclass BaseDexClassLoader = env->GetSuperclass(PathClassLoader);
+    if (!classLoader || dexFileobjs.empty() || env->ExceptionCheck()) return false;
+    jclass BaseDexClassLoader = env->FindClass("dalvik/system/BaseDexClassLoader");
+    if (!BaseDexClassLoader || !env->IsInstanceOf(classLoader, BaseDexClassLoader)) return false;
     // get pathList fieldid
     jfieldID pathListid = env->GetFieldID(BaseDexClassLoader, "pathList", "Ldalvik/system/DexPathList;");
+    if (!pathListid) return false;
     jobject pathList = env->GetObjectField(classLoader, pathListid);
+    if (!pathList || env->ExceptionCheck()) return false;
 
     // get DexPathList Class
     jclass DexPathListClass = env->GetObjectClass(pathList);
     // get dexElements fieldid
     jfieldID dexElementsid = env->GetFieldID(DexPathListClass, "dexElements", "[Ldalvik/system/DexPathList$Element;");
+    if (!dexElementsid) return false;
     jobjectArray dexElement = static_cast<jobjectArray>(env->GetObjectField(pathList, dexElementsid));
+    if (!dexElement || env->ExceptionCheck()) return false;
 
     jint len = env->GetArrayLength(dexElement);
 
-    LOGD("[+]Elements size:%d, dex File size: %d", len, dexFileobjs.size());
+    if (g_sdk_int >= 26) {
+        std::vector<jobject> missing;
+        for (jobject candidate : dexFileobjs) {
+            bool present = false;
+            for (int i = 0; i < len; ++i) {
+                jobject element = env->GetObjectArrayElement(dexElement, i);
+                present |= env->IsSameObject(candidate, element);
+                env->DeleteLocalRef(element);
+            }
+            if (!present) missing.push_back(candidate);
+        }
+        dexFileobjs.swap(missing);
+    }
+    LOGD("[+]Elements size:%d, append memory elements:%zu", len, dexFileobjs.size());
 
     // Get dexElement all values and add  add each value to the new array
     jclass ElementClass = env->FindClass(
             "dalvik/system/DexPathList$Element"); // dalvik/system/DexPathList$Element
     jobjectArray new_dexElement = env->NewObjectArray(len + dexFileobjs.size(), ElementClass, NULL);
+    if (!new_dexElement) return false;
     for (int i = 0; i < len; i++)
     {
         env->SetObjectArrayElement(new_dexElement, i, env->GetObjectArrayElement(dexElement, i));
@@ -241,13 +262,15 @@ static void make_dex_elements(JNIEnv *env, jobject classLoader, std::vector<jobj
         }
     }
     env->SetObjectField(pathList, dexElementsid, new_dexElement);
+    bool success = !env->ExceptionCheck();
 
     env->DeleteLocalRef(ElementClass);
     env->DeleteLocalRef(dexElement);
     env->DeleteLocalRef(DexPathListClass);
     env->DeleteLocalRef(pathList);
     env->DeleteLocalRef(BaseDexClassLoader);
-    env->DeleteLocalRef(PathClassLoader);
+    env->DeleteLocalRef(new_dexElement);
+    return success;
 }
 
 static void hook_application(jobject app, jstring name) {
@@ -255,17 +278,18 @@ static void hook_application(jobject app, jstring name) {
 }
 
 
-void restoreDexData(char *dexData, char *srcData, int srcDataLength) {
-    int index = 0;
-    while (index < srcDataLength) {
-        int insnsOffset = byte2Int(srcData, index);
-        index += 4;
-        int srcDataSize = byte2Int(srcData, index);
-        index += 4;
-        memcpy(dexData + insnsOffset, srcData + index, srcDataSize);
-        index += srcDataSize;
+static void restore_error(JNIEnv *env, const char *message) {
+    LOGE("%s", message);
+    if (env->ExceptionCheck()) return;
+    jclass error = env->FindClass("java/lang/IllegalStateException");
+    if (error) {
+        env->ThrowNew(error, message);
+        env->DeleteLocalRef(error);
     }
 }
+
+// DirectByteBuffer and the DefineClass hook outlive attachBaseContext.
+static std::vector<std::vector<uint8_t>> dexPayloads;
 
 /**
  * Dex加密格式
@@ -275,32 +299,93 @@ void restoreDexData(char *dexData, char *srcData, int srcDataLength) {
  */
 static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
 
-    jbyte* dexData = env->GetByteArrayElements(dexArray, NULL);
+    if (!dexArray || env->ExceptionCheck()) return;
     jint dexlen = env->GetArrayLength(dexArray);
-    // 4字节壳dex大小
-    int shell_len = byte2Int(reinterpret_cast<char *>(dexData), dexlen - 4);
-    // 前512字节进行AES解密
-    int tmp;
-    int decryptdex_len = dexlen - 4 - shell_len - 16; // AES加密后数据长度会增加16字节，这里要去掉
-    char *decryptdex = (char *) malloc(decryptdex_len * sizeof(char));
-    LOGD("decrypt start");
-    char *temp = tiny_aes_decrypt_cbc(reinterpret_cast<char *>(dexData + shell_len), 512 + 16, &tmp);
-    LOGD("decrypt end");
-    int tempSize = strlen(temp);
-    memcpy(decryptdex, temp, tmp);
-    memcpy(decryptdex + tmp, dexData + shell_len + 512 + 16, decryptdex_len - tmp);
-
-    // 获取application name
-    int app_len = decryptdex[0];
-    char app_name[app_len + 1];
-
-    if (app_len != 0) {
-       memset(app_name, 0, app_len + 1);
-       memcpy(app_name, decryptdex + 1, app_len);
+    if (dexlen < 4) {
+        restore_error(env, "Truncated shell DEX");
+        return;
     }
-    LOGD("app name len: %d", app_len);
+    jbyte *dexData = env->GetByteArrayElements(dexArray, nullptr);
+    if (!dexData) return;
+    uint32_t shell_len = method_restore::be32(reinterpret_cast<uint8_t *>(dexData) + dexlen - 4);
+    if (shell_len > uint32_t(dexlen - 4) || uint32_t(dexlen - 4) - shell_len < 528) {
+        env->ReleaseByteArrayElements(dexArray, dexData, JNI_ABORT);
+        restore_error(env, "Invalid encrypted DEX payload length");
+        return;
+    }
+    int tmp = 0;
+    char encrypted[528];
+    memcpy(encrypted, dexData + shell_len, sizeof(encrypted));
+    char *temp = tiny_aes_decrypt_cbc(encrypted, sizeof(encrypted), &tmp);
+    if (!temp || tmp != 512) {
+        env->ReleaseByteArrayElements(dexArray, dexData, JNI_ABORT);
+        restore_error(env, "Cannot decrypt DEX payload");
+        return;
+    }
+    const size_t decryptdex_len = dexlen - 4 - shell_len - 16;
+    dexPayloads.emplace_back(decryptdex_len);
+    char *decryptdex = reinterpret_cast<char *>(dexPayloads.back().data());
+    memcpy(decryptdex, temp, tmp);
+    memcpy(decryptdex + tmp, dexData + shell_len + 528, decryptdex_len - tmp);
+    env->ReleaseByteArrayElements(dexArray, dexData, JNI_ABORT);
 
-    void *art_handle;
+    const size_t app_len = static_cast<uint8_t>(decryptdex[0]);
+    if (!method_restore::range(1, app_len, decryptdex_len)) {
+        restore_error(env, "Invalid application name length");
+        return;
+    }
+    std::string app_name(decryptdex + 1, app_len);
+
+    struct DexSlice { char *data; uint32_t length; };
+    std::vector<DexSlice> slices;
+    size_t index = 1 + app_len;
+    while (index < decryptdex_len) {
+        if (!method_restore::range(index, 4, decryptdex_len)) {
+            restore_error(env, "Truncated DEX length");
+            return;
+        }
+        uint32_t length = method_restore::be32(reinterpret_cast<uint8_t *>(decryptdex + index));
+        index += 4;
+        if (length < 112 || !method_restore::range(index, length, decryptdex_len)) {
+            restore_error(env, "Invalid DEX length");
+            return;
+        }
+        char *begin = decryptdex + index;
+        if (!slices.empty()) {
+            for (int i = 0; i < 112; ++i) begin[i] ^= 0x66;
+        }
+          // Older producers left the checksum from before method extraction.
+          // ART verifies the still-extracted bytes before DefineClass can run.
+          uint32_t a = 1, b = 0;
+          for (size_t p = 12; p < length; ++p) {
+              a = (a + static_cast<uint8_t>(begin[p])) % 65521;
+              b = (b + a) % 65521;
+          }
+          uint32_t checksum = (b << 16) | a;
+          for (unsigned p = 0; p < 4; ++p) begin[8 + p] = checksum >> (8 * p);
+        index += length;
+        if (!method_restore::range(index, 4, decryptdex_len)) {
+            restore_error(env, "Truncated extracted method length");
+            return;
+        }
+        uint32_t methodsLength = method_restore::be32(reinterpret_cast<uint8_t *>(decryptdex + index));
+        index += 4;
+        if (!method_restore::range(index, methodsLength, decryptdex_len) ||
+            !register_method_dex(reinterpret_cast<uint8_t *>(begin), length,
+                                 reinterpret_cast<uint8_t *>(decryptdex + index), methodsLength)) {
+            restore_error(env, "Invalid extracted method records");
+            return;
+        }
+        slices.push_back({begin, length});
+        index += methodsLength;
+    }
+    // All DEX records must be registered before ART can define any business class.
+    if (slices.empty() || !install_class_restore(env, g_sdk_int)) {
+        restore_error(env, "Class-based method restoration requires arm64/x86/x86_64 ART API 26+ and a supported DefineClass hook");
+        return;
+    }
+
+    void *art_handle = nullptr;
     if (g_sdk_int < 26) {
         art_handle = ndk_dlopen(LIB_ART_PATH, RTLD_NOW);
         if (!art_handle) {
@@ -315,41 +400,21 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
     std::vector<jobject> dexobjs;
     std::vector<jobject> dexBuffers;
 
-    int index = 1 + app_len, count = 0;
-    while (index < decryptdex_len) {
-        // 每一个真正的dex的长度
-        int dexLength = byte2Int((char *) decryptdex, index);
-        index += 4;
-
-        // dex2、dex3数据解密
-        if (count != 0) {
-            for (int i = 0; i < 112; i++) {
-                decryptdex[index + i] ^= 0x66;
-            }
-        }
-
+    for (const auto &slice : slices) {
         if (g_sdk_int < 26) {
-            jobject mCookie = openmemory_load_dex(env, art_handle, (char *) decryptdex + index, dexLength);
+            jobject mCookie = openmemory_load_dex(env, art_handle, slice.data, slice.length);
             if (mCookie) {
                 dexobjs.push_back(mCookie);
             }
 
         } else {
-            jobject dexBuffer = env->NewDirectByteBuffer(decryptdex + index, dexLength);
+            jobject dexBuffer = env->NewDirectByteBuffer(slice.data, slice.length);
             dexBuffers.push_back(dexBuffer);
         }
 
-        index += dexLength;
-        int oldDexDataLength = byte2Int((char *) decryptdex, index);
-        index += 4;
-        char *oldDexData = (char *) malloc(oldDexDataLength * sizeof(char));
-        memcpy(oldDexData, decryptdex + index, oldDexDataLength);
-        restoreDexData(decryptdex + (index - dexLength - 4), oldDexData, oldDexDataLength);
-        index += oldDexDataLength;
-        count++;
     }
 
-    jstring appname = env->NewStringUTF(app_name);
+    jstring appname = env->NewStringUTF(app_name.c_str());
     if (g_sdk_int < 26) {
         ndk_dlclose(art_handle);
     } else {
@@ -360,34 +425,62 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
         }
 
         jclass InMemoryDexClassLoaderClass = env->FindClass("dalvik/system/InMemoryDexClassLoader");
+        // API 26 only has the single-buffer constructor; the array overload is API 27+.
         jmethodID InMemoryDexClassLoaderInit = env->GetMethodID(InMemoryDexClassLoaderClass, "<init>",
-                                                                "([Ljava/nio/ByteBuffer;Ljava/lang/ClassLoader;)V");
-        jobject InMemoryObj = env->NewObject(InMemoryDexClassLoaderClass, InMemoryDexClassLoaderInit, dexBufferArr, classLoader);
-        jobject pathListObj = GetField(InMemoryObj, "pathList", "Ldalvik/system/DexPathList;").l;
-        jobjectArray dexElements;
-        if (g_sdk_int >= 29) {
-            jclass list_jcs = env->FindClass("java/util/ArrayList");
-            jmethodID list_init = env->GetMethodID(list_jcs, "<init>", "()V");
-            jobject list_obj = env->NewObject(list_jcs, list_init);
-            dexElements = static_cast<jobjectArray>(CallStaticMethod("dalvik/system/DexPathList", "makeInMemoryDexElements", "([Ljava/nio/ByteBuffer;Ljava/util/List;)[Ldalvik/system/DexPathList$Element;", dexBufferArr, list_obj).l);
-        } else {
-            dexElements = static_cast<jobjectArray>(GetField(pathListObj, "dexElements", "[Ldalvik/system/DexPathList$Element;").l);
-        }
-
-        for (int i = 0; i < env->GetArrayLength(dexElements); i++) {
-            dexobjs.push_back(env->GetObjectArrayElement(dexElements, i));
+                g_sdk_int == 26 ? "(Ljava/nio/ByteBuffer;Ljava/lang/ClassLoader;)V"
+                                : "([Ljava/nio/ByteBuffer;Ljava/lang/ClassLoader;)V");
+        if (!InMemoryDexClassLoaderInit) return;
+        const size_t loaderCount = g_sdk_int == 26 ? dexBuffers.size() : 1;
+        for (size_t n = 0; n < loaderCount; ++n) {
+            jobject buffers = g_sdk_int == 26 ? dexBuffers[n] : dexBufferArr;
+            jobject InMemoryObj = env->NewObject(InMemoryDexClassLoaderClass,
+                    InMemoryDexClassLoaderInit, buffers, classLoader);
+            if (!InMemoryObj || env->ExceptionCheck()) return;
+            jobject pathListObj = GetField(InMemoryObj, "pathList", "Ldalvik/system/DexPathList;").l;
+            if (!pathListObj || env->ExceptionCheck()) return;
+            jobjectArray dexElements = static_cast<jobjectArray>(
+                    GetField(pathListObj, "dexElements", "[Ldalvik/system/DexPathList$Element;").l);
+            if (!dexElements || env->ExceptionCheck()) return;
+              if (env->GetArrayLength(dexElements) == 0) {
+                  jobjectArray failures = static_cast<jobjectArray>(GetField(pathListObj,
+                      "dexElementsSuppressedExceptions", "[Ljava/io/IOException;").l);
+                  if (failures && env->GetArrayLength(failures)) {
+                      env->Throw(static_cast<jthrowable>(env->GetObjectArrayElement(failures, 0)));
+                  } else restore_error(env, "InMemoryDexClassLoader produced no DEX elements");
+                  return;
+              }
+            for (int i = 0; i < env->GetArrayLength(dexElements); ++i) {
+                dexobjs.push_back(env->GetObjectArrayElement(dexElements, i));
+            }
+            env->DeleteLocalRef(dexElements);
+            env->DeleteLocalRef(pathListObj);
+            env->DeleteLocalRef(InMemoryObj);
         }
 
         env->DeleteLocalRef(ElementClass);
         env->DeleteLocalRef(InMemoryDexClassLoaderClass);
-        env->DeleteLocalRef(InMemoryObj);
-        env->DeleteLocalRef(pathListObj);
+        env->DeleteLocalRef(dexBufferArr);
     }
 
-    make_dex_elements(env, classLoader, dexobjs);
+    if (!make_dex_elements(env, classLoader, dexobjs)) {
+        restore_error(env, "Cannot inject business DEX into application ClassLoader");
+        return;
+    }
     hook_application(application, appname);
+    if (env->ExceptionCheck()) return;
+    // Original attachBaseContext may replace/reset the loader or its dexElements.
+    if (!make_dex_elements(env, classLoader, dexobjs)) {
+        restore_error(env, "Original Application removed business DEX elements");
+        return;
+    }
+    jobject currentLoader = CallObjectMethod(g_context, "getClassLoader", "()Ljava/lang/ClassLoader;").l;
+    if (!currentLoader || env->ExceptionCheck()) return;
+    if (!env->IsSameObject(currentLoader, classLoader) && !make_dex_elements(env, currentLoader, dexobjs)) {
+        restore_error(env, "Cannot inject business DEX into replaced ClassLoader");
+        return;
+    }
+    env->DeleteLocalRef(currentLoader);
 
-    free(decryptdex);
     for (int i = 0; i < dexobjs.size(); i++) {
         env->DeleteLocalRef(dexobjs[i]);
     }
@@ -396,7 +489,6 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
     }
     env->DeleteLocalRef(classLoader);
     env->DeleteLocalRef(appname);
-    env->ReleaseByteArrayElements(dexArray, dexData, 0);
 }
 
 void uninit(JNIEnv *env) {
