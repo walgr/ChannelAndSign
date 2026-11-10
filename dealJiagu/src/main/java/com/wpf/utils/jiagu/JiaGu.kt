@@ -14,6 +14,7 @@ import com.wpf.utils.jiagu.utils.AES128Helper.encrypt
 import com.wpf.utils.jiagu.utils.ApplicationHelper
 import com.wpf.utils.jiagu.utils.DexHelper
 import com.wpf.utils.jiagu.utils.EncryptUtils
+import com.wpf.utils.jiagu.utils.formatTime
 import com.wpf.utils.jiagu.d2c.D2cCompiler
 import com.wpf.utils.jiagu.d2c.D2cRules
 import com.wpf.utils.tools.LogStreamThread
@@ -36,6 +37,7 @@ object JiaGu {
         showLog: Boolean = false,
         d2cConfigPath: String = "",
     ) {
+        val startedAt = System.nanoTime()
         if (File(srcApkPath).extension.equals("xapk", true)) {
             val input = File(srcApkPath).absoluteFile
             val output = File(input.parentFile, input.nameWithoutExtension +
@@ -63,7 +65,8 @@ object JiaGu {
                     "XAPK 内 APK 签名证书不一致"
                 }
             }
-            println("XAPK 加固完成：$output" + if (signFilePath.isBlank()) "；安装前请对整个 XAPK 统一签名" else "")
+            println("XAPK 加固完成：$output，耗时：${((System.nanoTime() - startedAt) / 1_000_000).formatTime()}" +
+                if (signFilePath.isBlank()) "；安装前请对整个 XAPK 统一签名" else "")
             return
         }
         kotlin.runCatching {
@@ -232,15 +235,11 @@ object JiaGu {
                     if (isLinuxRuntime || isMacRuntime) {
                         Runtime.getRuntime().exec(arrayOf("chmod", "-R", "+x", "${projectRootPath}gradlew")).waitFor()
                     }
-                    val cmdApk =
-                        mutableListOf(
-                            "${projectRootPath}gradlew" + if (isWinRuntime) ".bat" else "",
-                            ":app:assembleRelease"
-                        )
-                    if (jdkPath.isNotEmpty()) {
-                        cmdApk.addAll(arrayOf("-D", "org.gradle.java.home=${jdkPath}"))
-                    }
-                    val processApk = ProcessBuilder(cmdApk).directory(File(projectRootPath)).start()
+                    val gradle = ShellGradle.prepare(File(projectRootPath), jdkPath, listOf(":app:assembleRelease"))
+                    println(gradle.description)
+                    val processApk = ProcessBuilder(gradle.command).directory(File(projectRootPath)).apply {
+                        environment().putAll(gradle.environment)
+                    }.start()
                     LogStreamThread(processApk.inputStream, showLog).start()
                     LogStreamThread(processApk.errorStream, showLog).start()
                     val resultApk = processApk.waitFor()
@@ -457,9 +456,7 @@ object JiaGu {
             fixManifestFile.delete()
             jiaguApkZipArchive.close()
             IntegritySeal.seal(jiaguApkFile, integrityKey)
-            if (showLog) {
-                println("加固完成：${srcApkPath},加固包：${jiaguApkFile.path}")
-            }
+            var completedPath = jiaguApkFile.path
             //签名
             if (signFilePath.isNotEmpty()) {
                 if (showLog) {
@@ -476,6 +473,7 @@ object JiaGu {
                     androidSdkPath = androidSdkPath
                 )
                 if (signOutFile.isNotEmpty()) {
+                    completedPath = signOutFile
                     if (showLog) {
                         println("签名完成：$signOutFile")
                     }
@@ -485,6 +483,7 @@ object JiaGu {
                     }
                 }
             }
+            println("加固完成：$srcApkPath，加固包：$completedPath，耗时：${((System.nanoTime() - startedAt) / 1_000_000).formatTime()}")
         }.onFailure {
             if (showLog) {
                 println(it.message)

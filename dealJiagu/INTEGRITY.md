@@ -24,3 +24,11 @@ gradlew :dealJiagu:verifyXapk -PxapkHarden
 2026-11-10：四 ABI 的新增窄整数 D2C/混合/VMP JNI 库编译通过；Android API 36 x86_64 ART 开启 CheckJNI 后，原 DEX、D2C、混合、全 VMP 的 17 个整数边界输入与全部 boolean 组合结果一致，日志 `build/protection-narrow-art-results.txt`。完整 XAPK 加固、统一签名及签名记录验证通过，日志 `build/protection-upgrade-final.log`。壳工程使用独立的短临时目录，避免 XAPK 嵌套路径触发 Windows CMake/Ninja 重生成失败；完成或失败后均清理该目录，不再删除输入旁的通用 `tmp` 目录。实际业务应用仍需单独执行启动、Provider、SDK、升级与多进程回归。
 
 相同 Java 完整性源码已通过 Android API 36 x86_64 ART 的 RSA 内容验证及缓存 SO 损坏检测，日志 `build/protection-integrity-art-results.txt`；这项测试通过独立 dalvikvm 运行，未安装或启动业务应用。
+
+## 壳构建的 Gradle 复用
+
+加固代码根据壳 Wrapper 声明的精确版本，只读查找 `GRADLE_HOME` 及有效 Gradle User Home 下已完成安装的 `wrapper/dists` bin/all 分发。缓存目录优先采用 JVM 的 `gradle.user.home`，其次是 `GRADLE_USER_HOME`，最后是用户目录的 `.gradle`。找到同版本后直接调用该分发的 Gradle launcher，复用依赖缓存；不同下载镜像的 URL 哈希不会再引发同版本重复下载。不会改写 Wrapper 配置、复制分发包或调整用户的 Gradle 目录。
+
+找不到可用分发时才回退到壳 Wrapper，并打印所需版本、缓存路径及可能下载的提示。JDK 同时用于启动进程的 `JAVA_HOME` 和 Gradle daemon 的 `org.gradle.java.home`。独立安装在任意目录且未通过 `GRADLE_HOME` 指定的 Gradle，无法自动发现；IDE 私有设置也不会自动传给独立加固程序。
+
+`:dealJiagu:verifyShellGradle` 测试精确版本、bin/all、部分下载排除、空格路径及缓存配置优先级，并以不存在的镜像地址和 `--offline` 实测本地 Gradle 的版本查询与最小构建。此复用逻辑避免的是分发包重复下载，构建依赖缺失时仍可能需要下载依赖。

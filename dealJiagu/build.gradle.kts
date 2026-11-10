@@ -42,6 +42,15 @@ tasks.register<JavaExec>("verifyShellIntegrity") {
     args(rootProject.projectDir.path)
 }
 
+tasks.register<JavaExec>("verifyShellGradle") {
+    group = "verification"
+    dependsOn("testClasses")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.ShellGradleRegressionKt")
+    args(rootProject.projectDir.path)
+}
+
 tasks.register("zipJiaguLibrary", Zip::class) {
     group = "jiagu"
     archiveFileName = "jiaguLibrary.zip"
