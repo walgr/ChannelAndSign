@@ -33,6 +33,10 @@ internal object VmpCompiler {
                     row[0] = 2; row[4] = (instruction as NarrowLiteralInstruction).narrowLiteral
                 }
                 op == "RETURN" -> row[0] = 3
+                op in setOf("INT_TO_BYTE", "INT_TO_SHORT", "INT_TO_CHAR") -> {
+                    row[0] = when (op) { "INT_TO_BYTE" -> 25; "INT_TO_SHORT" -> 26; else -> 27 }
+                    row[2] = two!!.registerB
+                }
                 op == "NEG_INT" || op == "NOT_INT" -> { row[0] = if (op == "NEG_INT") 4 else 5; row[2] = two!!.registerB }
                 op.startsWith("GOTO") -> { row[0] = 6; target() }
                 op.startsWith("IF_") -> {
@@ -63,16 +67,17 @@ internal object VmpCompiler {
         val encoded = words.mapIndexed { i, word -> hex(word xor (key + i * 0x9e3779b9.toInt())) }
             .chunked(6).joinToString(",\n") { it.joinToString(", ") }
         val symbol = "Java_${D2cCompiler.jniName(method.definingClass.removePrefix("L").removeSuffix(";"))}_${D2cCompiler.jniName(method.name)}__${D2cCompiler.jniName(method.parameterTypes.joinToString(""))}"
-        val args = method.parameters.indices.joinToString("") { ", jint p$it" }
+        val args = method.parameters.mapIndexed { i, p -> ", ${D2cCompiler.jniType(p.type)} p$i" }.joinToString("")
         val init = method.parameters.indices.joinToString("\n") { "r[${impl.registerCount - method.parameters.size + it}] = uint32_t(p$it);" }
         return """
-            extern "C" JNIEXPORT jint JNICALL $symbol(JNIEnv *env, jclass$args) {
+            extern "C" JNIEXPORT ${D2cCompiler.jniType(method.returnType)} JNICALL $symbol(JNIEnv *env, jclass$args) {
                 static const uint32_t program[] = {
                     $encoded
                 };
                 uint32_t r[${impl.registerCount}] = {};
                 $init
-                return vmp_run(env, r, ${impl.registerCount}u, program, ${instructions.size}u, ${hex(key)});
+                const jint result = vmp_run(env, r, ${impl.registerCount}u, program, ${instructions.size}u, ${hex(key)});
+                return ${D2cCompiler.returnValue(method.returnType, "result")};
             }
         """.trimIndent()
     }
@@ -125,6 +130,9 @@ internal object VmpCompiler {
                     case 22: r[a] = d2c_sar(r[b], right); break;
                     case 23: r[a] = r[b] >> (right & 31u); break;
                     case 24: r[a] = right - r[b]; break;
+                    case 25: r[a] = uint32_t(d2c_byte(r[b])); break;
+                    case 26: r[a] = uint32_t(d2c_short(r[b])); break;
+                    case 27: r[a] = r[b] & 65535u; break;
                     default: goto invalid;
                 }
             }

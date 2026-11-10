@@ -135,6 +135,9 @@ fun main(args: Array<String>) {
         val protected = File(work, "sample_jiagu_sign.xapk")
         XapkArchive.transform(protected, File(work, "validated_jiagu.xapk")) { members, main ->
             check(com.wpf.utils.jiagu.utils.ApplicationHelper.getName(main.file) == "com.wpf.util.jiagulibrary.StubApp")
+            val integrityKey = IntegritySeal.key(File(ResourceManager.cachePath, "cache/jiagu-integrity"))
+            com.wpf.util.jiagulibrary.utils.IntegrityVerifier.verify(main.file, IntegritySeal.publicHex(integrityKey))
+            File(work, "integrity-public.hex").writeText(IntegritySeal.publicHex(integrityKey))
             check(members.map { PackageSigner.certificate(it.file) }.distinct().size == 1)
             ZipFile(main.file).use { zip ->
                 check(zip.getInputStream(zip.getEntry("assets/audience_network/classes.dex")).readBytes().contentEquals(embeddedDex))

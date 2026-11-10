@@ -15,6 +15,7 @@ public class AssetsUtil {
             throw new IllegalStateException("Cannot create shell directory: " + directory);
         }
         String abi = ShellAbi.detect();
+        RuntimeCompatibility.requireSupported(android.os.Build.VERSION.SDK_INT, abi);
         String asset = ShellAbi.assetName(abi);
         long updateTime;
         try {
@@ -24,7 +25,7 @@ public class AssetsUtil {
         }
         File target = new File(directory, "libjiagu" + StubApp.VERSION + "_" + updateTime + "_" + abi + ".so");
         Log.w("NDK_JIAGU", "processAbi=" + abi + ", asset=" + asset + ", target=" + target);
-        if (target.isFile() && target.length() > 0) return target.getAbsolutePath();
+        if (IntegrityVerifier.matchesShell(target, asset)) return target.getAbsolutePath();
 
         File temporary = null;
         try {
@@ -38,6 +39,7 @@ public class AssetsUtil {
                 output.getFD().sync();
             }
             if (temporary.length() == 0) throw new IOException("Empty shell SO asset");
+            if (!IntegrityVerifier.matchesShell(temporary, asset)) throw new IOException("Extracted shell SO integrity mismatch");
             try (InputStream input = new FileInputStream(temporary)) {
                 byte[] header = new byte[20];
                 new DataInputStream(input).readFully(header);
@@ -45,7 +47,9 @@ public class AssetsUtil {
                     throw new IOException("Shell SO ELF does not match process ABI " + abi);
                 }
             }
-            if (!temporary.renameTo(target)) throw new IOException("Cannot publish shell SO: " + target);
+            // Android rename replaces atomically. Do not unlink a file another process may be loading.
+            if (!temporary.renameTo(target) && !IntegrityVerifier.matchesShell(target, asset))
+                throw new IOException("Cannot publish shell SO: " + target);
             return target.getAbsolutePath();
         } catch (IOException error) {
             throw new IllegalStateException("Cannot extract shell SO: ABI=" + abi +

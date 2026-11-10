@@ -13,6 +13,18 @@ import org.jf.dexlib2.writer.pool.DexPool
 
 /** D2C for pure static int calculations. Explicit unsupported selections fail before packaging. */
 object D2cCompiler {
+    internal fun jniType(type: String): String = when (type) {
+        "Z" -> "jboolean"; "B" -> "jbyte"; "C" -> "jchar"; "S" -> "jshort"; "I" -> "jint"
+        else -> error("Unsupported JNI scalar type $type")
+    }
+
+    internal fun returnValue(type: String, value: String): String = when (type) {
+        "Z" -> "($value != 0 ? JNI_TRUE : JNI_FALSE)"
+        "B" -> "jbyte(d2c_byte(uint32_t($value)))"
+        "S" -> "jshort(d2c_short(uint32_t($value)))"
+        "C" -> "jchar(uint32_t($value) & 65535u)"
+        else -> value
+    }
     data class Result(val dexFiles: Map<String, ByteArray>, val source: String, val methods: List<String>,
                       val vmpMethods: List<String> = emptyList()) {
         val d2cMethods: List<String> get() = methods - vmpMethods.toSet()
@@ -117,8 +129,9 @@ object D2cCompiler {
         if (!AccessFlags.STATIC.isSet(method.accessFlags) || AccessFlags.NATIVE.isSet(method.accessFlags) ||
             AccessFlags.ABSTRACT.isSet(method.accessFlags) || AccessFlags.SYNCHRONIZED.isSet(method.accessFlags) ||
             AccessFlags.DECLARED_SYNCHRONIZED.isSet(method.accessFlags)) unsupported("only non-synchronized static DEX methods are supported")
-        if (method.returnType != "I" || method.parameterTypes.any { it.toString() != "I" })
-            unsupported("only (int...) -> int signatures are supported")
+        val scalars = setOf("I", "Z", "B", "C", "S")
+        if (method.returnType !in scalars || method.parameterTypes.any { it.toString() !in scalars })
+            unsupported("only static int/boolean/byte/char/short parameters and return types are supported")
         val impl = method.implementation ?: unsupported("missing implementation")
         if (impl.tryBlocks.isNotEmpty()) unsupported("try/catch is not supported")
         val instructions = impl.instructions.toList()
@@ -162,7 +175,10 @@ object D2cCompiler {
                 op in setOf("MOVE", "MOVE_FROM16", "MOVE_16") -> "${reg(two!!.registerA)} = ${reg(two.registerB)};"
                 op in setOf("CONST_4", "CONST_16", "CONST", "CONST_HIGH16") ->
                     "${reg(one!!.registerA)} = uint32_t(${(instruction as NarrowLiteralInstruction).narrowLiteral}LL);"
-                op == "RETURN" -> "return d2c_i32(${reg(one!!.registerA)});"
+                op == "RETURN" -> "return ${returnValue(method.returnType, "d2c_i32(${reg(one!!.registerA)})")};"
+                op == "INT_TO_BYTE" -> "${reg(two!!.registerA)} = uint32_t(d2c_byte(${reg(two.registerB)}));"
+                op == "INT_TO_SHORT" -> "${reg(two!!.registerA)} = uint32_t(d2c_short(${reg(two.registerB)}));"
+                op == "INT_TO_CHAR" -> "${reg(two!!.registerA)} = ${reg(two.registerB)} & 65535u;"
                 op == "NEG_INT" -> "${reg(two!!.registerA)} = 0u - ${reg(two.registerB)};"
                 op == "NOT_INT" -> "${reg(two!!.registerA)} = ~${reg(two.registerB)};"
                 op.startsWith("GOTO") -> "goto ${target(pos, instruction)};"
@@ -199,10 +215,10 @@ object D2cCompiler {
         // Every reachable exit must be an explicit return. ART verified the original control flow;
         // the final guard is retained for malformed/unverified input, never a silent result.
         val symbol = "Java_${jniName(method.definingClass.removePrefix("L").removeSuffix(";"))}_${jniName(method.name)}__${jniName(method.parameterTypes.joinToString(""))}"
-        val args = method.parameters.indices.joinToString("") { ", jint p$it" }
+        val args = method.parameters.mapIndexed { i, p -> ", ${jniType(p.type)} p$i" }.joinToString("")
         val init = method.parameters.indices.joinToString("\n") { "r[${impl.registerCount - method.parameters.size + it}] = uint32_t(p$it);" }
         return """
-            extern "C" JNIEXPORT jint JNICALL $symbol(JNIEnv *env, jclass$args) {
+            extern "C" JNIEXPORT ${jniType(method.returnType)} JNICALL $symbol(JNIEnv *env, jclass$args) {
                 uint32_t r[${impl.registerCount}] = {};
                 $init
                 $body
@@ -218,6 +234,8 @@ object D2cCompiler {
         #include <cstdint>
         #include <cstring>
         static jint d2c_i32(uint32_t value) { jint result; std::memcpy(&result, &value, 4); return result; }
+        static jint d2c_byte(uint32_t value) { value &= 255u; return (value & 128u) ? jint(value) - 256 : jint(value); }
+        static jint d2c_short(uint32_t value) { value &= 65535u; return (value & 32768u) ? jint(value) - 65536 : jint(value); }
         static uint32_t d2c_sar(uint32_t a, uint32_t b) {
             b &= 31u;
             if (!b) return a;

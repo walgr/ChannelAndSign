@@ -14,7 +14,18 @@ fun main(args: Array<String>) {
         "overloaded(I)I", "overloaded(II)I", "under_score(I)I", "bitwise(II)I", "compare(II)I", "zeroCompare(I)I").map { prefix + it }.toSet()
     val input = mapOf("classes.dex" to original)
     val defaults = D2cCompiler.selectDefaults(input, "com.wpf.jiagu.d2c")
-    check(defaults.methods == selected + (prefix + "mainProcess(I)I"))
+    val narrowPrefix = "Lcom/wpf/jiagu/d2c/NarrowSmoke;->"
+    val narrow = listOf("asByte(I)B", "asShort(I)S", "asChar(I)C", "mix(BSC)I", "choose(ZZ)Z", "narrowLoop(I)S", "conversions(I)I")
+        .map { narrowPrefix + it }.toSet()
+    check(defaults.methods == selected + (prefix + "mainProcess(I)I") + narrow)
+    listOf("narrow-d2c" to D2cCompiler.compile(input, narrow),
+        "narrow-hybrid" to D2cCompiler.compileHybrid(input, narrow),
+        "narrow-vmp" to D2cCompiler.compile(input, narrow, narrow)).forEach { (name, result) ->
+        val directory = File(output.parentFile, name).apply { mkdirs() }
+        File(directory, "classes.dex").writeBytes(result.dexFiles.getValue("classes.dex"))
+        File(directory, "d2c_generated.cpp").writeText(result.source)
+        check(result.methods.toSet() == narrow)
+    }
     check(prefix + "unsupported(I)I" in defaults.skipped)
     check(prefix + "catchBlock(I)I" in defaults.skipped)
     check(D2cCompiler.selectDefaults(input, "com.wpf.jiagu").methods == defaults.methods)
@@ -69,6 +80,8 @@ fun main(args: Array<String>) {
     val config = File(output, "rules.txt")
     config.writeText("# selected methods\n" + selected.joinToString("\n"))
     check(D2cRules.read(config) == selected)
+    config.writeText(narrow.joinToString("\n"))
+    check(D2cRules.read(config) == narrow)
     config.writeText("Lcom/example/*;->*(I)I")
     // Wildcards must never broaden the protected method set.
     check(runCatching { D2cRules.read(config) }.isFailure)

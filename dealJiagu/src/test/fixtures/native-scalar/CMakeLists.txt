@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.10)
+project(narrow_scalar_regression)
+if(NOT DEFINED GENERATED_DIR)
+    message(FATAL_ERROR "Set GENERATED_DIR to the verifyD2c output parent")
+endif()
+foreach(mode IN ITEMS d2c hybrid vmp)
+    add_library(narrow_${mode} SHARED "${GENERATED_DIR}/narrow-${mode}/d2c_generated.cpp")
+endforeach()

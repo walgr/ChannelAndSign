@@ -28,6 +28,20 @@ kotlin {
     jvmToolchain(8)
 }
 
+// Exercise the exact Android verifier source on the JVM, without an Android framework stub.
+sourceSets.named("test") {
+    java.srcDir("../jiagulibrary/src/main/java")
+    java.include("**/IntegrityVerifier.java", "**/RuntimeCompatibility.java")
+}
+
+tasks.register<JavaExec>("verifyShellIntegrity") {
+    group = "verification"
+    dependsOn("testClasses")
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.IntegrityRegressionKt")
+    args(rootProject.projectDir.path)
+}
+
 tasks.register("zipJiaguLibrary", Zip::class) {
     group = "jiagu"
     archiveFileName = "jiaguLibrary.zip"

@@ -18,9 +18,11 @@ Lcom/example/security/Core;->checksum(I)I
 
 随后照常使用桌面加固入口；命令行也可显式传入 `-d2cConfig "C:\path\rules.txt"`，其他加固参数照旧。Kotlin API 新增默认参数 `d2cConfigPath`，可指定配置路径。显式配置覆盖自动选择，为精确匹配，最多 256 个方法；配置为空、规则重复、方法不存在或含不支持的操作都会在写出加固 APK 前失败。自动筛选没有匹配方法时继续使用第三代加固，不影响打包。
 
-当前支持非同步的 `static int method(int...)`，包括：整数常量、移动、取反、加减乘除余数、位运算、移位、条件分支、跳转、循环和整数返回。支持方法重载、JNI 名称转义、多 DEX。使用无符号寄存器实现 Java 整数溢出；除零抛出 ArithmeticException，并处理 MIN_VALUE / -1。
+当前支持非同步 static 方法，参数和返回值可使用 `int/boolean/byte/char/short` 的组合，包括：整数常量、移动、取反、加减乘除余数、位运算、移位、条件分支、跳转、循环、整数返回及 `int-to-byte/short/char` 转换。按实际类型生成 JNI 参数和返回值，byte/short 符号扩展、char 零扩展、boolean 返回归一化。支持方法重载、JNI 名称转义、多 DEX。使用无符号寄存器实现 Java 整数溢出；除零抛出 ArithmeticException，并处理 MIN_VALUE / -1。
 
 暂不支持实例方法、long/float/double、对象/数组、调用其他方法、字段访问、switch、try/catch、同步方法。自动筛选会跳过这些方法；显式指定则报错。第一阶段建议只选择自有、纯整数计算方法。
+
+新增的窄整数例子位于 `src/test/fixtures/d2c/NarrowSmoke.java`。`:dealJiagu:verifyD2c` 另外生成 `build/d2c/narrow-d2c`、`narrow-hybrid`、`narrow-vmp` 三种输出。对应的 Android CMake 测试工程位于 `src/test/fixtures/native-scalar`，通过 `GENERATED_DIR` 指定 `build/d2c` 的绝对路径。
 
 生成的源码（含 VMP 程序和解释器）参与 SHA-256 缓存标识；实现或保护路径变化会生成新的原生壳缓存。日志分别输出 D2C、VMP 方法数量。APK 的包名、方法名称和签名发生变化后，应更新白名单。需要重新构建桌面工具或加固 JAR，旧版工具不会识别新配置。
 

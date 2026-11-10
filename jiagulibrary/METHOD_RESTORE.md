@@ -12,7 +12,7 @@ Hook 根据 ART DexFile 的 `begin_` 找到运行时实际使用的 DEX，以头
 
 x86/x86_64 Hook 复制完整指令并重定位相对调用、跳转、条件分支；x86 处理 PIC `get_pc_thunk` / `call; pop`，x86_64 处理 RIP 相对寻址并使用附近的跳板。遇到不支持的指令（例如 LOOP/JCXZ、VEX/EVEX）会在改写入口之前失败。Hook 仅在壳初始化时安装一次，不支持并发安装、卸载；入口写入期间要求目标函数没有正在执行的其他线程。此限制需要在实际 ART 启动环境中验证。
 
-`StubApp.VERSION` 已更新为 `v3_4`，运行时 SO 文件名包含安装包 lastUpdateTime，避免覆盖安装继续使用旧壳或旧 AES 参数。`dealJiagu:processResources` 和 `加固打包` 自动依赖 `zipJiaguLibrary`；重新编译桌面程序/加固 JAR 后再加固 APK，不能继续使用旧工具包。加固侧缓存键包含壳源码 ZIP 的 MD5，会随资源变更失效。
+`StubApp.VERSION` 已更新为 `v3_5`，运行时 SO 文件名包含安装包 lastUpdateTime，避免覆盖安装继续使用旧壳或旧 AES 参数。启动先验证有独立 RSA 签名的完整性记录；缓存 SO 每次按记录中的 SHA-256 核对，损坏时重新提取。`dealJiagu:processResources` 和 `加固打包` 自动依赖 `zipJiaguLibrary`；重新编译桌面程序/加固 JAR 后再加固 APK，不能继续使用旧工具包。加固侧缓存键包含壳源码 ZIP 的 MD5 和完整性公钥，会随资源或公钥变更失效。
 
 壳 App 的 ABI 过滤包含 x86/x86_64。加固工具提取、校验并缓存各 ABI 的 SO。所有加固 APK 都携带 arm64/x86/x86_64 壳资产；有 ARM 原生库的 APK 也可能由 Intel ART 通过 native bridge 运行，不能按原 APK 的 lib 目录过滤掉 Intel 壳资产。加载端读取 /proc/self/exe 的 ELF 架构选择壳，读取失败时回退到进程 os.arch。SO 先写临时文件并校验 ELF，再原子重命名；提取失败会保留 ABI、资产路径及原始异常。
 

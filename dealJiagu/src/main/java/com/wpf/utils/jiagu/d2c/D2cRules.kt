@@ -9,8 +9,8 @@ object D2cRules {
         file.readLines(Charsets.UTF_8).forEachIndexed { index, raw ->
             val line = raw.trim().removePrefix("\uFEFF")
             if (line.isEmpty() || line.startsWith("#")) return@forEachIndexed
-            require('*' !in line && '?' !in line && line.matches(Regex("L[^;\\s]+;->[^()\\s]+\\(I*\\)I"))) {
-                "D2C ${file.name}:${index + 1}: expected Lpackage/Class;->method(II)I"
+            require('*' !in line && '?' !in line && line.matches(Regex("L[^;\\s]+;->[^()\\s]+\\([IZBCS]*\\)[IZBCS]"))) {
+                "D2C ${file.name}:${index + 1}: expected exact method descriptor with int/boolean/byte/char/short scalar types"
             }
             require(methods.add(line)) { "D2C duplicate rule at line ${index + 1}" }
         }
