@@ -31,11 +31,12 @@ import com.wpf.util.common.ui.utils.*
 import com.wpf.util.common.ui.utils.onExternalDrag
 import com.wpf.util.common.ui.widget.common.ItemView
 import com.wpf.util.common.ui.widget.common.SelectFileAddTitle
-import com.wpf.utils.tools.SignHelper
+import com.wpf.utils.jiagu.PackageSigner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import com.wpf.utils.jiagu.XapkArchive
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -70,7 +71,7 @@ fun doSignPage() {
                             .clip(shape = RoundedCornerShape(8.dp)).background(color = centerBgColor),
                     ) {
                         Column {
-                            SelectFileAddTitle("文件列表", arrayOf("apk")) {
+                            SelectFileAddTitle("文件列表", arrayOf("apk", "xapk")) {
                                 dealFileList.add(Path(it, it))
                             }
                             Box(modifier = Modifier.padding(8.dp, 0.dp, 8.dp, 0.dp)) {
@@ -104,10 +105,10 @@ fun doSignPage() {
                                                 isRunDealFile = true
                                                 val apkPathList = dealFileList.flatMap {
                                                     val pathFile = File(it.path)
-                                                    if (pathFile.isFile && pathFile.extension == "apk") {
+                                                    if (XapkArchive.isPackage(pathFile)) {
                                                         listOf(it.path)
                                                     } else if (pathFile.isDirectory) {
-                                                        pathFile.listFiles { child -> pathFile.isFile && child.extension == "apk" }
+                                                        pathFile.listFiles { child -> XapkArchive.isPackage(child) }
                                                             ?.map { child ->
                                                                 child.path
                                                             }?.toList() ?: emptyList()
@@ -115,11 +116,11 @@ fun doSignPage() {
                                                         emptyList()
                                                     }
                                                 }
-                                                if (apkPathList.isEmpty()) return@IconButton
+                                                if (apkPathList.isEmpty()) { isRunDealFile = false; return@IconButton }
                                                 CoroutineScope(Dispatchers.Default).launch {
                                                     apkPathList.forEach {
                                                         signList.first().apply {
-                                                            SignHelper.sign(storeFile, keyAlias, storePass, keyPass, inputApkPath = it, reserveInput = true)
+                                                            runCatching { PackageSigner.sign(storeFile, keyAlias, storePass, keyPass, inputApkPath = it, reserveInput = true) }.onFailure { println("签名失败：${it.message}") }
                                                         }
                                                     }
                                                     isRunDealFile = false
@@ -140,7 +141,7 @@ fun doSignPage() {
                         onExternalDrag {
                             dealFileList.addAll(it.flatMap { file ->
                                 //apk或文件夹
-                                if (file.contains(".apk") || !file.contains(".")) {
+                                if (File(file).isDirectory || XapkArchive.isPackage(File(file))) {
                                     mutableListOf(Path(name = file, path = file))
                                 } else mutableListOf()
                             }.toMutableList())
@@ -155,10 +156,10 @@ fun doSignPage() {
                 val apkPathList = dealFileList.flatMap {
                     val pathFile = File(it.path)
                     if (!pathFile.exists()) return@flatMap emptyList()
-                    if (pathFile.isFile && pathFile.extension == "apk") {
+                    if (XapkArchive.isPackage(pathFile)) {
                         listOf(it.path)
                     } else if (pathFile.isDirectory) {
-                        pathFile.listFiles { child -> pathFile.isFile && child.extension == "apk" }
+                        pathFile.listFiles { child -> XapkArchive.isPackage(child) }
                             ?.map { child ->
                                 child.path
                             }?.toList() ?: emptyList()
@@ -166,11 +167,11 @@ fun doSignPage() {
                         emptyList()
                     }
                 }
-                if (apkPathList.isEmpty()) return@showSelectSignDialog
+                if (apkPathList.isEmpty()) { isRunDealFile = false; return@showSelectSignDialog }
                 CoroutineScope(Dispatchers.Default).launch {
                     apkPathList.forEach { apkPath ->
                         sign.apply {
-                            SignHelper.sign(storeFile, keyAlias, storePass, keyPass, inputApkPath = apkPath, reserveInput = true)
+                            runCatching { PackageSigner.sign(storeFile, keyAlias, storePass, keyPass, inputApkPath = apkPath, reserveInput = true) }.onFailure { println("签名失败：${it.message}") }
                         }
                     }
                     isRunDealFile = false

@@ -17,7 +17,6 @@ import com.wpf.utils.jiagu.utils.EncryptUtils
 import com.wpf.utils.jiagu.d2c.D2cCompiler
 import com.wpf.utils.jiagu.d2c.D2cRules
 import com.wpf.utils.tools.LogStreamThread
-import com.wpf.utils.tools.SignHelper
 import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.util.zip.Deflater
@@ -37,6 +36,36 @@ object JiaGu {
         showLog: Boolean = false,
         d2cConfigPath: String = "",
     ) {
+        if (File(srcApkPath).extension.equals("xapk", true)) {
+            val input = File(srcApkPath).absoluteFile
+            val output = File(input.parentFile, input.nameWithoutExtension +
+                if (signFilePath.isBlank()) "_jiagu.xapk" else "_jiagu_sign.xapk")
+            val sidecar = File(input.parentFile, input.nameWithoutExtension + ".d2c.txt")
+            val rules = d2cConfigPath.ifBlank { sidecar.takeIf { it.isFile }?.path ?: "" }
+            XapkArchive.transform(input, output) { members, base ->
+                println("XAPK：加固主 APK ${base.path}，保留 ${members.size - 1} 个拆分 APK 和附带资源")
+                val baseWork = java.nio.file.Files.createTempDirectory(base.file.parentFile.toPath(), ".base-jiagu-").toFile()
+                try {
+                    val source = base.file.copyTo(File(baseWork, "base.apk"))
+                    deal(source.path, secretKey, keyVi, androidSdkPath, jdkPath,
+                        isAndroidX = isAndroidX, showLog = showLog, d2cConfigPath = rules)
+                    val hardened = File(baseWork, "base_jiagu.apk")
+                    check(hardened.isFile) { "XAPK 主 APK 加固未产生输出" }
+                    XapkArchive.publish(hardened, base.file)
+                } finally { baseWork.deleteRecursively() }
+                if (signFilePath.isNotBlank()) members.forEach { member ->
+                    val target = java.nio.file.Files.createTempFile(member.file.parentFile.toPath(), ".signed-", ".apk").toFile()
+                    val signed = PackageSigner.sign(signFilePath, signAlias, keyStorePassword, keyPassword,
+                        outApkPath = target.path, inputApkPath = member.file.path, androidSdkPath = androidSdkPath)
+                    XapkArchive.publish(File(signed), member.file)
+                }
+                if (signFilePath.isNotBlank()) check(members.map { PackageSigner.certificate(it.file) }.distinct().size == 1) {
+                    "XAPK 内 APK 签名证书不一致"
+                }
+            }
+            println("XAPK 加固完成：$output" + if (signFilePath.isBlank()) "；安装前请对整个 XAPK 统一签名" else "")
+            return
+        }
         kotlin.runCatching {
             require(secretKey.toByteArray(Charsets.UTF_8).size == 16 &&
                     keyVi.toByteArray(Charsets.UTF_8).size == 16) {
@@ -47,7 +76,7 @@ object JiaGu {
                 return
             }
             val srcApkFile = File(srcApkPath)
-            if (!srcApkFile.exists() || !srcApkFile.canRead() || srcApkFile.extension != "apk") {
+            if (!srcApkFile.exists() || !srcApkFile.canRead() || !srcApkFile.extension.equals("apk", true)) {
                 println("该文件非apk或者不可读取：${srcApkPath}")
                 return
             }
@@ -69,8 +98,8 @@ object JiaGu {
                     println("D2C 默认白名单：$packageName 及其子包；可转换 ${selection.methods.size} 个方法，跳过 ${selection.skipped.size} 个不支持的方法")
                     if (showLog) selection.skipped.values.forEach { println("D2C 跳过：$it") }
                 }.methods
-                D2cCompiler.compile(inputs, rules).also {
-                    println("D2C 已转换 ${it.methods.size} 个方法；其余方法继续使用第三代方法抽离")
+                D2cCompiler.compileHybrid(inputs, rules).also {
+                    println("混合保护：D2C ${it.d2cMethods.size} 个方法，VMP ${it.vmpMethods.size} 个方法；其余方法继续使用第三代方法抽离")
                 }.takeIf { it.methods.isNotEmpty() }
             }
             val d2cHash = d2c?.let {
@@ -207,14 +236,14 @@ object JiaGu {
                 if (resultApk != 0) {
                     jiaguApkFile.deleteRecursively()
                     File(File(srcApkPath).parent + File.separator + "tmp").deleteRecursively()
-                    return
+                    error("加固壳编译失败：退出码 $resultApk")
                 }
 
                 val jiaguAppFile = File(
                     projectRootPath + "app/build/outputs/apk/release/".replace("/", File.separator)
                 ).listFiles()?.first {
                     it.extension == "apk"
-                } ?: return
+                } ?: error("加固壳编译未产生 APK")
                 val jiaguAppZip = ZipArchive(jiaguAppFile.toPath())
                 val jiaguReleaseDexFile = File(jiaguAppFile.parent + File.separator + "classes.dex")
                 jiaguAppZip.getInputStream("classes.dex")?.let {
@@ -226,7 +255,7 @@ object JiaGu {
                         println("打加固壳失败")
                     }
                     tmpPathFile.deleteRecursively()
-                    return
+                    error("加固壳编译未产生有效 DEX")
                 }
 
                 try {
@@ -424,14 +453,15 @@ object JiaGu {
                 if (showLog) {
                     println("正在对加固包签名")
                 }
-                val signOutFile = SignHelper.sign(
+                val signOutFile = PackageSigner.sign(
                     signFilePath.checkWinPath(),
                     signAlias,
                     keyStorePassword,
                     keyPassword,
                     outApkPath = "",
                     inputApkPath = jiaguApkFile.path.checkWinPath(),
-                    false
+                    reserveInput = false,
+                    androidSdkPath = androidSdkPath
                 )
                 if (signOutFile.isNotEmpty()) {
                     if (showLog) {

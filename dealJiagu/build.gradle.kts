@@ -91,6 +91,16 @@ tasks.register<JavaExec>("verifyAesPayload") {
     mainClass.set("com.wpf.utils.jiagu.utils.AES128HelperRegressionKt")
 }
 
+tasks.register<JavaExec>("verifyXapk") {
+    group = "verification"
+    dependsOn("testClasses", "prepareHybridFixture")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.XapkRegressionKt")
+    doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path) +
+        if (project.hasProperty("xapkHarden")) listOf("--harden") else emptyList()) }
+}
+
 val compileD2cFixture = tasks.register<JavaCompile>("compileD2cFixture") {
     source("src/test/fixtures/d2c")
     classpath = files()
@@ -131,4 +141,69 @@ tasks.register<JavaExec>("verifyD2c") {
     classpath = sourceSets["test"].runtimeClasspath
     mainClass.set("com.wpf.utils.jiagu.d2c.D2cRegressionKt")
     args(rootProject.file("build/d2c/original/classes.dex").path, rootProject.file("build/d2c/generated").path)
+}
+
+val compileHybridFixture = tasks.register<JavaCompile>("compileHybridFixture") {
+    source("src/test/fixtures/d2c", "src/test/fixtures/hybrid-app")
+    destinationDirectory.set(rootProject.layout.buildDirectory.dir("hybrid-app/classes"))
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
+    options.encoding = "UTF-8"
+}
+
+val compileHybridShellFixture = tasks.register<JavaCompile>("compileHybridShellFixture") {
+    source("../jiagulibrary/src/main/java")
+    destinationDirectory.set(rootProject.layout.buildDirectory.dir("hybrid-app/shell-classes"))
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
+    options.encoding = "UTF-8"
+}
+
+// Keep the integration fixture independent of manually prepared provider-shell files.
+fun fixtureSdk(): File {
+    val properties = Properties()
+    rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use { properties.load(it) }
+    return file(properties.getProperty("sdk.dir") ?: System.getenv("ANDROID_HOME")
+        ?: error("Hybrid fixture requires sdk.dir in local.properties or ANDROID_HOME"))
+}
+
+listOf(compileHybridFixture, compileHybridShellFixture).forEach { compile ->
+    compile.configure { classpath = files(provider { fixtureSdk().resolve("platforms/android-33/android.jar") }) }
+}
+
+val hybridDexFixtures = listOf(
+    Triple("prepareHybridFixture", compileHybridFixture, "hybrid-app/original"),
+    Triple("prepareHybridShellFixture", compileHybridShellFixture, "hybrid-app/shell")
+).map { (name, compile, outputPath) ->
+    tasks.register<JavaExec>(name) {
+        dependsOn(compile)
+        javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+        mainClass.set("com.android.tools.r8.D8")
+        val dexOutput = rootProject.layout.buildDirectory.dir(outputPath)
+        inputs.files(compile.map { it.destinationDirectory })
+        outputs.dir(dexOutput)
+        doFirst {
+            val sdk = fixtureSdk()
+            val d8 = sdk.resolve("build-tools").listFiles()?.sortedByDescending { it.name }
+                ?.map { it.resolve("lib/d8.jar") }?.firstOrNull { it.isFile }
+                ?: error("Install Android SDK build-tools to run hybrid fixture")
+            val androidJar = sdk.resolve("platforms/android-33/android.jar")
+            check(androidJar.isFile) { "Hybrid fixture requires Android SDK platform 33" }
+            dexOutput.get().asFile.mkdirs()
+            classpath = files(d8)
+            setArgs(listOf("--min-api", "26", "--lib", androidJar.path, "--output", dexOutput.get().asFile.path) +
+                compile.get().destinationDirectory.get().asFile.walkTopDown()
+                    .filter { it.extension == "class" }.map { it.path }.toList())
+        }
+    }
+}
+
+tasks.register<JavaExec>("verifyHybridPayload") {
+    group = "verification"
+    dependsOn("testClasses", hybridDexFixtures)
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.d2c.HybridPayloadRegressionKt")
+    args(rootProject.file("build/hybrid-app/original/classes.dex").path,
+        rootProject.file("build/hybrid-app/shell/classes.dex").path,
+        rootProject.file("build/hybrid-app/payload").path)
 }

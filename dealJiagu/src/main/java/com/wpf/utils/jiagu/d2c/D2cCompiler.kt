@@ -13,7 +13,10 @@ import org.jf.dexlib2.writer.pool.DexPool
 
 /** D2C for pure static int calculations. Explicit unsupported selections fail before packaging. */
 object D2cCompiler {
-    data class Result(val dexFiles: Map<String, ByteArray>, val source: String, val methods: List<String>)
+    data class Result(val dexFiles: Map<String, ByteArray>, val source: String, val methods: List<String>,
+                      val vmpMethods: List<String> = emptyList()) {
+        val d2cMethods: List<String> get() = methods - vmpMethods.toSet()
+    }
     data class DefaultSelection(val methods: Set<String>, val skipped: Map<String, String>)
     private class UnsupportedMethod(message: String) : IllegalArgumentException(message)
 
@@ -44,7 +47,18 @@ object D2cCompiler {
     fun methodId(method: Method): String =
         "${method.definingClass}->${method.name}(${method.parameterTypes.joinToString("")})${method.returnType}"
 
-    fun compile(inputs: Map<String, ByteArray>, selected: Set<String>): Result {
+    /** Branching/looping or longer calculations use VMP; short straight-line code uses D2C. */
+    fun compileHybrid(inputs: Map<String, ByteArray>, selected: Set<String>): Result {
+        val vmp = inputs.values.flatMap { bytes -> DexBackedDexFile(null, bytes).classes }
+            .flatMap { it.methods }.filter { methodId(it) in selected }
+            .filter { method -> method.implementation?.instructions?.toList()?.let { instructions ->
+                instructions.size >= 24 || instructions.any { it is OffsetInstruction }
+            } == true }.map(::methodId).toSet()
+        return compile(inputs, selected, vmp)
+    }
+
+    fun compile(inputs: Map<String, ByteArray>, selected: Set<String>, virtualized: Set<String> = emptySet()): Result {
+        require(selected.containsAll(virtualized)) { "VMP methods must belong to the selected whitelist" }
         if (selected.isEmpty()) return Result(inputs, "", emptyList())
         val found = mutableSetOf<String>()
         val sources = mutableListOf<String>()
@@ -56,7 +70,8 @@ object D2cCompiler {
                     val id = methodId(method)
                     if (id !in selected) method else {
                         require(found.add(id)) { "D2C duplicate method: $id" }
-                        sources += translate(method)
+                        val nativeSource = translate(method) // Shared support/operand validation for both backends.
+                        sources += if (id in virtualized) VmpCompiler.translate(method) else nativeSource
                         changed = true
                         // Parameter names belong to debug_info/code_item. Keeping them on a native
                         // method makes dexlib2 synthesize an invalid empty code_item for debug builds.
@@ -78,7 +93,8 @@ object D2cCompiler {
             }
         }
         require(found == selected) { "D2C methods not found: ${(selected - found).sorted().joinToString()}" }
-        return Result(outputs, PREAMBLE + sources.joinToString("\n"), found.sorted())
+        return Result(outputs, PREAMBLE + (if (virtualized.isEmpty()) "" else VmpCompiler.runtime) +
+            sources.joinToString("\n"), found.sorted(), virtualized.sorted())
     }
 
     // JNI long names disambiguate overloads. Escape UTF-16 code units per JNI naming rules.

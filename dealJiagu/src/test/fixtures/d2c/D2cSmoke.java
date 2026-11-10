@@ -17,13 +17,16 @@ public class D2cSmoke {
     public static int overloaded(int a) { return a + 1; }
     public static int overloaded(int a, int b) { return a - b; }
     public static int under_score(int a) { return a & 127; }
+    public static int bitwise(int a, int b) { return (a | b) ^ (a & b) ^ (a << b) ^ (a >> b) ^ (a >>> b) ^ 0x7fff0000; }
+    public static int compare(int a, int b) { if (a == b) return 1; if (a < b) return 2; if (a > b) return 3; return 4; }
+    public static int zeroCompare(int a) { if (a == 0) return 4; if (a < 0) return 5; return 6; }
     public static int unsupported(int a) { return Integer.parseInt(String.valueOf(a)); }
     public static int catchBlock(int a) { try { return 100 / a; } catch (ArithmeticException e) { return 0; } }
     public static int mainProcess(int a) { return a + 2; } // Left in DEX as a negative selection check.
 
     public static void main(String[] args) throws Exception {
         boolean expectNative = args.length != 0;
-        if (expectNative) System.load(args[0]);
+        if (expectNative && !"shell".equals(args[0])) System.load(args[0]);
         if (java.lang.reflect.Modifier.isNative(D2cSmoke.class.getDeclaredMethod("mix", int.class, int.class).getModifiers()) != expectNative)
             throw new AssertionError("native declaration mismatch");
         int[] values = {0, 1, -1, Integer.MIN_VALUE, Integer.MAX_VALUE, 31, 32, -32, 1234567, -8765432};
@@ -38,6 +41,9 @@ public class D2cSmoke {
             check(loop(a), sum);
             check(overloaded(a), a + 1); check(overloaded(a, b), a - b);
             check(under_score(a), a & 127); check(mainProcess(a), a + 2);
+            check(bitwise(a, b), (a | b) ^ (a & b) ^ (a << b) ^ (a >> b) ^ (a >>> b) ^ 0x7fff0000);
+            check(compare(a, b), a == b ? 1 : a < b ? 2 : a > b ? 3 : 4);
+            check(zeroCompare(a), a == 0 ? 4 : a < 0 ? 5 : 6);
             cases++;
         }
         try { divide(1, 0); throw new AssertionError("missing divide exception"); } catch (ArithmeticException expected) { }

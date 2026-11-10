@@ -13,23 +13,27 @@ import java.util.zip.Adler32
 
 object DexHelper {
 
+    private val secondaryDexName = Regex("classes([2-9]|[1-9][0-9]+)\\.dex")
+
+    // Only root multidex entries belong to the application. Embedded SDK/plugin DEX is an asset.
+    private fun applicationDexIndex(name: String): Int? = when (name) {
+        "classes.dex" -> 1
+        else -> secondaryDexName.matchEntire(name)?.groupValues?.get(1)?.toIntOrNull()
+    }
+
     fun getApkSrcDexList(apk: ZipFile): List<Pair<String, InputStream>> {
-        val srcDexList = apk.fileHeaders.filter {
-            it.fileName.endsWith("dex")
-        }.sortedBy {
-            (it.fileName.replace("classes", "").replace(".dex", "").ifEmpty { "1" }).toInt()
-        }
+        val srcDexList = apk.fileHeaders.mapNotNull { header ->
+            applicationDexIndex(header.fileName)?.let { index -> header to index }
+        }.sortedBy { it.second }.map { it.first }
         return srcDexList.map {
             it.fileName to apk.getInputStream(it)
         }
     }
 
     fun getApkSrcDexList(apk: ZipArchive): List<Pair<String, InputStream>> {
-        val srcDexList = apk.listEntries().filter {
-            it.endsWith("dex")
-        }.sortedBy {
-            (it.replace("classes", "").replace(".dex", "").ifEmpty { "1" }).toInt()
-        }
+        val srcDexList = apk.listEntries().mapNotNull { name ->
+            applicationDexIndex(name)?.let { index -> name to index }
+        }.sortedBy { it.second }.map { it.first }
         return srcDexList.map {
             it to apk.getInputStream(it)
         }

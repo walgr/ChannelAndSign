@@ -11,7 +11,7 @@ fun main(args: Array<String>) {
     val output = File(args[1]).apply { mkdirs() }
     val prefix = "Lcom/wpf/jiagu/d2c/D2cSmoke;->"
     val selected = listOf("mix(II)I", "divide(II)I", "remainder(II)I", "literal(I)I", "loop(I)I",
-        "overloaded(I)I", "overloaded(II)I", "under_score(I)I").map { prefix + it }.toSet()
+        "overloaded(I)I", "overloaded(II)I", "under_score(I)I", "bitwise(II)I", "compare(II)I", "zeroCompare(I)I").map { prefix + it }.toSet()
     val input = mapOf("classes.dex" to original)
     val defaults = D2cCompiler.selectDefaults(input, "com.wpf.jiagu.d2c")
     check(defaults.methods == selected + (prefix + "mainProcess(I)I"))
@@ -24,6 +24,23 @@ fun main(args: Array<String>) {
     val auto = D2cCompiler.compile(input, defaults.methods)
     val autoMethods = DexBackedDexFile(null, auto.dexFiles.getValue("classes.dex")).classes.flatMap { it.methods }
     check(autoMethods.count { AccessFlags.NATIVE.isSet(it.accessFlags) } == defaults.methods.size)
+    val hybrid = D2cCompiler.compileHybrid(input, selected)
+    check(setOf(prefix + "mix(II)I", prefix + "loop(I)I", prefix + "compare(II)I", prefix + "zeroCompare(I)I")
+        .all { it in hybrid.vmpMethods })
+    check(prefix + "divide(II)I" in hybrid.d2cMethods)
+    check(hybrid.vmpMethods.toSet().intersect(hybrid.d2cMethods.toSet()).isEmpty())
+    check(hybrid.vmpMethods.size + hybrid.d2cMethods.size == selected.size)
+    val virtualized = D2cCompiler.compile(input, selected, selected)
+    check(virtualized.vmpMethods.toSet() == selected && virtualized.d2cMethods.isEmpty())
+    check(runCatching { D2cCompiler.compile(input, selected, setOf(prefix + "missing(I)I")) }.isFailure)
+    listOf("hybrid" to hybrid, "virtualized" to virtualized).forEach { (name, compiled) ->
+        val directory = File(output.parentFile, name).apply { mkdirs() }
+        File(directory, "classes.dex").writeBytes(compiled.dexFiles.getValue("classes.dex"))
+        File(directory, "d2c_generated.cpp").writeText(compiled.source)
+        File(directory, "protection.txt").writeText(compiled.methods.joinToString("\n") {
+            "${if (it in compiled.vmpMethods) "VMP" else "D2C"} $it"
+        })
+    }
     val result = D2cCompiler.compile(input, selected)
     val bytes = result.dexFiles.getValue("classes.dex")
     File(output, "classes.dex").writeBytes(bytes)
