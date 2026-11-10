@@ -42,3 +42,5 @@ Lcom/example/security/Core;->checksum(I)I
 - 尚未用 Keep 真实业务方法验证混合保护，未生成新的 Keep 混合保护包。x86/arm64 原生执行也尚未实机验证。
 
 2026-11-10 收尾验证：`:dealJiagu:verifyD2c`、`:dealJiagu:verifyHybridPayload`、`:dealJiagu:verifyAesPayload` 和 `:dealJiagu:processResources` 均通过。集成示例 APK 的签名及 16 KiB ZIP 对齐校验通过。
+
+2026-11-10 兼容性扩展：第三代还原已补齐 API 21–25 和 ARMv7 路径。独立双 DEX 混合加固包在 API 21 ARMv7、API 21/25 x86、API 36 x86_64 各通过五项设备回归；这是包含 D2C、VMP 和剩余方法还原的完整 APK 验证。详细范围及未实测平台见 `../jiagulibrary/METHOD_RESTORE.md`。Keep 业务包仍需另外验收。

@@ -7,6 +7,15 @@ cmake_minimum_required(VERSION 3.10.2)
 
 project("jiagu")
 
+# ARM/Thumb instruction relocation is vendored and built statically; no extra SO to extract.
+if(ANDROID_ABI STREQUAL "armeabi-v7a")
+    set(Plugin.SymbolResolver OFF CACHE BOOL "" FORCE)
+    set(DOBBY_DEBUG OFF CACHE BOOL "" FORCE)
+    set(DOBBY_GENERATE_SHARED OFF CACHE BOOL "" FORCE)
+    set(NearBranch OFF CACHE BOOL "" FORCE)
+    add_subdirectory(third_party/dobby EXCLUDE_FROM_ALL)
+endif()
+
 option(METHOD_RESTORE_TESTS "Build extracted method parser regression tests" OFF)
 if(METHOD_RESTORE_TESTS)
     add_executable(aes_payload_test ../../test/cpp/aes_payload_test.c utils/aes.c)
@@ -20,6 +29,11 @@ if(METHOD_RESTORE_TESTS)
                 utils/x86_hook.cpp utils/hde/hde32.c utils/hde/hde64.c)
         target_include_directories(x86_hook_test PRIVATE utils)
         target_compile_options(x86_hook_test PRIVATE -UNDEBUG)
+    endif()
+    if(ANDROID_ABI STREQUAL "armeabi-v7a")
+        add_executable(arm_hook_test ../../test/cpp/arm_hook_test.cpp)
+        target_link_libraries(arm_hook_test dobby log)
+        target_compile_options(arm_hook_test PRIVATE -UNDEBUG)
     endif()
 endif()
 
@@ -51,3 +65,6 @@ include_directories(
 target_link_libraries(
         jiagu
         log)
+if(ANDROID_ABI STREQUAL "armeabi-v7a")
+    target_link_libraries(jiagu dobby)
+endif()

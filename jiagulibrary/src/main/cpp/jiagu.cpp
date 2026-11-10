@@ -21,7 +21,7 @@
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 
-#if defined(__aarch64__)
+#if defined(__LP64__)
 #define LIB_ART_PATH "/system/lib64/libart.so"
 #elif defined(__arm__)
 #define LIB_ART_PATH "/system/lib/libart.so"
@@ -31,7 +31,7 @@
 
 static jobject g_context;
 static int g_sdk_int;
-static const char *g_jiagu_path;
+static std::string g_jiagu_path;
 
 // vm dex
 unsigned char VMDEX[400] = {
@@ -62,15 +62,13 @@ unsigned char VMDEX[400] = {
         0x09, 0x01, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x14, 0x01, 0x00, 0x00
 };
 
-static void write_vm_dex(const char *vmdex)
+static bool write_vm_dex(const char *vmdex)
 {
-    if (access(vmdex, F_OK) == -1) {
-        LOGD("write_vm_dex");
-        FILE *file = fopen(vmdex, "wb");
-        fwrite(VMDEX, 400, 1, file);
-        fclose(file);
-    }
-
+    FILE *file = fopen(vmdex, "wb");
+    if (!file) return false;
+    const bool written = fwrite(VMDEX, sizeof(VMDEX), 1, file) == 1;
+    const bool closed = fclose(file) == 0;
+    return written && closed;
 }
 
 static int byte2Int(char *b, int index) {
@@ -99,7 +97,10 @@ static void init(JNIEnv *env, jobject application) {
         jstring path = static_cast<jstring>(CallObjectMethod(dexDir, "getPath",
                                                              "()Ljava/lang/String;").l);
         // .jiagu目录的路径
-        g_jiagu_path = env->GetStringUTFChars(path, nullptr);
+        const char *chars = env->GetStringUTFChars(path, nullptr);
+        if (!chars) return;
+        g_jiagu_path = chars;
+        env->ReleaseStringUTFChars(path, chars);
 
         env->DeleteLocalRef(dex);
         env->DeleteLocalRef(fileDir);
@@ -107,9 +108,6 @@ static void init(JNIEnv *env, jobject application) {
         env->DeleteLocalRef(dexDir);
         env->DeleteLocalRef(path);
 
-        char vm_path[128];
-        sprintf(vm_path, "%s/vm.dex", g_jiagu_path);
-        write_vm_dex(vm_path);
     }
 }
 
@@ -130,77 +128,48 @@ static jbyteArray getDex(JNIEnv *env, jobject application) {
 }
 
 static jobject openmemory_load_dex(JNIEnv *env, void *art_handle, char *base, int dex_size) {
-    int zero = open("/dev/zero", PROT_WRITE);
-    void *g_decrypt_base = mmap(0, dex_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, zero, 0);
-    close(zero);
-    if (g_decrypt_base == MAP_FAILED)
-    {
-        LOGE("[-]ANONYMOUS mmap failed:%s", strerror(errno));
-        exit(-1);
-    }
-    memcpy(g_decrypt_base, base, dex_size);
-
-    char dex_path[128];
-    char odex_path[128];
-    sprintf(dex_path, "%s/vm.dex", g_jiagu_path);
-    sprintf(odex_path, "%s/vm.odex", g_jiagu_path);
-    jstring dex = env->NewStringUTF(dex_path);
-    jstring odex = env->NewStringUTF(odex_path);
-    LOGD("replace %s", dex_path);
+    // The encrypted payload backing this buffer lives until process exit. Do not write
+    // business DEX to disk or restore its instructions before the DefineClass hook.
+    const void *nativeDex = load_legacy_dex(g_sdk_int, art_handle, base, dex_size);
+    if (!nativeDex) return nullptr;
+    const std::string stem = std::string(g_jiagu_path) + "/vm-" + std::to_string(getpid());
+    const std::string dex_path = stem + ".dex", odex_path = stem + ".odex";
+    if (!write_vm_dex(dex_path.c_str())) return nullptr;
+    jstring dex = env->NewStringUTF(dex_path.c_str());
+    jstring odex = env->NewStringUTF(odex_path.c_str());
     jobject dexFile = CallStaticMethod("dalvik/system/DexFile", "loadDex",
-                                       "(Ljava/lang/String;Ljava/lang/String;I)Ldalvik/system/DexFile;",
-                                       dex, odex, 0).l;
-
-    jfieldID cookie_field;
-    jclass DexFileClass = env->FindClass("dalvik/system/DexFile");
-    if (g_sdk_int < 23) {
-        std::unique_ptr<std::vector<const void *>> dex_files(new std::vector<const void *>());
-        dex_files.get()->push_back(load(g_sdk_int, art_handle, (char *)g_decrypt_base, (dex_size)));
-
-        cookie_field = env->GetFieldID(DexFileClass, "mCookie", "J");
-        jlong mCookie = static_cast<jlong>(reinterpret_cast<uintptr_t>(dex_files.release()));
-        env->SetLongField(dexFile, cookie_field, mCookie);
+        "(Ljava/lang/String;Ljava/lang/String;I)Ldalvik/system/DexFile;", dex, odex, 0).l;
+    env->DeleteLocalRef(dex); env->DeleteLocalRef(odex);
+    // These files contain the fixed 400-byte empty shell DEX, never business code.
+    // ART keeps its mappings after unlink; recreate the stub for the next DEX slice.
+    unlink(dex_path.c_str()); unlink(odex_path.c_str());
+    if (!dexFile || env->ExceptionCheck()) return nullptr;
+    jclass type = env->FindClass("dalvik/system/DexFile");
+    if (g_sdk_int <= 22) {
+        auto *files = new std::vector<const void *>{nativeDex};
+        jfieldID field = env->GetFieldID(type, "mCookie", "J");
+        if (!field) { delete files; return nullptr; }
+        env->SetLongField(dexFile, field, static_cast<jlong>(reinterpret_cast<uintptr_t>(files)));
     } else {
-        std::vector<std::unique_ptr<const void *>> dex_files;
-        dex_files.push_back(std::move(load23(art_handle, (char *)g_decrypt_base, (dex_size))));
-
-        cookie_field = env->GetFieldID(DexFileClass, "mCookie", "Ljava/lang/Object;");
-        jobject mCookie = env->GetObjectField(dexFile, cookie_field);
-
-        jlongArray long_array = env->NewLongArray(1 + dex_files.size());
-        jboolean is_long_data_copied;
-        jlong* mix_element = env->GetLongArrayElements(long_array, &is_long_data_copied);
-
-        mix_element[0] = NULL;
-        for (size_t i = 0; i < dex_files.size(); ++i) {
-            if (g_sdk_int == 23) {
-                mix_element[i] = reinterpret_cast<uintptr_t>(dex_files[i].get());
-            } else {
-                mix_element[1 + i] = reinterpret_cast<uintptr_t>(dex_files[i].get());
-            }
+        // Marshmallow: [DexFile*]; Nougat: [OatFile* (null), DexFile*].
+        const jsize offset = g_sdk_int == 23 ? 0 : 1;
+        jlongArray cookie = env->NewLongArray(offset + 1);
+        if (!cookie) return nullptr;
+        const jlong pointer = static_cast<jlong>(reinterpret_cast<uintptr_t>(nativeDex));
+        env->SetLongArrayRegion(cookie, offset, 1, &pointer);
+        jfieldID field = env->GetFieldID(type, "mCookie", "Ljava/lang/Object;");
+        if (!field || env->ExceptionCheck()) return nullptr;
+        env->SetObjectField(dexFile, field, cookie);
+        if (g_sdk_int >= 24) {
+            jfieldID internal = env->GetFieldID(type, "mInternalCookie", "Ljava/lang/Object;");
+            if (!internal) return nullptr;
+            env->SetObjectField(dexFile, internal, cookie);
         }
-
-        // 更新mCookie
-        env->ReleaseLongArrayElements((jlongArray)mCookie, mix_element, 0);
-        if (env->ExceptionCheck())
-        {
-            LOGE("[-]g_sdk_int Update cookie failed");
-            return NULL;
-        }
-
-        for (auto& dex_file : dex_files) {
-            dex_file.release();
-        }
-
-        env->SetObjectField(dexFile, cookie_field, mCookie);
+        env->DeleteLocalRef(cookie);
     }
-
-    env->DeleteLocalRef(dex);
-    env->DeleteLocalRef(odex);
-
-    return dexFile;
+    env->DeleteLocalRef(type);
+    return env->ExceptionCheck() ? nullptr : dexFile;
 }
-
 static bool make_dex_elements(JNIEnv *env, jobject classLoader, std::vector<jobject> dexFileobjs)
 {
     if (!classLoader || dexFileobjs.empty() || env->ExceptionCheck()) return false;
@@ -250,6 +219,7 @@ static bool make_dex_elements(JNIEnv *env, jobject classLoader, std::vector<jobj
     if (g_sdk_int < 26) {
         jmethodID ElementInit = env->GetMethodID(ElementClass, "<init>",
                                                  "(Ljava/io/File;ZLjava/io/File;Ldalvik/system/DexFile;)V");
+        if (!ElementInit) return false;
         jboolean isDirectory = JNI_FALSE;
         for (int i = 0; i < dexFileobjs.size(); i++) {
             jobject element_obj = env->NewObject(ElementClass, ElementInit, NULL, isDirectory, NULL,
@@ -350,7 +320,16 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
             restore_error(env, "Invalid DEX length");
             return;
         }
-        char *begin = decryptdex + index;
+        // Payload records have no alignment padding. ART 5.x requires 4-byte DEX
+        // alignment; later DEX slices may start at an arbitrary byte offset.
+        // Keep page-aligned writable backing for both legacy and modern loaders.
+        char *begin = static_cast<char *>(mmap(nullptr, length, PROT_READ | PROT_WRITE,
+                                             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+        if (begin == MAP_FAILED) {
+            restore_error(env, "Cannot allocate aligned DEX memory");
+            return;
+        }
+        memcpy(begin, decryptdex + index, length);
         if (!slices.empty()) {
             for (int i = 0; i < 112; ++i) begin[i] ^= 0x66;
         }
@@ -381,7 +360,7 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
     }
     // All DEX records must be registered before ART can define any business class.
     if (slices.empty() || !install_class_restore(env, g_sdk_int)) {
-        restore_error(env, "Class-based method restoration requires arm64/x86/x86_64 ART API 26+ and a supported DefineClass hook");
+        restore_error(env, "Class-based method restoration requires ARM/Intel ART API 21+ and a supported DefineClass hook");
         return;
     }
 
@@ -390,6 +369,7 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
         art_handle = ndk_dlopen(LIB_ART_PATH, RTLD_NOW);
         if (!art_handle) {
             LOGE("[-]get %s handle failed:%s", LIB_ART_PATH, dlerror());
+            restore_error(env, "Cannot open ART for legacy DEX loading");
             return;
         }
     }
@@ -405,6 +385,9 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
             jobject mCookie = openmemory_load_dex(env, art_handle, slice.data, slice.length);
             if (mCookie) {
                 dexobjs.push_back(mCookie);
+            } else {
+                restore_error(env, "Cannot load legacy in-memory DEX");
+                return;
             }
 
         } else {

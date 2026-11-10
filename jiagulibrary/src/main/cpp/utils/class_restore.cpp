@@ -2,6 +2,9 @@
 #include "method_restore.h"
 #include "And64InlineHook.hpp"
 #include "x86_hook.h"
+#if defined(__arm__)
+#include "dobby.h"
+#endif
 #include "dlopen.h"
 #include "art_symbol.h"
 #include "plog.h"
@@ -19,6 +22,9 @@ using DefineClass = void *(*)(void *, void *, const char *, size_t, void *, cons
 DefineClass originalDefineClass = nullptr;
 using DefineClassWithLength = void *(*)(void *, void *, const char *, size_t, size_t, void *, const void *, const void *);
 DefineClassWithLength originalDefineClassWithLength = nullptr;
+// Android 5.0 has neither Thread* nor hash; never call it with the 5.1+ ABI.
+using DefineClass21 = void *(*)(void *, const char *, void *, const void *, const void *);
+DefineClass21 originalDefineClass21 = nullptr;
 
 bool restoreClass(const void *dexFile, const void *classDef) {
     std::lock_guard<std::mutex> lock(restoreMutex);
@@ -83,6 +89,16 @@ void *defineClassWithLength(void *linker, void *thread, const char *descriptor, 
     }
     return originalDefineClassWithLength(linker, thread, descriptor, first, second, loader, dexFile, classDef);
 }
+void *defineClass21(void *linker, const char *descriptor, void *loader,
+                    const void *dexFile, const void *classDef) {
+    if (!restoreClass(dexFile, classDef)) {
+        JNIEnv *env = nullptr;
+        if (javaVm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_4) == JNI_OK)
+            env->ThrowNew(env->FindClass("java/lang/IllegalStateException"), "Cannot restore DEX instructions");
+        return nullptr;
+    }
+    return originalDefineClass21(linker, descriptor, loader, dexFile, classDef);
+}
 } // namespace
 
 bool register_method_dex(const uint8_t *dex, size_t size, const uint8_t *data, size_t dataSize) {
@@ -96,9 +112,9 @@ bool register_method_dex(const uint8_t *dex, size_t size, const uint8_t *data, s
 bool install_class_restore(JNIEnv *env, int sdk) {
     bool hasMethods = false;
     for (const auto &dex : dexFiles) hasMethods |= !dex->instructions.empty();
-    if (!hasMethods || originalDefineClass || originalDefineClassWithLength) return true;
-#if defined(__aarch64__) || defined(__i386__) || defined(__x86_64__)
-    if (sdk < 26) return false;
+    if (!hasMethods || originalDefineClass || originalDefineClassWithLength || originalDefineClass21) return true;
+#if defined(__aarch64__) || defined(__arm__) || defined(__i386__) || defined(__x86_64__)
+    if (sdk < 21) return false;
     // Android 10+ ART is delivered in APEX; Android 11+ uses com.android.art.
 #if defined(__LP64__)
 #define ART_LIB_DIR "lib64"
@@ -122,21 +138,30 @@ bool install_class_restore(JNIEnv *env, int sdk) {
     };
     void *target = nullptr;
     for (const char *symbol : symbols) {
+        if (sdk == 21) break;
         target = resolve_art_symbol(artHandle, artPath, symbol);
         if (target) break;
     }
     bool withLength = false;
-    if (!target) {
+    if (!target && sdk >= 26) {
         target = resolve_art_symbol(artHandle, artPath,
             "_ZN3art11ClassLinker11DefineClassEPNS_6ThreadEPKc" ART_SIZE_T ART_SIZE_T "NS_6HandleINS_6mirror11ClassLoaderEEERKNS_7DexFileERKNS_3dex8ClassDefE");
         withLength = target != nullptr;
     }
+    if (sdk == 21) {
+        target = resolve_art_symbol(artHandle, artPath,
+            "_ZN3art11ClassLinker11DefineClassEPKcNS_6HandleINS_6mirror11ClassLoaderEEERKNS_7DexFileERKNS7_8ClassDefE");
+    }
     if (!target || env->GetJavaVM(&javaVm) != JNI_OK) { LOGE("ART DefineClass resolution failed"); return false; }
     void *replacement = withLength ? reinterpret_cast<void *>(defineClassWithLength) : reinterpret_cast<void *>(defineClass);
     void **original = withLength ? reinterpret_cast<void **>(&originalDefineClassWithLength) : reinterpret_cast<void **>(&originalDefineClass);
+    if (sdk == 21) { replacement = reinterpret_cast<void *>(defineClass21); original = reinterpret_cast<void **>(&originalDefineClass21); }
 #if defined(__aarch64__)
     A64HookFunction(target, replacement, original);
     return *original != nullptr;
+#elif defined(__arm__)
+    return DobbyHook(target, reinterpret_cast<dobby_dummy_func_t>(replacement),
+                     reinterpret_cast<dobby_dummy_func_t *>(original)) == 0 && *original != nullptr;
 #else
     return install_x86_hook(target, replacement, original);
 #endif

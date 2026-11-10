@@ -9,7 +9,8 @@ public class FixtureChecks {
             if (!java.lang.reflect.Modifier.isNative(FixtureChecks.class.getDeclaredMethod("straight", int.class).getModifiers()))
                 throw new AssertionError("D2C was not applied");
         } catch (NoSuchMethodException error) { throw new AssertionError(error); }
-        if (straight(123) != ((123 * 7) ^ 0x1234) || branching(13) != 78 || new FixtureChecks().restored(7) != 22)
+        if (straight(123) != ((123 * 7) ^ 0x1234) || branching(13) != 78 || new FixtureChecks().restored(7) != 22 ||
+                new SecondaryChecks().value(7) != 37)
             throw new AssertionError("D2C/VMP/restoration mismatch");
     }
 }

@@ -153,7 +153,7 @@ val prepareD2cFixture = tasks.register<JavaExec>("prepareD2cFixture") {
         check(androidJar.isFile) { "D2C fixture requires Android SDK platform 33" }
         dexOutput.get().asFile.mkdirs()
         classpath = files(d8)
-        setArgs(listOf("--min-api", "26", "--lib", androidJar.path, "--output", dexOutput.get().asFile.path) +
+        setArgs(listOf("--min-api", "21", "--lib", androidJar.path, "--output", dexOutput.get().asFile.path) +
             compileD2cFixture.get().destinationDirectory.get().asFile.walkTopDown()
                 .filter { it.extension == "class" }.map { it.path }.toList())
     }
@@ -215,10 +215,29 @@ val hybridDexFixtures = listOf(
             check(androidJar.isFile) { "Hybrid fixture requires Android SDK platform 33" }
             dexOutput.get().asFile.mkdirs()
             classpath = files(d8)
-            setArgs(listOf("--min-api", "26", "--lib", androidJar.path, "--output", dexOutput.get().asFile.path) +
+            setArgs(listOf("--min-api", "21", "--lib", androidJar.path, "--output", dexOutput.get().asFile.path) +
                 compile.get().destinationDirectory.get().asFile.walkTopDown()
-                    .filter { it.extension == "class" }.map { it.path }.toList())
+                    .filter { it.extension == "class" && it.name != "SecondaryChecks.class" }.map { it.path }.toList())
         }
+    }
+}
+
+val prepareCompatibilitySecondaryFixture = tasks.register<JavaExec>("prepareCompatibilitySecondaryFixture") {
+    dependsOn(compileHybridFixture)
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    mainClass.set("com.android.tools.r8.D8")
+    val output = rootProject.layout.buildDirectory.dir("compatibility/secondary")
+    inputs.files(compileHybridFixture.map { it.destinationDirectory })
+    outputs.dir(output)
+    doFirst {
+        val sdk = fixtureSdk()
+        val d8 = sdk.resolve("build-tools").listFiles()!!.sortedByDescending { it.name }
+            .map { it.resolve("lib/d8.jar") }.first { it.isFile }
+        output.get().asFile.mkdirs()
+        classpath = files(d8)
+        setArgs(listOf("--min-api", "21", "--lib", sdk.resolve("platforms/android-33/android.jar").path,
+            "--output", output.get().asFile.path,
+            compileHybridFixture.get().destinationDirectory.get().asFile.resolve("com/wpf/jiagu/compat/SecondaryChecks.class").path))
     }
 }
 
@@ -269,7 +288,7 @@ compatibilityChecks.forEach { name -> tasks.named(name).configure { finalizedBy(
 
 val prepareCompatibilityApp = tasks.register<JavaExec>("prepareCompatibilityApp") {
     group = "verification"
-    dependsOn("testClasses", "prepareHybridFixture")
+    dependsOn("testClasses", "prepareHybridFixture", prepareCompatibilitySecondaryFixture)
     javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
     classpath = sourceSets["test"].runtimeClasspath
     mainClass.set("com.wpf.utils.jiagu.CompatibilityFixtureKt")

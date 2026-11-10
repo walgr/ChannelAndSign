@@ -113,6 +113,9 @@ quick_on_stack_back = (void *)pv;
 #else
 # error "not supported"
 #endif
+// ARM instruction/data caches are not necessarily coherent on physical devices.
+__builtin___clear_cache((char *)__insns, (char *)__insns + sizeof(__insns));
+__builtin___clear_cache((char *)(pv & ~(uintptr_t)1), (char *)(pv & ~(uintptr_t)1) + 16);
 LOGD("init done! quick_on_stack_replace = %p, quick_on_stack_back = %p",
      STUBS.generic_stub, quick_on_stack_back);
 } //if

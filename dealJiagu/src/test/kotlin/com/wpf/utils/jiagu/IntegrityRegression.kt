@@ -38,10 +38,10 @@ fun main(args: Array<String>) {
     check(runCatching { IntegrityVerifier.verify(forged, publicKey) }.isFailure)
     reject(original, IntegritySeal.publicHex(attackerKey))
     reject(original + ("assets/libjiagu_x86.so" to byteArrayOf(1)))
-    listOf(26,27,28,29,30,31,32,33,34,35,36,37).forEach { sdk ->
-        listOf("arm64-v8a", "x86", "x86_64").forEach { RuntimeCompatibility.requireSupported(sdk, it) }
+    (21..37).forEach { sdk ->
+        listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64").forEach { RuntimeCompatibility.requireSupported(sdk, it) }
     }
-    check(runCatching { RuntimeCompatibility.requireSupported(25, "x86_64") }.isFailure)
-    check(runCatching { RuntimeCompatibility.requireSupported(36, "armeabi-v7a") }.isFailure)
+    check(runCatching { RuntimeCompatibility.requireSupported(20, "x86_64") }.isFailure)
+    check(runCatching { RuntimeCompatibility.requireSupported(36, "mips") }.isFailure)
     println("SHELL_INTEGRITY_PASSED: signed records, wrong key/re-sign/tamper/deletion rejection, cached SO mismatch, runtime compatibility contract")
 }

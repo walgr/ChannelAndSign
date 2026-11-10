@@ -157,6 +157,7 @@ fun main(args: Array<String>) {
             ZipFile(main.file).use { zip ->
                 check(zip.getInputStream(zip.getEntry("assets/audience_network/classes.dex")).readBytes().contentEquals(embeddedDex))
                 check(zip.getEntry("assets/libjiagu_x86.so") != null)
+                check(zip.getEntry("assets/libjiagu_v7a.so") != null)
                 check(zip.getEntry("assets/libjiagu_x86_64.so") != null)
                 check(zip.getInputStream(zip.getEntry("classes.dex")).readBytes().size >
                     File(root, "build/hybrid-app/original/classes.dex").length())

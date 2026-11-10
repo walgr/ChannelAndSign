@@ -318,7 +318,7 @@ object JiaGu {
             val nativeAbis = apkEntries.filter { it.startsWith("lib/") && it.endsWith(".so") }
                 .map { it.removePrefix("lib/").substringBefore('/') }.toSet()
             // Native-bridge emulators can run ARM APKs inside an Intel ART process.
-            val targetAbis = setOf("arm64-v8a", "x86", "x86_64") + nativeAbis
+            val targetAbis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64") + nativeAbis
             val soFileList = shellSoFiles.filterKeys { it in targetAbis }
             check(soFileList.isNotEmpty()) { "原 APK 没有可用的加固壳 ABI: $targetAbis" }
             soFileList.values.forEach { soFile ->

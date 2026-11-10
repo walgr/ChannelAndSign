@@ -10,7 +10,7 @@
 
 SO 提取缓存增加内容核对，损坏缓存会从已经验证的 APK 重新提取；新提取文件核对 SHA-256 和 ELF ABI，通过后才发布并加载。每个新进程均重新检查，验证开销与受保护文件总大小相关。
 
-兼容性合同仍为 Android API 26+ 的 arm64-v8a、x86、x86_64 ART，并依赖设备 ART DefineClass 符号/Hook 能力。启动会在加载壳 SO 前给出不支持 API/进程 ABI 的明确错误；这不代表所有 OEM/Android 版本都已实机验证。ARMv7 代码可编译，不代表支持第三代方法恢复。加固前同时拒绝重复加固、缺少主 classes.dex、超出载荷长度限制的 Application 名；Application 名按 UTF-8 字节写入载荷。
+兼容性合同为 Android API 21+ 的 armeabi-v7a、arm64-v8a、x86、x86_64 ART，并依赖设备 ART DefineClass 符号/Hook 能力。启动会在加载壳 SO 前给出不支持 API/进程 ABI 的明确错误；这不代表所有 OEM/Android 版本都已实机验证。ARMv7 已接入 ARM/Thumb 类定义 Hook；各设备仍需执行启动回归。加固前同时拒绝重复加固、缺少主 classes.dex、超出载荷长度限制的 Application 名；Application 名按 UTF-8 字节写入载荷。
 
 验证命令：
 

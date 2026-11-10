@@ -10,7 +10,7 @@ import java.security.MessageDigest
 /** Local build evidence only. Never includes keys/passwords or invents device results. */
 class ProtectionReport(val packageName: String, val selectionMode: String) {
     val schemaVersion = 1
-    val supportedRuntime = "API 26+ arm64-v8a/x86/x86_64; requires a supported ART DefineClass hook"
+    val supportedRuntime = "API 21+ armeabi-v7a/arm64-v8a/x86/x86_64; requires supported ART DefineClass/OpenMemory symbols"
     val deviceValidation = "not_run"
     val startupPerformance = "not_measured; collect NDK_JIAGU_PERF on a device"
     var archiveType = "APK"

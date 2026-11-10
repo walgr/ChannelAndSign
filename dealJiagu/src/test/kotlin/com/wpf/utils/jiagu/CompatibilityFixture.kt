@@ -11,7 +11,7 @@ fun main(args: Array<String>) {
     ResourceManager.tempFolderPath = File(work, "tools").apply { mkdirs() }.path + File.separator
     val manifest = File(work, "AndroidManifest.xml")
     manifest.writeText("""<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.wpf.jiagu.compat" android:versionCode="1">
-        <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="33"/>
+        <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33"/>
         <application android:name="com.wpf.jiagu.compat.FixtureApplication" android:debuggable="true" android:label="Jiagu regression">
           <activity android:name="com.wpf.jiagu.compat.FixtureActivity" android:exported="true"/>
           <provider android:name="com.wpf.jiagu.compat.FixtureProvider" android:authorities="com.wpf.jiagu.compat.main" android:exported="false"/>
@@ -35,12 +35,17 @@ fun main(args: Array<String>) {
         } }
         out.putNextEntry(ZipEntry("classes.dex"))
         File(root, "build/hybrid-app/original/classes.dex").inputStream().use { it.copyTo(out) }; out.closeEntry()
+        out.putNextEntry(ZipEntry("classes2.dex"))
+        File(root, "build/compatibility/secondary/classes.dex").inputStream().use { it.copyTo(out) }; out.closeEntry()
     }
     JiaGu.deal(input.path, "0123456789abcdef", "fedcba9876543210", sdk.path, System.getProperty("java.home"),
         File(root, "jiagulibrary/jiagu.jks").path, "jiagu", "abc12345678", "abc12345678", showLog = true)
     val output = File(work, "compat_jiagu_sign.apk")
     val report = ProtectionReport.read(output)
+    val outputManifest = com.wpf.utils.jiagu.utils.ApplicationHelper.manifestXml(output)
+    check("android:minSdkVersion=\"21\"" in outputManifest && "android:targetSdkVersion=\"33\"" in outputManifest)
     check(report.getAsJsonArray("d2cMethods").size() > 0 && report.getAsJsonArray("vmpMethods").size() > 0)
     check(report.getAsJsonArray("extractedCodeItems").size() > 0)
+    check(report.getAsJsonArray("extractedCodeItems").any { it.asJsonObject["dex"].asString == "classes2.dex" })
     println("COMPATIBILITY_FIXTURE_READY: $output")
 }

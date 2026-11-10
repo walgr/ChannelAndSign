@@ -35,8 +35,8 @@ XAPK 的 `baseProtection` 描述主 APK 的处理结果；外层大小和 SHA-25
 .\gradlew.bat :dealJiagu:verifyDeviceCompatibility -PdeviceSerial=emulator-5554 --console=plain
 ```
 
-使用独立包 `com.wpf.jiagu.compat` 验证 D2C、VMP、第三代还原、原 Application、主/远程进程 Provider 和 Activity。覆盖首次安装启动、SO 缓存复用、损坏缓存恢复、多进程启动、同证书覆盖安装，并记录启动统计与 `am start -W` 的命令耗时。
+使用独立双 DEX 包 `com.wpf.jiagu.compat` 验证 D2C、VMP、第三代还原、跨 DEX 调用、原 Application、主/远程进程 Provider 和 Activity。覆盖首次安装启动、SO 缓存复用、损坏缓存恢复、多进程启动、同证书覆盖安装，并记录启动统计与 `am start -W` 的命令耗时。API 21–23 使用安装会话和旧版进程查询命令；框架提前返回 Activity 启动结果时，有界等待实际 Application 及 Activity 验证日志。
 
-脚本拒绝覆盖预先存在的同名测试包，仅操作本次安装的测试包，结束后卸载它；不清空设备 Logcat，不修改业务 App。损坏缓存测试只通过 run-as 修改这个可调试测试包的 SO 缓存。设备需 API 26+ 且 ART 版本受当前还原实现支持。
+脚本拒绝覆盖预先存在的同名测试包，仅操作本次安装的测试包，结束后卸载它；不清空设备 Logcat，不修改业务 App。损坏缓存测试只通过 run-as 修改这个可调试测试包的 SO 缓存。设备需 API 21+ 且 ART 版本受当前还原实现支持。
 
 结果与日志保存于 `build/compatibility/device-<序列号>/results.json` 和 `evidence.log`。失败会使 Gradle 任务失败；清理失败也会记录。此结果只证明指定设备上的独立测试包，实际业务 APK、其他 API/ABI/OEM 仍需单独验证。重复运行会覆盖该设备的上一轮报告，请在需要时归档。
