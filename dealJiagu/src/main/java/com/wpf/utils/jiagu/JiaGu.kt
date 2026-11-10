@@ -44,7 +44,12 @@ object JiaGu {
                 if (signFilePath.isBlank()) "_jiagu.xapk" else "_jiagu_sign.xapk")
             val sidecar = File(input.parentFile, input.nameWithoutExtension + ".d2c.txt")
             val rules = d2cConfigPath.ifBlank { sidecar.takeIf { it.isFile }?.path ?: "" }
+            var baseReport: com.google.gson.JsonObject? = null
+            var preservedSplits: List<String> = emptyList()
+            var protectedMember = ""
             XapkArchive.transform(input, output) { members, base ->
+                protectedMember = base.path
+                preservedSplits = members.filter { it != base }.map { it.path }
                 println("XAPK：加固主 APK ${base.path}，保留 ${members.size - 1} 个拆分 APK 和附带资源")
                 val baseWork = java.nio.file.Files.createTempDirectory(base.file.parentFile.toPath(), ".base-jiagu-").toFile()
                 try {
@@ -53,6 +58,9 @@ object JiaGu {
                         isAndroidX = isAndroidX, showLog = showLog, d2cConfigPath = rules)
                     val hardened = File(baseWork, "base_jiagu.apk")
                     check(hardened.isFile) { "XAPK 主 APK 加固未产生输出" }
+                    baseReport = ProtectionReport.read(hardened).apply {
+                        addProperty("sourceName", base.path); addProperty("outputName", base.path)
+                    }
                     XapkArchive.publish(hardened, base.file)
                 } finally { baseWork.deleteRecursively() }
                 if (signFilePath.isNotBlank()) members.forEach { member ->
@@ -65,6 +73,12 @@ object JiaGu {
                     "XAPK 内 APK 签名证书不一致"
                 }
             }
+            val details = requireNotNull(baseReport)
+            ProtectionReport(details["packageName"].asString, details["selectionMode"].asString).apply {
+                archiveType = "XAPK"; baseProtection = details; protectedArchiveMember = protectedMember
+                this.preservedSplits = preservedSplits; signed = signFilePath.isNotBlank()
+                phase("xapk_processing", startedAt)
+            }.write(input, output, startedAt)
             println("XAPK 加固完成：$output，耗时：${((System.nanoTime() - startedAt) / 1_000_000).formatTime()}" +
                 if (signFilePath.isBlank()) "；安装前请对整个 XAPK 统一签名" else "")
             return
@@ -91,6 +105,8 @@ object JiaGu {
             val rulesFile = if (d2cConfigPath.isNotBlank()) File(d2cConfigPath)
                 else File(srcApkFile.parentFile, srcApkFile.nameWithoutExtension + ".d2c.txt")
             require(d2cConfigPath.isBlank() || rulesFile.isFile) { "D2C config not found: $rulesFile" }
+            val report = ProtectionReport(packageName.orEmpty(), if (rulesFile.isFile) "explicit" else "manifest_package")
+            val compileStarted = System.nanoTime()
             val d2c = run {
                 val explicitRules = if (rulesFile.isFile) D2cRules.read(rulesFile) else null
                 val original = ZipArchive(srcApkFile.toPath())
@@ -101,13 +117,16 @@ object JiaGu {
                 val rules = explicitRules ?: D2cCompiler.selectDefaults(inputs,
                     requireNotNull(packageName?.takeIf { it.isNotBlank() }) { "无法获取 APK 主包名，不能生成默认 D2C 白名单" }
                 ).also { selection ->
+                    report.skippedNativeMethods = selection.skipped
                     println("D2C 默认白名单：$packageName 及其子包；可转换 ${selection.methods.size} 个方法，跳过 ${selection.skipped.size} 个不支持的方法")
                     if (showLog) selection.skipped.values.forEach { println("D2C 跳过：$it") }
                 }.methods
                 D2cCompiler.compileHybrid(inputs, rules).also {
+                    report.d2cMethods = it.d2cMethods; report.vmpMethods = it.vmpMethods
                     println("混合保护：D2C ${it.d2cMethods.size} 个方法，VMP ${it.vmpMethods.size} 个方法；其余方法继续使用第三代方法抽离")
                 }.takeIf { it.methods.isNotEmpty() }
             }
+            report.phase("method_selection_and_compilation", compileStarted)
             val d2cHash = d2c?.let {
                 java.security.MessageDigest.getInstance("SHA-256").digest(it.source.toByteArray(Charsets.UTF_8))
                     .joinToString("") { value -> "%02x".format(value.toInt() and 255) }
@@ -157,6 +176,9 @@ object JiaGu {
                 "x86_64" to File(jiaguCacheHashPath, "libjiagu_x86_64.so"),
             )
 
+            report.shellCacheHit = jiaguDexCacheHashFile.isFile && jiaguDexCacheHashFile.length() > 0L &&
+                shellSoFiles.values.all { it.isFile && it.length() > 0L }
+            val shellStarted = System.nanoTime()
             if (!jiaguDexCacheHashFile.isFile || jiaguDexCacheHashFile.length() == 0L ||
                 shellSoFiles.values.any { !it.isFile || it.length() == 0L }) {
                 if (showLog) {
@@ -286,6 +308,7 @@ object JiaGu {
                     println("发现加固壳缓存直接处理")
                 }
             }
+            report.phase("shell_preparation", shellStarted)
             //添加.so
             if (showLog) {
                 println("添加so到apk中")
@@ -325,6 +348,7 @@ object JiaGu {
             }
 
             var encryptData: ByteArray? = null
+            val extractionStarted = System.nanoTime()
             val srcDexList = DexHelper.getApkSrcDexList(jiaguApkZipArchive)
             srcDexList.forEachIndexed { index, pair ->
                 val dexByteArray = d2c?.dexFiles?.get(pair.first) ?: pair.second.readBytes()
@@ -333,7 +357,8 @@ object JiaGu {
                     whiteList = arrayOf(
                         (packageName ?: srcApplicationName.take(srcApplicationName.lastIndexOf("."))).replace(".", "/")
                     ),
-                    blackList = arrayOf("databinding")
+                    blackList = arrayOf("databinding"),
+                    onExtracted = { method, bytes -> report.extractedCodeItems.add(ProtectionReport.Extracted(pair.first, method, bytes)) }
                 )
                 if (index == 0) {
                     // 扩容 4字节源dex大小 + 源dex + 4字节源dex抽取代码大小 + 源dex抽取代码
@@ -402,6 +427,8 @@ object JiaGu {
                     ) // 源dex抽取代码
                 }
             }
+            report.phase("dex_extraction_and_encryption", extractionStarted)
+            val rewriteStarted = System.nanoTime()
             // 合并dex
             if (showLog) {
                 println("合并加密dex(${encryptData!!.size})到壳dex(${keDexByteArray.size})")
@@ -456,7 +483,9 @@ object JiaGu {
             fixManifestFile.delete()
             jiaguApkZipArchive.close()
             IntegritySeal.seal(jiaguApkFile, integrityKey)
+            report.phase("apk_rewrite_and_integrity_seal", rewriteStarted)
             var completedPath = jiaguApkFile.path
+            val signingStarted = System.nanoTime()
             //签名
             if (signFilePath.isNotEmpty()) {
                 if (showLog) {
@@ -483,6 +512,9 @@ object JiaGu {
                     }
                 }
             }
+            report.phase("signing", signingStarted)
+            report.signed = signFilePath.isNotEmpty()
+            report.write(srcApkFile, File(completedPath), startedAt)
             println("加固完成：$srcApkPath，加固包：$completedPath，耗时：${((System.nanoTime() - startedAt) / 1_000_000).formatTime()}")
         }.onFailure {
             if (showLog) {

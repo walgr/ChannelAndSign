@@ -121,7 +121,8 @@ tasks.register<JavaExec>("verifyXapk") {
     classpath = sourceSets["test"].runtimeClasspath
     mainClass.set("com.wpf.utils.jiagu.XapkRegressionKt")
     doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path) +
-        if (project.hasProperty("xapkHarden")) listOf("--harden") else emptyList()) }
+        if (project.hasProperty("xapkHarden") || gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "verifyCompatibility" })
+            listOf("--harden") else emptyList()) }
 }
 
 val compileD2cFixture = tasks.register<JavaCompile>("compileD2cFixture") {
@@ -167,7 +168,7 @@ tasks.register<JavaExec>("verifyD2c") {
 }
 
 val compileHybridFixture = tasks.register<JavaCompile>("compileHybridFixture") {
-    source("src/test/fixtures/d2c", "src/test/fixtures/hybrid-app")
+    source("src/test/fixtures/d2c", "src/test/fixtures/hybrid-app", "src/test/fixtures/compatibility")
     destinationDirectory.set(rootProject.layout.buildDirectory.dir("hybrid-app/classes"))
     sourceCompatibility = "1.8"
     targetCompatibility = "1.8"
@@ -229,4 +230,60 @@ tasks.register<JavaExec>("verifyHybridPayload") {
     args(rootProject.file("build/hybrid-app/original/classes.dex").path,
         rootProject.file("build/hybrid-app/shell/classes.dex").path,
         rootProject.file("build/hybrid-app/payload").path)
+}
+
+val compatibilityChecks = listOf("verifyD2c", "verifyAesPayload", "verifyHybridPayload", "verifyShellIntegrity", "verifyShellGradle", "verifyXapk")
+val compatibilityReport = tasks.register("writeCompatibilityReport") {
+    group = "verification"
+    mustRunAfter(compatibilityChecks)
+    doLast {
+        val results = compatibilityChecks.map { name ->
+            val check = tasks.named(name).get()
+            mapOf("task" to check.path, "status" to when {
+                check.state.failure != null -> "failed"
+                !check.state.executed -> "not_run"
+                check.state.skipped -> "skipped"
+                else -> "passed"
+            })
+        }
+        val folder = rootProject.file("build/compatibility").apply { mkdirs() }
+        val status = if (results.any { it["status"] == "failed" }) "failed"
+            else if (results.all { it["status"] == "passed" }) "passed" else "incomplete"
+        val report = mapOf("schemaVersion" to 1, "scope" to "host_and_packaging", "status" to status,
+            "checks" to results, "deviceValidation" to "not_run", "startupPerformance" to "not_measured",
+            "note" to "Host/runtime-contract tests do not prove device/ABI/OEM startup compatibility; run verifyDeviceCompatibility for a selected device")
+        folder.resolve("host-results.json").writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(report)))
+        folder.resolve("host-results.md").writeText("# 自动兼容性回归（构建侧）\n\n状态：$status\n\n" +
+            results.joinToString("\n") { "- ${it["task"]}：${it["status"]}" } +
+            "\n\n设备验证：未执行。此结果不代表所有 Android/ABI/OEM 均已通过启动验证。\n")
+        println("兼容性回归报告：${folder.resolve("host-results.json")}")
+    }
+}
+tasks.register("verifyCompatibility") {
+    group = "verification"
+    description = "Run all host regressions and full XAPK hardening/signing; write an explicit evidence summary"
+    dependsOn(compatibilityChecks)
+    finalizedBy(compatibilityReport)
+}
+compatibilityChecks.forEach { name -> tasks.named(name).configure { finalizedBy(compatibilityReport) } }
+
+val prepareCompatibilityApp = tasks.register<JavaExec>("prepareCompatibilityApp") {
+    group = "verification"
+    dependsOn("testClasses", "prepareHybridFixture")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.CompatibilityFixtureKt")
+    doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path)) }
+}
+tasks.register<JavaExec>("verifyDeviceCompatibility") {
+    group = "verification"
+    dependsOn(prepareCompatibilityApp)
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.DeviceCompatibilityKt")
+    doFirst {
+        val serial = providers.gradleProperty("deviceSerial").orNull
+            ?: error("Provide -PdeviceSerial=<adb serial> for an explicitly selected test device")
+        setArgs(listOf(rootProject.projectDir.path, serial))
+    }
 }

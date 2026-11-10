@@ -44,6 +44,7 @@ object DexHelper {
         whiteList: Array<String>? = null,
         blackList: Array<String>? = null,
         maxDealSize: Int = Integer.MAX_VALUE,
+        onExtracted: ((String, Int) -> Unit)? = null,
     ): ByteArray {
         val parseDexHelper = ParseDexUtils()
         parseDexHelper.parseAll(dexBytes)
@@ -72,6 +73,7 @@ object DexHelper {
                 byteBuffer.write(EncryptUtils.intToByteArray(codeItem.insnsOffset))
                 byteBuffer.write(EncryptUtils.intToByteArray(nopBytes.size))
                 byteBuffer.write(oldData)
+                onExtracted?.invoke(funName, oldData.size)
             }
 
         }

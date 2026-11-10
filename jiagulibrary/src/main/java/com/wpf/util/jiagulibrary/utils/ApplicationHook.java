@@ -99,9 +99,12 @@ public class ApplicationHook {
             applicationInfo.className = sDelegateApplication.getClass().getName();
 
 
-            sDelegateApplication.onCreate();
+            long started = System.nanoTime();
+            try { sDelegateApplication.onCreate(); }
+            finally { StartupMetrics.phase("delegate_oncreate_ms", started); }
 
         } catch (Exception e) {
+            StartupMetrics.failure("delegate_oncreate", e);
             e.printStackTrace();
         }
     }

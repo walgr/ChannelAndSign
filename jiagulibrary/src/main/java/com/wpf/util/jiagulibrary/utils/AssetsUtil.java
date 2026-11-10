@@ -25,7 +25,11 @@ public class AssetsUtil {
         }
         File target = new File(directory, "libjiagu" + StubApp.VERSION + "_" + updateTime + "_" + abi + ".so");
         Log.w("NDK_JIAGU", "processAbi=" + abi + ", asset=" + asset + ", target=" + target);
-        if (IntegrityVerifier.matchesShell(target, asset)) return target.getAbsolutePath();
+        if (IntegrityVerifier.matchesShell(target, asset)) {
+            StartupMetrics.flag("so_cache_hit", true);
+            return target.getAbsolutePath();
+        }
+        StartupMetrics.flag("so_cache_hit", false);
 
         File temporary = null;
         try {

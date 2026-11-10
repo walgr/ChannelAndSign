@@ -133,6 +133,21 @@ fun main(args: Array<String>) {
             jdkPath = System.getProperty("java.home"), signFilePath = store, signAlias = "jiagu",
             keyStorePassword = "abc12345678", keyPassword = "abc12345678", showLog = true)
         val protected = File(work, "sample_jiagu_sign.xapk")
+        val report = ProtectionReport.read(protected)
+        check(File(protected.path + ".protection.md").isFile)
+        check(report["archiveType"].asString == "XAPK" && report["signed"].asBoolean)
+        check(report["outputBytes"].asLong == protected.length())
+        val hash = java.security.MessageDigest.getInstance("SHA-256").digest(protected.readBytes())
+            .joinToString("") { "%02x".format(it.toInt() and 255) }
+        check(report["outputSha256"].asString == hash)
+        check(report["deviceValidation"].asString == "not_run")
+        check(report["protectedArchiveMember"].asString == "apks/main.APK")
+        check(report.getAsJsonArray("preservedSplits").map { it.asString } == listOf("apks/config.en.apk"))
+        val baseReport = report.getAsJsonObject("baseProtection")
+        check(baseReport.getAsJsonArray("d2cMethods").size() > 0)
+        check(baseReport.getAsJsonArray("vmpMethods").size() > 0)
+        check(baseReport.getAsJsonArray("extractedCodeItems").size() > 0)
+        check(!report.toString().contains("abc12345678") && !report.toString().contains("0123456789abcdef"))
         XapkArchive.transform(protected, File(work, "validated_jiagu.xapk")) { members, main ->
             check(com.wpf.utils.jiagu.utils.ApplicationHelper.getName(main.file) == "com.wpf.util.jiagulibrary.StubApp")
             val integrityKey = IntegritySeal.key(File(ResourceManager.cachePath, "cache/jiagu-integrity"))
