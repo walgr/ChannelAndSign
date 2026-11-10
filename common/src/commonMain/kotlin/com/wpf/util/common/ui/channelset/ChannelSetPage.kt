@@ -428,11 +428,19 @@ fun dealClientClick(
     channelFileNameList: SnapshotStateList<String>,
     channelNameList: SnapshotStateList<String>
 ) {
+    // Removing the last client still requests position 0; queued row clicks can also be stale.
+    val client = clientList.getOrNull(pos)
+    if (client == null) {
+        if (clientList.isEmpty()) {
+            channelFileNameList.clear()
+            channelNameList.clear()
+        }
+        return
+    }
     clientList.forEach {
         it.isSelect = false
         it.isSelectState.value = false
     }
-    val client = clientList[pos]
     client.isSelect = true
     client.isSelectState.value = true
     clientList.saveData()

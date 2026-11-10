@@ -36,6 +36,10 @@ object JiaGu {
         isAndroidX: Boolean = true,
         showLog: Boolean = false,
         d2cConfigPath: String = "",
+        obfuscateResourcePaths: Boolean = false,
+        encryptResourceContents: Boolean = false,
+        encryptNativeLibraries: Boolean = false,
+        nativeExclusions: Set<String> = emptySet(),
     ) {
         val startedAt = System.nanoTime()
         if (File(srcApkPath).extension.equals("xapk", true)) {
@@ -53,9 +57,30 @@ object JiaGu {
                 println("XAPK：加固主 APK ${base.path}，保留 ${members.size - 1} 个拆分 APK 和附带资源")
                 val baseWork = java.nio.file.Files.createTempDirectory(base.file.parentFile.toPath(), ".base-jiagu-").toFile()
                 try {
+                    val splitDependencies = linkedSetOf<String>()
+                    var unreadableSplit = false
+                    if (encryptNativeLibraries) members.filter { it != base }.forEach { member ->
+                        java.util.zip.ZipFile(member.file).use { split ->
+                            split.entries().asSequence().filter { NativeProtection.isLibrary(it.name) }.forEach { entry ->
+                                val info = runCatching {
+                                    require(entry.size in 64..(128L * 1024 * 1024))
+                                    split.getInputStream(entry).use { NativeProtection.elf(it.readBytes(), entry.name.split('/')[1]) }
+                                }.getOrNull()
+                                if (info == null) unreadableSplit = true else splitDependencies.addAll(info.needed)
+                            }
+                        }
+                    }
+                    if (unreadableSplit) java.util.zip.ZipFile(base.file).use { original ->
+                        original.entries().asSequence().filter { NativeProtection.isLibrary(it.name) }.forEach {
+                            splitDependencies.add(it.name.substringAfterLast('/'))
+                        }
+                    }
+                    if (splitDependencies.isNotEmpty()) println("XAPK：保留 split 引用或无法分析的主包 SO，共 ${splitDependencies.size} 个依赖名称")
                     val source = base.file.copyTo(File(baseWork, "base.apk"))
                     deal(source.path, secretKey, keyVi, androidSdkPath, jdkPath,
-                        isAndroidX = isAndroidX, showLog = showLog, d2cConfigPath = rules)
+                        isAndroidX = isAndroidX, showLog = showLog, d2cConfigPath = rules,
+                        obfuscateResourcePaths = obfuscateResourcePaths, encryptResourceContents = encryptResourceContents,
+                        encryptNativeLibraries = encryptNativeLibraries, nativeExclusions = nativeExclusions + splitDependencies)
                     val hardened = File(baseWork, "base_jiagu.apk")
                     check(hardened.isFile) { "XAPK 主 APK 加固未产生输出" }
                     baseReport = ProtectionReport.read(hardened).apply {
@@ -194,6 +219,16 @@ object JiaGu {
                         val source = readText(Charsets.UTF_8)
                         check(source.contains("PUBLIC_KEY_HEX = \"\"")) { "加固壳缺少完整性公钥注入点" }
                         writeText(source.replace("PUBLIC_KEY_HEX = \"\"", "PUBLIC_KEY_HEX = \"$integrityPublicKey\""), Charsets.UTF_8)
+                    }
+                    File(projectRootPath, "jiagulibrary/src/main/java/com/wpf/util/jiagulibrary/utils/ResourceArchive.java").apply {
+                        val source = readText(Charsets.UTF_8)
+                        check(source.contains("KEY_HEX = \"\"")) { "加固壳缺少资源密钥注入点" }
+                        writeText(source.replace("KEY_HEX = \"\"", "KEY_HEX = \"${ResourceEncryption.key(secretKey)}\""), Charsets.UTF_8)
+                    }
+                    File(projectRootPath, "jiagulibrary/src/main/java/com/wpf/util/jiagulibrary/utils/NativeArchive.java").apply {
+                        val source = readText(Charsets.UTF_8)
+                        check(source.contains("KEY_HEX = \"\"")) { "加固壳缺少 SO 密钥注入点" }
+                        writeText(source.replace("KEY_HEX = \"\"", "KEY_HEX = \"${NativeProtection.key(secretKey)}\""), Charsets.UTF_8)
                     }
                     if (d2c != null) {
                         File(projectRootPath, "jiagulibrary/src/main/cpp/utils/d2c_generated.cpp")
@@ -482,6 +517,21 @@ object JiaGu {
             )
             fixManifestFile.delete()
             jiaguApkZipArchive.close()
+            val resourceStarted = System.nanoTime()
+            report.resources = ResourceProtection.protect(jiaguApkFile, obfuscateResourcePaths)
+            if (encryptResourceContents) {
+                report.resourceEncryption = ResourceEncryption.encrypt(jiaguApkFile, ResourceEncryption.key(secretKey))
+                val encrypted = requireNotNull(report.resourceEncryption)
+                println("轻量资源内容加密：${encrypted.encryptedFiles.size} 个文件 / ${encrypted.encryptedBytes} 字节，保留 ${encrypted.bootstrapFiles.size} 个启动资源，按大小/类型预算跳过 ${encrypted.skippedFiles.size} 个文件")
+            }
+            report.phase("resource_protection", resourceStarted)
+            println("资源加固：完整性保护 ${report.resources!!.integrityFiles} 个文件，路径混淆 ${report.resources!!.renamedFiles} 个文件")
+            val nativeStarted = System.nanoTime()
+            report.nativeProtection = NativeProtection.protect(jiaguApkFile, encryptNativeLibraries,
+                NativeProtection.key(secretKey), shellSoFiles, nativeExclusions)
+            val native = requireNotNull(report.nativeProtection)
+            println("SO 加固：完整性覆盖 ${native.integrityFiles} 个原始库，内容加密 ${native.encryptedFiles.size} 个 / ${native.encryptedBytes} 字节，保留明文 ${native.retainedFiles.size} 个（详见保护报告）")
+            report.phase("native_protection", nativeStarted)
             IntegritySeal.seal(jiaguApkFile, integrityKey)
             report.phase("apk_rewrite_and_integrity_seal", rewriteStarted)
             var completedPath = jiaguApkFile.path

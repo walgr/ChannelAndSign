@@ -1,12 +1,12 @@
 # 兼容性与完整性校验
 
-加固后默认生成 `assets/jiagu-integrity.bin` 和 `.sig`。记录包含最终 `classes.dex`（壳及加密业务载荷）、`AndroidManifest.xml` 与包内全部壳 SO asset 的 SHA-256，使用 RSA-2048/SHA256withRSA 签名。对应公钥注入壳 Java 代码并参与壳缓存键。`StubApp.attachBaseContext` 在加载 SO 或解密 DEX 之前验证签名及记录内容；缺失、重复、替换或损坏会明确失败。
+加固后默认生成 `assets/jiagu-integrity.bin` 和 `.sig`。记录包含最终 `classes.dex`（壳及加密业务载荷）、`AndroidManifest.xml`、`resources.arsc`、`res/`、`lib/<abi>/*.so` 与 `assets/` 全部文件（含业务 SO、壳 SO，排除完整性记录本身及目录）的 SHA-256，使用 RSA-2048/SHA256withRSA 签名。对应公钥注入壳 Java 代码并参与壳缓存键。`StubApp.attachBaseContext` 在加载 SO 或解密 DEX 之前验证签名及记录内容；缺失、重复、替换或损坏会明确失败。
 
 完整性签名独立于 APK 部署证书，因此保留「加固 → 自行签名」及 XAPK 全部 split 重签流程。它不会绑定 APK 的 Android 签名证书，也不会拒绝仅更换部署证书的包。若要锁定发布证书，需要另外设置证书绑定策略，不能默认锁定加固前的第三方证书。
 
 签名私钥保存在工具缓存 `cache/jiagu-integrity/private.pk8`，不写入 APK/XAPK、日志或壳源码。请将该缓存作为私有构建材料保管。删除此私钥后会生成新密钥并重建壳，已有 APK 仍使用其中原公钥正常验证。记录签名能防止只改内容或重算 SHA-256；它不能保证攻击者无法同时修改壳 DEX、公钥及验证代码。
 
-当前保护范围是主 APK 的载荷、Manifest 和壳 SO；未纳入普通资源、第三方 SO 以及功能 split 内的代码。XAPK 的各 APK 仍由统一部署证书签名与验签。
+当前保护范围是主 APK 的载荷、Manifest、资源表、res、assets（含壳 SO）与 lib 目录的业务 SO；split 内的代码、资源和 SO 未纳入壳的独立记录。SO 内容加密为可选项，依赖与预算控制及缓存限制见 [NATIVE_PROTECTION.md](NATIVE_PROTECTION.md)。资源路径混淆及轻量内容加密为可选项，加密载荷同时纳入签名，详见 [RESOURCES.md](RESOURCES.md)。XAPK 的各 APK 仍由统一部署证书签名与验签。
 
 SO 提取缓存增加内容核对，损坏缓存会从已经验证的 APK 重新提取；新提取文件核对 SHA-256 和 ELF ABI，通过后才发布并加载。每个新进程均重新检查，验证开销与受保护文件总大小相关。
 

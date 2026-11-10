@@ -3,11 +3,13 @@ package com.wpf.util.common.ui.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import com.google.gson.reflect.TypeToken
+import com.russhwolf.settings.Settings
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KProperty
 
 class AutoSaveAny<T>(
-    private val key: String, private var data: T
+    private val key: String, private var data: T,
+    private val storage: Settings = settings
 ) {
 
     var value: T = data
@@ -15,12 +17,14 @@ class AutoSaveAny<T>(
         set(value) {
             field = value
             data = value
-            settings.putString(key, if (value is Serializable) gson.toJson(value) else value.toString())
+            storage.putString(key, if (value is Serializable) gson.toJson(value) else value.toString())
         }
 
     init {
-        val json = settings.getString(key, "")
-        if (data is Serializable) {
+        val json = storage.getString(key, "")
+        if (data is Boolean) {
+            json.toBooleanStrictOrNull()?.let { data = it as T }
+        } else if (data is Serializable) {
             val t = gson.fromJson<T>(json, object : TypeToken<T>() {}.type)
             t?.let {
                 data = it
@@ -46,7 +50,8 @@ internal inline operator fun <reified T> AutoSaveAny<T>.setValue(
 }
 
 class AutoSaveState<T, H : MutableState<T>>(
-    private var key: String, value: H
+    private var key: String, value: H,
+    private val storage: Settings = settings
 ): MutableState<T> by value {
     private var data: H = value
 
@@ -54,12 +59,14 @@ class AutoSaveState<T, H : MutableState<T>>(
         get() = data.value
         set(value) {
             this.data.value = value
-            settings.putString(key, if (value is Serializable) gson.toJson(value) else value.toString())
+            storage.putString(key, if (value is Serializable) gson.toJson(value) else value.toString())
         }
 
     init {
-        val json = settings.getString(key, "")
-        if (data.value is Serializable) {
+        val json = storage.getString(key, "")
+        if (data.value is Boolean) {
+            json.toBooleanStrictOrNull()?.let { data.value = it as T }
+        } else if (data.value is Serializable) {
             val t = gson.fromJson<T>(json, object : TypeToken<T>() {}.type)
             t?.let {
                 this.data.value = it

@@ -8,7 +8,7 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 
 /** ADB smart socket avoids host adb executable/home differences; all commands target the fixture only. */
-private class FixtureAdb(private val serial: String) {
+internal class FixtureAdb(private val serial: String) {
     fun shell(command: String): String = request("shell:$command")
     fun install(apk: File, update: Boolean): String {
         if (shell("getprop ro.build.version.sdk").trim().toInt() >= 24) return request(
@@ -39,10 +39,11 @@ private class FixtureAdb(private val serial: String) {
 
 fun main(args: Array<String>) {
     val root = File(args[0]); val serial = args[1]
-    val folder = File(root, "build/compatibility/device-${serial.replace(Regex("[^A-Za-z0-9_.-]"), "_")}").apply { mkdirs() }
+    val rootsOnly = args.getOrNull(2) == "--native-roots-only"
+    val folder = File(root, "build/compatibility/device-${serial.replace(Regex("[^A-Za-z0-9_.-]"), "_")}" + if (rootsOnly) "-native-roots" else "").apply { mkdirs() }
     val adb = FixtureAdb(serial)
     val pkg = "com.wpf.jiagu.compat"
-    val apk = File(root, "build/compatibility/fixture/compat_jiagu_sign.apk")
+    val apk = File(root, "build/compatibility/fixture/" + if (rootsOnly) "compat-roots_jiagu_sign.apk" else "compat_jiagu_sign.apk")
     val results = mutableListOf<Map<String, Any>>()
     val report = linkedMapOf<String, Any>("schemaVersion" to 1, "scope" to "device_fixture", "serial" to serial,
         "startedAtUtc" to java.time.Instant.now().toString(),
@@ -78,7 +79,7 @@ fun main(args: Array<String>) {
             Thread.sleep(200)
         }
     }
-    fun launch(name: String, cacheHit: Int? = null) {
+    fun launch(name: String, cacheHit: Int? = null, resourceCacheHit: Int = 1, nativeCacheHit: Int = 1) {
         shell("am force-stop $pkg")
         val start = shell("am start -W -n $pkg/.FixtureActivity")
         check("Status: ok" in start && "Error" !in start) { "Activity launch failed: $start" }
@@ -88,18 +89,20 @@ fun main(args: Array<String>) {
         val complete = metrics.lastOrNull { it["stage"].asString == "application" } ?: error("Missing completed Application timing")
         check(complete["status"].asString == "ok")
         cacheHit?.let { check(complete.getAsJsonObject("phasesMs")["so_cache_hit"].asInt == it) { "Unexpected SO cache state for $name" } }
+        check(complete.getAsJsonObject("phasesMs")["resource_cache_hit"].asInt == resourceCacheHit) { "Unexpected resource cache state for $name" }
+        check(complete.getAsJsonObject("phasesMs")["native_cache_hit"].asInt == nativeCacheHit) { "Unexpected native cache state for $name" }
         val markerDeadline = System.nanoTime() + 30_000_000_000L
         while (true) {
             val evidence = shell("logcat -d -v raw -s JIAGU_COMPAT:I '*:S'")
             if ("COMPAT_ACTIVITY_PASSED pid=$pid" in evidence && "COMPAT_APPLICATION_PASSED pid=$pid" in evidence &&
-                "COMPAT_PROVIDER_PASSED pid=$pid" in evidence) break
+                "COMPAT_PROVIDER_PASSED pid=$pid" in evidence && "COMPAT_RESOURCES_PASSED pid=$pid" in evidence && "COMPAT_NATIVE_PASSED pid=$pid" in evidence) break
             check(System.nanoTime() < markerDeadline) { "Fixture Application/Provider/Activity assertions did not all finish" }
             Thread.sleep(200)
         }
         val activityTimes = Regex("(?m)^(ThisTime|TotalTime|WaitTime): (\\d+)").findAll(start)
             .associate { it.groupValues[1] to it.groupValues[2].toLong() }
         results.add(mapOf("name" to name, "status" to "passed", "pid" to pid, "shellStartup" to complete,
-            "activityStartCommandMs" to activityTimes))
+            "activityStartCommandMs" to activityTimes, "resourceReads" to "passed"))
         save()
     }
     try {
@@ -110,8 +113,24 @@ fun main(args: Array<String>) {
         check(shell("pm path $pkg").trim().isEmpty()) { "Fixture package already exists; refusing to overwrite an existing installation" }
         val install = adb.install(apk, false); log.append("install: $install\n")
         check("Success" in install) { install }; installedByThisRun = true
-        launch("fresh_install_cold_process", 0)
+        launch("fresh_install_cold_process", 0, 0, 0)
         launch("cold_process_reuses_so_cache", 1)
+
+        shell("am force-stop $pkg")
+        val nativeVersion = Regex("[0-9a-f]{64}").find(shell("run-as $pkg ls no_backup/jiagu-native"))?.value
+            ?: error("No native cache version found")
+        val nativeAbi = shell("run-as $pkg ls no_backup/jiagu-native/$nativeVersion").trim()
+        check(nativeAbi in setOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a"))
+        val nativeFile = "no_backup/jiagu-native/$nativeVersion/$nativeAbi/libcompat_entry.so"
+        check("NATIVE_CACHE_DAMAGED" in shell("run-as $pkg sh -c 'chmod 600 $nativeFile && echo CORRUPT > $nativeFile && echo NATIVE_CACHE_DAMAGED'"))
+        launch("damaged_native_cache_recovered", 1, 1, 0)
+
+        shell("am force-stop $pkg")
+        val resourceFiles = shell("run-as $pkg ls no_backup/jiagu-resources")
+        val resourceFile = Regex("resources-[0-9a-f]{64}\\.apk").find(resourceFiles)?.value ?: error("No resource cache found")
+        val damagedResource = shell("run-as $pkg sh -c 'chmod 600 no_backup/jiagu-resources/$resourceFile && echo CORRUPT > no_backup/jiagu-resources/$resourceFile && echo RESOURCE_CACHE_DAMAGED'")
+        check("RESOURCE_CACHE_DAMAGED" in damagedResource)
+        launch("damaged_resource_cache_recovered", 1, 0)
 
         shell("am force-stop $pkg")
         val names = shell("run-as $pkg ls .jiagu")
@@ -127,7 +146,10 @@ fun main(args: Array<String>) {
         val remote = records(remotePid).lastOrNull { it["stage"].asString == "application" }
             ?: error("Missing remote process startup record")
         check(remote["status"].asString == "ok")
-        results.add(mapOf("name" to "remote_process_provider", "status" to "passed", "pid" to remotePid, "shellStartup" to remote))
+        check(remote.getAsJsonObject("phasesMs")["resource_cache_hit"].asInt == 1)
+        check(remote.getAsJsonObject("phasesMs")["native_cache_hit"].asInt == 1)
+        results.add(mapOf("name" to "remote_process_provider", "status" to "passed", "pid" to remotePid, "shellStartup" to remote,
+            "resourceReads" to "passed"))
         save()
 
         shell("am force-stop $pkg")

@@ -6,6 +6,8 @@ import com.wpf.util.jiagulibrary.utils.ApplicationHook;
 import com.wpf.util.jiagulibrary.utils.IO;
 import com.wpf.util.jiagulibrary.utils.IntegrityVerifier;
 import com.wpf.util.jiagulibrary.utils.StartupMetrics;
+import com.wpf.util.jiagulibrary.utils.ResourceRuntime;
+import com.wpf.util.jiagulibrary.utils.NativeRuntime;
 
 import static com.wpf.util.jiagulibrary.utils.AssetsUtil.copyJiaGu;
 
@@ -13,7 +15,7 @@ public class StubApp extends Application {
     /**
      * so的版本，格式为: v + 数字
      */
-    public static final String VERSION = "v3_6";
+    public static final String VERSION = "v3_9";
 
     @Override
     protected void attachBaseContext(Context context) {
@@ -23,6 +25,12 @@ public class StubApp extends Application {
             long phase = System.nanoTime();
             IntegrityVerifier.verify(new java.io.File(context.getApplicationInfo().sourceDir));
             StartupMetrics.phase("integrity_ms", phase);
+            phase = System.nanoTime();
+            ResourceRuntime.install(context);
+            StartupMetrics.phase("resource_prepare_ms", phase);
+            phase = System.nanoTime();
+            NativeRuntime.install(context);
+            StartupMetrics.phase("native_prepare_ms", phase);
             phase = System.nanoTime();
             String library = copyJiaGu(context);
             StartupMetrics.phase("so_prepare_ms", phase);

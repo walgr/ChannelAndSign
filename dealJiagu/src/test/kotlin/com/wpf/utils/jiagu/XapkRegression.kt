@@ -44,13 +44,15 @@ fun main(args: Array<String>) {
     }
     val aapt = File(sdk, "build-tools/35.0.0/aapt2.exe")
     val android = File(sdk, "platforms/android-33/android.jar")
+    val native = nativeFixtures(root, sdk)
     fun apk(name: String, split: String = ""): File {
         val dir = File(work, name).apply { mkdirs() }
         val manifest = File(dir, "AndroidManifest.xml")
         manifest.writeText("""<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.wpf.jiagu.d2c" android:versionCode="1" $split>
             <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="33"/><application android:hasCode="${split.isEmpty()}"/></manifest>""")
         val result = File(dir, "$name.apk")
-        tool(aapt.path, "link", "--manifest", manifest.path, "-I", android.path, "-o", result.path)
+        if (split.isEmpty()) compileResourceFixture(dir, sdk, manifest, result)
+        else tool(aapt.path, "link", "--manifest", manifest.path, "-I", android.path, "-o", result.path)
         if (split.isEmpty()) {
             val replacement = File(dir, "with-dex.apk")
             ZipOutputStream(replacement.outputStream()).use { out ->
@@ -62,6 +64,20 @@ fun main(args: Array<String>) {
                 out.putNextEntry(ZipEntry("assets/audience_network/")); out.closeEntry()
                 out.putNextEntry(ZipEntry("assets/audience_network/classes.dex"))
                 out.write(embeddedDex); out.closeEntry()
+                native.walkTopDown().filter { it.extension == "so" && it.name != "libcompat_entry.so" }.forEach { lib ->
+                    out.putNextEntry(ZipEntry("lib/" + lib.relativeTo(native).invariantSeparatorsPath)); out.write(lib.readBytes()); out.closeEntry()
+                }
+            }
+            XapkArchive.publish(replacement, result)
+        } else {
+            val replacement = File(dir, "with-native.apk")
+            ZipOutputStream(replacement.outputStream()).use { out ->
+                ZipFile(result).use { zip -> zip.entries().asSequence().forEach {
+                    out.putNextEntry(ZipEntry(it.name)); zip.getInputStream(it).use { it.copyTo(out) }; out.closeEntry()
+                } }
+                native.walkTopDown().filter { it.name == "libcompat_entry.so" }.forEach { lib ->
+                    out.putNextEntry(ZipEntry("lib/" + lib.relativeTo(native).invariantSeparatorsPath)); out.write(lib.readBytes()); out.closeEntry()
+                }
             }
             XapkArchive.publish(replacement, result)
         }
@@ -131,7 +147,8 @@ fun main(args: Array<String>) {
     if (args.getOrNull(2) == "--harden") {
         JiaGu.deal(input.path, "0123456789abcdef", "fedcba9876543210", sdk.path,
             jdkPath = System.getProperty("java.home"), signFilePath = store, signAlias = "jiagu",
-            keyStorePassword = "abc12345678", keyPassword = "abc12345678", showLog = true)
+            keyStorePassword = "abc12345678", keyPassword = "abc12345678", showLog = true,
+            obfuscateResourcePaths = true, encryptResourceContents = true, encryptNativeLibraries = true)
         val protected = File(work, "sample_jiagu_sign.xapk")
         val report = ProtectionReport.read(protected)
         check(File(protected.path + ".protection.md").isFile)
@@ -147,6 +164,12 @@ fun main(args: Array<String>) {
         check(baseReport.getAsJsonArray("d2cMethods").size() > 0)
         check(baseReport.getAsJsonArray("vmpMethods").size() > 0)
         check(baseReport.getAsJsonArray("extractedCodeItems").size() > 0)
+        check(baseReport.getAsJsonObject("resources")["renamedFiles"].asInt == 8)
+        check(baseReport.getAsJsonObject("resourceEncryption").getAsJsonArray("encryptedFiles").size() > 0)
+        check(baseReport.getAsJsonObject("nativeProtection").getAsJsonArray("encryptedFiles").size() == 4)
+        check(baseReport.getAsJsonObject("nativeProtection").getAsJsonObject("retainedFiles").entrySet().all {
+            it.key.endsWith("libcompat_dependency.so") && it.value.asString == "configured or split dependency exclusion"
+        })
         check(!report.toString().contains("abc12345678") && !report.toString().contains("0123456789abcdef"))
         XapkArchive.transform(protected, File(work, "validated_jiagu.xapk")) { members, main ->
             check(com.wpf.utils.jiagu.utils.ApplicationHelper.getName(main.file) == "com.wpf.util.jiagulibrary.StubApp")
@@ -155,7 +178,12 @@ fun main(args: Array<String>) {
             File(work, "integrity-public.hex").writeText(IntegritySeal.publicHex(integrityKey))
             check(members.map { PackageSigner.certificate(it.file) }.distinct().size == 1)
             ZipFile(main.file).use { zip ->
-                check(zip.getInputStream(zip.getEntry("assets/audience_network/classes.dex")).readBytes().contentEquals(embeddedDex))
+                check(zip.getEntry("assets/audience_network/classes.dex") == null)
+                val restored = com.wpf.util.jiagulibrary.utils.ResourceArchive.restore(main.file, File(work, "resource-cache"),
+                    requireNotNull(com.wpf.util.jiagulibrary.utils.IntegrityVerifier.resourceVersion()), ResourceEncryption.key("0123456789abcdef"))
+                ZipFile(restored.file).use { archive ->
+                    check(archive.getInputStream(archive.getEntry("assets/audience_network/classes.dex")).readBytes().contentEquals(embeddedDex))
+                }
                 check(zip.getEntry("assets/libjiagu_x86.so") != null)
                 check(zip.getEntry("assets/libjiagu_v7a.so") != null)
                 check(zip.getEntry("assets/libjiagu_x86_64.so") != null)

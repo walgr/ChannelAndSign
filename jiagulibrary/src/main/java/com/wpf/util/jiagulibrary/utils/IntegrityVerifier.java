@@ -24,7 +24,7 @@ public final class IntegrityVerifier {
                 String name = entries.nextElement().getName();
                 if (!names.add(name)) throw new IOException("Duplicate APK entry: " + name);
             }
-            byte[] record = readSmall(zip, RECORD, 16384);
+            byte[] record = readSmall(zip, RECORD, 32 * 1024 * 1024);
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(hex(publicKeyHex))));
             signature.update(record);
@@ -33,10 +33,10 @@ public final class IntegrityVerifier {
             try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(record))) {
                 if (in.readInt() != 0x4a474931) throw new IOException("Unknown integrity record version");
                 int count = in.readInt();
-                if (count < 3 || count > 32) throw new IOException("Invalid integrity entry count");
+                if (count < 3 || count > 100000) throw new IOException("Invalid integrity entry count");
                 for (int i = 0; i < count; i++) {
                     String name = in.readUTF();
-                    if (!isProtected(name) || hashes.containsKey(name)) throw new IOException("Invalid integrity entry: " + name);
+                    if (name.endsWith("/") || !isProtected(name) || hashes.containsKey(name)) throw new IOException("Invalid integrity entry: " + name);
                     byte[] expected = new byte[32]; in.readFully(expected);
                     ZipEntry entry = zip.getEntry(name);
                     if (entry == null) throw new IOException("Missing protected entry: " + name);
@@ -48,7 +48,7 @@ public final class IntegrityVerifier {
                 if (in.available() != 0 || !hashes.containsKey("classes.dex") || !hashes.containsKey("AndroidManifest.xml"))
                     throw new IOException("Incomplete integrity record");
             }
-            for (String name : names) if (isProtected(name) && !hashes.containsKey(name))
+            for (String name : names) if (!name.endsWith("/") && isProtected(name) && !hashes.containsKey(name))
                 throw new IOException("Unrecorded protected entry: " + name);
             verified = Collections.unmodifiableMap(hashes);
         } catch (IOException | GeneralSecurityException | IllegalArgumentException error) {
@@ -64,9 +64,32 @@ public final class IntegrityVerifier {
         catch (IOException | GeneralSecurityException error) { return false; }
     }
 
+    public static String resourceVersion() {
+        byte[] hash = verified.get(ResourceArchive.ASSET);
+        if (hash == null) return null;
+        StringBuilder hex = new StringBuilder(64);
+        for (byte value : hash) hex.append(String.format(java.util.Locale.ROOT, "%02x", value & 255));
+        return hex.toString();
+    }
+
+    public static String nativeVersion() {
+        try {
+            MessageDigest hash = MessageDigest.getInstance("SHA-256");
+            List<String> names = new ArrayList<>();
+            for (String name : verified.keySet()) if (name.startsWith(NativeArchive.PREFIX)) names.add(name);
+            if (names.isEmpty()) return null;
+            Collections.sort(names);
+            for (String name : names) { hash.update(name.getBytes("UTF-8")); hash.update((byte)0); hash.update(verified.get(name)); }
+            StringBuilder result = new StringBuilder();
+            for (byte b : hash.digest()) result.append(String.format(java.util.Locale.ROOT, "%02x", b & 255));
+            return result.toString();
+        } catch (GeneralSecurityException | IOException error) { throw new IllegalStateException(error); }
+    }
+
     private static boolean isProtected(String name) {
         return "classes.dex".equals(name) || "AndroidManifest.xml".equals(name) ||
-            name.matches("assets/libjiagu_(v8a|v7a|x86|x86_64)\\.so");
+            "resources.arsc".equals(name) || name.startsWith("res/") || name.matches("lib/[^/]+/[^/]+\\.so") ||
+            (name.startsWith("assets/") && !RECORD.equals(name) && !SIGNATURE.equals(name));
     }
 
     private static byte[] readSmall(ZipFile zip, String name, int limit) throws IOException {

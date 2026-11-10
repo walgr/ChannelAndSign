@@ -22,6 +22,10 @@ fun main(args: Array<String>? = null) {
     var isAndroidX = true
     var isDebug = false
     var d2cConfigPath = ""
+    var obfuscateResourcePaths = false
+    var encryptResourceContents = false
+    var encryptNativeLibraries = false
+    var nativeExclusions = emptySet<String>()
     args.forEachIndexed { index, arg ->
         val nextInput = args.getOrNull(index + 1) ?: ""
         if (arg.startsWith("-") && nextInput.startsWith("-")) {
@@ -70,6 +74,19 @@ fun main(args: Array<String>? = null) {
         if ("-d2cConfig" == arg) {
             d2cConfigPath = nextInput
         }
+        if ("-obfuscateResourcePaths" == arg) {
+            require(nextInput == "0" || nextInput == "1") { "-obfuscateResourcePaths 需要 0 或 1" }
+            obfuscateResourcePaths = nextInput == "1"
+        }
+        if ("-encryptResourceContents" == arg) {
+            require(nextInput == "0" || nextInput == "1") { "-encryptResourceContents 需要 0 或 1" }
+            encryptResourceContents = nextInput == "1"
+        }
+        if ("-encryptNativeLibraries" == arg) {
+            require(nextInput == "0" || nextInput == "1") { "-encryptNativeLibraries 需要 0 或 1" }
+            encryptNativeLibraries = nextInput == "1"
+        }
+        if ("-nativeExclusions" == arg) nativeExclusions = nextInput.split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
     }
     ResourceManager.serverBaseUrl = serviceBaseUrl
     ResourceManager.cachePath = cachePath
@@ -88,6 +105,10 @@ fun main(args: Array<String>? = null) {
         isAndroidX = isAndroidX,
         showLog = isDebug,
         d2cConfigPath = d2cConfigPath,
+        obfuscateResourcePaths = obfuscateResourcePaths,
+        encryptResourceContents = encryptResourceContents,
+        encryptNativeLibraries = encryptNativeLibraries,
+        nativeExclusions = nativeExclusions,
     )
     println("加固结束，用时:${(System.currentTimeMillis() - startTime).formatTime()}")
 }

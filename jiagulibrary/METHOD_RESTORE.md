@@ -12,7 +12,7 @@ Hook 根据 ART DexFile 的 `begin_` 找到运行时实际使用的 DEX，以头
 
 x86/x86_64 Hook 复制完整指令并重定位相对调用、跳转、条件分支；x86 处理 PIC `get_pc_thunk` / `call; pop`，x86_64 处理 RIP 相对寻址并使用附近的跳板。遇到不支持的指令（例如 LOOP/JCXZ、VEX/EVEX）会在改写入口之前失败。Hook 仅在壳初始化时安装一次，不支持并发安装、卸载；入口写入期间要求目标函数没有正在执行的其他线程。此限制需要在实际 ART 启动环境中验证。
 
-`StubApp.VERSION` 已更新为 `v3_6`，运行时 SO 文件名包含安装包 lastUpdateTime，避免覆盖安装继续使用旧壳或旧 AES 参数。启动先验证有独立 RSA 签名的完整性记录；缓存 SO 每次按记录中的 SHA-256 核对，损坏时重新提取。`dealJiagu:processResources` 和 `加固打包` 自动依赖 `zipJiaguLibrary`；重新编译桌面程序/加固 JAR 后再加固 APK，不能继续使用旧工具包。加固侧缓存键包含壳源码 ZIP 的 MD5 和完整性公钥，会随资源或公钥变更失效。
+`StubApp.VERSION` 已更新为 `v3_9`，运行时 SO 文件名包含安装包 lastUpdateTime，避免覆盖安装继续使用旧壳或旧 AES 参数。启动先验证有独立 RSA 签名的完整性记录；缓存 SO 每次按记录中的 SHA-256 核对，损坏时重新提取。`dealJiagu:processResources` 和 `加固打包` 自动依赖 `zipJiaguLibrary`；重新编译桌面程序/加固 JAR 后再加固 APK，不能继续使用旧工具包。加固侧缓存键包含壳源码 ZIP 的 MD5 和完整性公钥，会随资源或公钥变更失效。
 
 壳 App 的 ABI 过滤包含 x86/x86_64。加固工具提取、校验并缓存各 ABI 的 SO。所有加固 APK 都携带 ARMv7/arm64/x86/x86_64 壳资产；有 ARM 原生库的 APK 也可能由 Intel ART 通过 native bridge 运行，不能按原 APK 的 lib 目录过滤掉 Intel 壳资产。加载端读取 /proc/self/exe 的 ELF 架构选择壳，读取失败时回退到进程 os.arch。SO 先写临时文件并校验 ELF，再原子重命名；提取失败会保留 ABI、资产路径及原始异常。
 
@@ -64,3 +64,5 @@ ART 隐藏 DefineClass 符号时，先读取同一库 ELF 的符号表，再用�
 2026-11-09：隔离的 Android 17/API 37 x86_64 模拟器实测 `Keep_jiagu_provider_fixed_unsigned.apk` 的同内容测试签名副本：安装成功，业务 DEX 注入成功，日志确认按类恢复抽离方法，原 Application 初始化完成，进入 MainActivity/KeepActivity 和通知权限弹窗，未再出现 VPR ClassNotFoundException。四种 ABI 原生库均构建通过；x86/arm64 的 Android 集成启动尚未验证。模拟器日志另有原应用原生保护子进程经 ARM native bridge 的 SIGSEGV；原版 APK 也记录到同类转译/JNI 崩溃，因此不能据此宣称应用所有原生子进程兼容模拟器。
 
 `src/test/cpp/art_symbol_test.cpp` 以实际 API 37 libart.so 为输入，验证 XZ 解压、新签名精确匹配、非精确名称拒绝、截断 ELF 和越界 section 表；Linux 主机执行通过。修复包的原生解密验证仍为 4 个 DEX/13 条抽离记录，通过 16 KiB ZIP 对齐检查。
+
+资源保护：主 APK 的资源表、res 和 assets 已纳入启动前内容签名校验，并提供可选资源文件路径混淆和轻量内容加密；运行时恢复资源后再加载原 Application。详见 [资源加固说明](../dealJiagu/RESOURCES.md)。

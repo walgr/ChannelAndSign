@@ -38,10 +38,10 @@ object IntegritySeal {
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).use { output ->
             ZipFile(apk).use { zip ->
-                val names = zip.entries().asSequence().map { it.name }.filter {
-                    it == "classes.dex" || it == "AndroidManifest.xml" || it.matches(Regex("assets/libjiagu_(v8a|v7a|x86|x86_64)\\.so"))
+                val names = zip.entries().asSequence().filter { !it.isDirectory }.map { it.name }.filter {
+                    it == "classes.dex" || it == "AndroidManifest.xml" || ResourceProtection.isResource(it) || NativeProtection.isLibrary(it)
                 }.sorted().toList()
-                require(names.distinct().size == names.size && "classes.dex" in names && "AndroidManifest.xml" in names && names.size >= 3)
+                require(names.distinct().size == names.size && "classes.dex" in names && "AndroidManifest.xml" in names && names.size in 3..100000)
                 output.writeInt(0x4a474931); output.writeInt(names.size)
                 names.forEach { name ->
                     val hash = MessageDigest.getInstance("SHA-256")
@@ -54,6 +54,7 @@ object IntegritySeal {
             }
         }
         val record = bytes.toByteArray()
+        require(record.size <= 32 * 1024 * 1024) { "资源完整性记录超过 32 MiB" }
         val signature = Signature.getInstance("SHA256withRSA").apply { initSign(key.private); update(record) }.sign()
         ZipArchive(apk.toPath()).use {
             it.add(BytesSource(record, "assets/jiagu-integrity.bin", 0))

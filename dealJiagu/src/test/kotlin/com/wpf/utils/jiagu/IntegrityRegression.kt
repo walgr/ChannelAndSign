@@ -11,7 +11,9 @@ fun main(args: Array<String>) {
     val publicKey = IntegritySeal.publicHex(key)
     check(publicKey == IntegritySeal.publicHex(IntegritySeal.key(File(work, "key"))))
     val entries = mapOf("AndroidManifest.xml" to "manifest".toByteArray(), "classes.dex" to "encrypted dex".toByteArray(),
-        "assets/libjiagu_x86_64.so" to "shell ELF".toByteArray())
+        "assets/libjiagu_x86_64.so" to "shell ELF".toByteArray(),
+        "resources.arsc" to "resource table".toByteArray(), "res/raw/probe.txt" to "raw".toByteArray(),
+        "assets/probe.txt" to "asset".toByteArray(), "lib/x86/libbusiness.so" to "business ELF".toByteArray())
     fun write(file: File, contents: Map<String, ByteArray>) = ZipOutputStream(file.outputStream()).use { out ->
         contents.forEach { (name, bytes) -> out.putNextEntry(ZipEntry(name)); out.write(bytes); out.closeEntry() }
     }
@@ -38,6 +40,13 @@ fun main(args: Array<String>) {
     check(runCatching { IntegrityVerifier.verify(forged, publicKey) }.isFailure)
     reject(original, IntegritySeal.publicHex(attackerKey))
     reject(original + ("assets/libjiagu_x86.so" to byteArrayOf(1)))
+    reject(original + ("res/raw/added.txt" to byteArrayOf(1)))
+    reject(original + ("assets/added.txt" to byteArrayOf(1)))
+    reject(original + ("lib/x86/libadded.so" to byteArrayOf(1)))
+    val large = File(work, "many-resources.apk")
+    write(large, entries + (0 until 600).associate { "assets/large-resource-$it.txt" to byteArrayOf(it.toByte()) })
+    IntegritySeal.seal(large, key)
+    IntegrityVerifier.verify(large, publicKey)
     (21..37).forEach { sdk ->
         listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64").forEach { RuntimeCompatibility.requireSupported(sdk, it) }
     }

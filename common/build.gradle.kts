@@ -4,6 +4,22 @@ plugins {
     id("org.jetbrains.compose")
 }
 
+tasks.register<JavaExec>("verifyAutoSaveBoolean") {
+    group = "verification"
+    dependsOn("desktopTestClasses")
+    val tests = kotlin.targets.getByName("desktop").compilations.getByName("test") as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
+    classpath(tests.output.allOutputs, tests.runtimeDependencyFiles)
+    mainClass.set("com.wpf.util.common.ui.utils.AutoSaveBooleanRegressionKt")
+}
+
+tasks.register<JavaExec>("verifyClientSelection") {
+    group = "verification"
+    dependsOn("desktopTestClasses")
+    val tests = kotlin.targets.getByName("desktop").compilations.getByName("test") as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
+    classpath(tests.output.allOutputs, tests.runtimeDependencyFiles)
+    mainClass.set("com.wpf.util.common.ui.channelset.ClientSelectionRegressionKt")
+}
+
 group = "com.wpf.compose.common"
 version = "1.0-SNAPSHOT"
 

@@ -29,6 +29,10 @@ kotlin {
 }
 
 // Exercise the exact Android verifier source on the JVM, without an Android framework stub.
+sourceSets.named("main") {
+    java.srcDir("../jiagulibrary/src/main/java")
+    java.include("**/*.kt", "**/ResourceArchive.java", "**/NativeArchive.java", "**/ShellAbi.java")
+}
 sourceSets.named("test") {
     java.srcDir("../jiagulibrary/src/main/java")
     java.include("**/IntegrityVerifier.java", "**/RuntimeCompatibility.java")
@@ -251,7 +255,34 @@ tasks.register<JavaExec>("verifyHybridPayload") {
         rootProject.file("build/hybrid-app/payload").path)
 }
 
-val compatibilityChecks = listOf("verifyD2c", "verifyAesPayload", "verifyHybridPayload", "verifyShellIntegrity", "verifyShellGradle", "verifyXapk")
+tasks.register<JavaExec>("verifyResourceProtection") {
+    group = "verification"
+    dependsOn("testClasses")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.ResourceProtectionRegressionKt")
+    doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path)) }
+}
+
+tasks.register<JavaExec>("verifyResourceEncryption") {
+    group = "verification"
+    dependsOn("testClasses")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.ResourceEncryptionRegressionKt")
+    doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path)) }
+}
+
+tasks.register<JavaExec>("verifyNativeProtection") {
+    group = "verification"
+    dependsOn("testClasses")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.NativeProtectionRegressionKt")
+    doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path)) }
+}
+
+val compatibilityChecks = listOf("verifyD2c", "verifyAesPayload", "verifyHybridPayload", "verifyShellIntegrity", "verifyShellGradle", "verifyResourceProtection", "verifyResourceEncryption", "verifyNativeProtection", "verifyXapk")
 val compatibilityReport = tasks.register("writeCompatibilityReport") {
     group = "verification"
     mustRunAfter(compatibilityChecks)
@@ -292,7 +323,8 @@ val prepareCompatibilityApp = tasks.register<JavaExec>("prepareCompatibilityApp"
     javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
     classpath = sourceSets["test"].runtimeClasspath
     mainClass.set("com.wpf.utils.jiagu.CompatibilityFixtureKt")
-    doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path)) }
+    doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path) +
+        if (project.hasProperty("nativeRootsOnly")) listOf("--native-roots-only") else emptyList()) }
 }
 tasks.register<JavaExec>("verifyDeviceCompatibility") {
     group = "verification"
@@ -303,6 +335,36 @@ tasks.register<JavaExec>("verifyDeviceCompatibility") {
     doFirst {
         val serial = providers.gradleProperty("deviceSerial").orNull
             ?: error("Provide -PdeviceSerial=<adb serial> for an explicitly selected test device")
-        setArgs(listOf(rootProject.projectDir.path, serial))
+        setArgs(listOf(rootProject.projectDir.path, serial) +
+            if (project.hasProperty("nativeRootsOnly")) listOf("--native-roots-only") else emptyList())
+    }
+}
+
+tasks.register<JavaExec>("prepareCompatibilityMatrix") {
+    group = "verification"
+    description = "Generate four independent apps: signed controls, hardened v1 and hardened v2 (12 APKs)"
+    dependsOn("testClasses")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.CompatibilityMatrixKt")
+    jvmArgs("-Dfile.encoding=UTF-8")
+    doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path)) }
+}
+
+tasks.register<JavaExec>("verifyCompatibilityMatrix") {
+    group = "verification"
+    description = "Compare baseline/hardened apps and exercise repeated startup, recreation, multiprocess and version upgrade"
+    dependsOn("testClasses")
+    if (!project.hasProperty("matrixReuse")) dependsOn("prepareCompatibilityMatrix")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.MatrixDeviceCompatibilityKt")
+    jvmArgs("-Dfile.encoding=UTF-8")
+    doFirst {
+        val serial = providers.gradleProperty("deviceSerial").orNull
+            ?: error("Provide -PdeviceSerial=<adb serial> to select the test device")
+        val iterations = providers.gradleProperty("matrixIterations").getOrElse("20").toInt()
+        require(iterations in 1..1000) { "matrixIterations must be 1..1000" }
+        setArgs(listOf(rootProject.projectDir.path, serial, iterations.toString()))
     }
 }
