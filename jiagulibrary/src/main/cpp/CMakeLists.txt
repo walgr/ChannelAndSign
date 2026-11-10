@@ -28,6 +28,7 @@ if(METHOD_RESTORE_TESTS)
         add_executable(x86_hook_test ../../test/cpp/x86_hook_test.cpp
                 utils/x86_hook.cpp utils/hde/hde32.c utils/hde/hde64.c)
         target_include_directories(x86_hook_test PRIVATE utils)
+        target_link_libraries(x86_hook_test log)
         target_compile_options(x86_hook_test PRIVATE -UNDEBUG)
     endif()
     if(ANDROID_ABI STREQUAL "armeabi-v7a")

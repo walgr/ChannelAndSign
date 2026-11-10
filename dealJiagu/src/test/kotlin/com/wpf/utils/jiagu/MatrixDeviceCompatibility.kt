@@ -11,6 +11,12 @@ fun main(args: Array<String>) {
     val root = File(args[0]); val serial = args[1]; val iterations = args[2].toInt()
     require(serial.matches(Regex("[A-Za-z0-9_.:-]+"))) { "Invalid device serial" }
     require(iterations in 1..1000)
+    val requestedProfiles = args.getOrNull(3)?.split(',')?.map { it.trim() }?.toSet()
+        ?: matrixProfiles.map { it.id }.toSet()
+    require(requestedProfiles.isNotEmpty() && requestedProfiles.all { id -> matrixProfiles.any { it.id == id } }) {
+        "matrixProfiles must contain only code,resources,native,full"
+    }
+    val selectedProfiles = matrixProfiles.filter { it.id in requestedProfiles }
     val source = matrixFolder(root)
     val inventory = JsonParser.parseString(File(source, "inventory.json").readText()).asJsonObject
     check(inventory["status"].asString == "passed") { "Generate a complete matrix first" }
@@ -37,7 +43,8 @@ fun main(args: Array<String>) {
     val profiles = mutableListOf<Map<String, Any>>()
     val report = linkedMapOf<String, Any>("schemaVersion" to 1, "scope" to "device_matrix", "status" to "running",
         "serial" to serial, "runId" to runId, "startedAtUtc" to java.time.Instant.now().toString(),
-        "iterationsPerVariant" to iterations, "artifacts" to artifacts, "scenarios" to results, "profiles" to profiles,
+        "iterationsPerVariant" to iterations, "selectedProfiles" to selectedProfiles.map { it.id },
+        "artifacts" to artifacts, "scenarios" to results, "profiles" to profiles,
         "limits" to "Synthetic fixtures; results apply only to this device/API/ABI. am start -W is not first-frame or long-duration soak measurement.")
     val log = File(folder, "evidence.log")
     val gson = GsonBuilder().setPrettyPrinting().create()
@@ -53,21 +60,42 @@ fun main(args: Array<String>) {
     fun shell(command: String): String = adb.shell(command).also { log.appendText("$ $command\n$it\n") }
     var sdk = 0
     var activeScenario = "preflight"
+    var deviceStartedAt = ""
     fun captureCrash(pkg: String) {
-        val crash = adb.shell("logcat -d -b crash -v threadtime -t 300")
+        val since = if (deviceStartedAt.isEmpty()) "" else "-T '$deviceStartedAt' "
+        val crash = adb.shell("logcat -d -b crash -v threadtime ${since}-t 300")
         val lines = crash.lines()
         // Persist only this fixture's crash records, including debuggerd records for native crashes.
         val crashLogPids = lines.filter { "Process: $pkg," in it || ">>> $pkg <<<" in it }
             .mapNotNull { it.trim().split(Regex("\\s+")).getOrNull(2) }.toSet()
         val filtered = lines.filter { it.trim().split(Regex("\\s+")).getOrNull(2) in crashLogPids }.joinToString("\n")
         log.appendText("fixture crash evidence: $pkg\n$filtered\n")
+        if (sdk >= 24) for (crashedPid in crashLogPids.filter { it.matches(Regex("[0-9]+")) }) {
+            val nativeLog = adb.shell("logcat -d -v threadtime --pid=$crashedPid ${since}-s NDK_JIAGU:D NDK_JIAGU_PERF:I '*:S'")
+            log.appendText("fixture native diagnostics pid=$crashedPid\n$nativeLog\n")
+        }
     }
-    fun pid(name: String): Int = if (sdk >= 26) shell("pidof $name").trim().split(' ').first().toIntOrNull()
-        ?: error("Process is not alive: $name") else shell("ps").lineSequence()
-        .map { it.trim().split(Regex("\\s+")) }.firstOrNull { it.size >= 2 && it.last() == name }?.get(1)?.toIntOrNull()
-        ?: error("Process is not alive: $name")
+    fun pid(name: String): Int {
+        val candidates = if (sdk >= 26) shell("pidof $name").trim().split(Regex("\\s+"))
+            .mapNotNull { it.toIntOrNull() }.distinct() else shell("ps").lineSequence()
+            .map { it.trim().split(Regex("\\s+")) }.filter { it.size >= 2 && it.last() == name }
+            .mapNotNull { it[1].toIntOrNull() }.distinct().toList()
+        check(candidates.isNotEmpty()) { "Process is not alive: $name" }
+        if (candidates.size == 1) return candidates.single()
+        // OEM processes can share a command name. Match Android's component owner, never pidof's arbitrary order.
+        val record = Regex("ProcessRecord\\{[^}\\r\\n]*\\s(\\d+):${Regex.escape(name)}/")
+        for (component in listOf("activities", "providers")) {
+            val owners = record.findAll(adb.shell("dumpsys activity $component"))
+                .map { it.groupValues[1].toInt() }.filter { it in candidates }.distinct().toList()
+            if (owners.size == 1) {
+                log.appendText("resolved component PID name=$name candidates=$candidates owner=${owners.single()} via=$component\n")
+                return owners.single()
+            }
+        }
+        error("Ambiguous fixture process ownership: $name candidates=$candidates")
+    }
     fun readLogs(process: Int): String = adb.shell("logcat -d -v raw " +
-        (if (sdk >= 24) "--pid=$process " else "") + "-s JIAGU_COMPAT:I NDK_JIAGU_PERF:I AndroidRuntime:E '*:S'")
+        (if (sdk >= 24) "--pid=$process " else "") + "-s JIAGU_COMPAT:I NDK_JIAGU_PERF:I NDK_JIAGU:D AndroidRuntime:E '*:S'")
     fun timing(evidence: String, process: Int): JsonObject? = evidence.lineSequence().filter { it.startsWith('{') }
         .mapNotNull { runCatching { JsonParser.parseString(it).asJsonObject }.getOrNull() }
         .filter { it["pid"]?.asInt == process && it["stage"]?.asString == "application" }.lastOrNull()
@@ -77,7 +105,7 @@ fun main(args: Array<String>) {
         activeScenario = "$kind/$scenario"
         val token = UUID.randomUUID().toString().replace("-", "")
         shell("am force-stop $pkg")
-        val start = shell("am start -W -n $pkg/.FixtureActivity --es matrix_run $token " +
+        val start = shell("am start -W -f 0x10008000 -n $pkg/.FixtureActivity --es matrix_run $token " +
             "--es matrix_state $runId --ei matrix_version $version --ez matrix_recreate $recreate " +
             "--ez matrix_require_state ${scenario != "fresh_install" && scenario != "fresh_data"}")
         check("Status: ok" in start && "Error" !in start) { "Activity launch failed: $start" }
@@ -92,6 +120,14 @@ fun main(args: Array<String>) {
                 (kind == "baseline" || metrics?.get("status")?.asString == "ok")) break
             if ("FATAL EXCEPTION" in evidence || metrics?.get("status")?.asString == "failed" || System.nanoTime() > deadline) {
                 log.appendText("launch failure pid=$process\n$evidence\n")
+                if ("FATAL EXCEPTION" !in evidence) {
+                    val activities = adb.shell("dumpsys activity activities")
+                    val resumed = Regex("(?m)^\\s*(?:mResumedActivity|topResumedActivity)\\s*[:=].*$")
+                        .findAll(activities).map { it.value.trim() }.toList()
+                    log.appendText("foreground at assertion failure: ${resumed.joinToString("; ")}\n")
+                    if (metrics?.get("status")?.asString == "ok" && resumed.isNotEmpty() && resumed.none { "$pkg/" in it })
+                        error("Test environment interrupted fixture foreground: ${resumed.joinToString("; ")}")
+                }
                 error("Missing successful fixture assertion for ${profile.id}/$scenario")
             }
             Thread.sleep(200)
@@ -107,6 +143,7 @@ fun main(args: Array<String>) {
             .associate { it.groupValues[1] to it.groupValues[2].toLong() }
         val result = linkedMapOf<String, Any>("profile" to profile.id, "kind" to kind, "scenario" to scenario,
             "versionCode" to version, "status" to "passed", "pid" to process, "activityStartCommandMs" to times)
+        Regex("(?m)^processAbi=([^,]+),").find(evidence)?.groupValues?.get(1)?.let { result["processAbi"] = it }
         metrics?.let { result["shellStartup"] = it }
         results.add(result); save()
     }
@@ -135,12 +172,15 @@ fun main(args: Array<String>) {
     try {
         save()
         sdk = shell("getprop ro.build.version.sdk").trim().toInt()
+        deviceStartedAt = adb.shell("date '+%m-%d %H:%M:%S.000'").trim().takeIf {
+            it.matches(Regex("[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.000"))
+        }.orEmpty()
         report["sdk"] = sdk; report["abis"] = shell("getprop ro.product.cpu.abilist").trim()
         report["model"] = shell("getprop ro.product.model").trim()
         report["fingerprint"] = shell("getprop ro.build.fingerprint").trim()
         report["pageSize"] = shell("getconf PAGESIZE").trim()
         check(sdk >= 21) { "Matrix requires API 21+" }
-        for (profile in matrixProfiles) {
+        for (profile in selectedProfiles) {
             val pkg = matrixPackage(profile.id)
             val before = results.size
             var owned = false
@@ -163,8 +203,22 @@ fun main(args: Array<String>) {
                 remote(profile, "baseline")
                 install(1, "hardened", true)
                 launch(profile, "hardened", "baseline_to_hardened_update_preserves_state")
+                activeScenario = "hardened/reset_fixture_data"
                 shell("am force-stop $pkg")
-                check("Success" in shell("pm clear $pkg")) { "Cannot reset owned fixture data" }
+                val cleared = shell("pm clear $pkg")
+                if ("Success" in cleared) {
+                    status["freshDataReset"] = "pm_clear"
+                } else {
+                    check("SecurityException" in cleared && "android.permission.CLEAR_APP_USER_DATA" in cleared) {
+                        "Cannot reset owned fixture data: $cleared"
+                    }
+                    // Only this run's fixture is removed. Verify removal before a fresh signed install.
+                    check(owned && "Success" in shell("pm uninstall $pkg")) { "Cannot uninstall owned fixture for data reset" }
+                    owned = false
+                    check(shell("pm path $pkg").trim().isEmpty()) { "Fixture still installed after data reset uninstall" }
+                    install(1, "hardened", false)
+                    status["freshDataReset"] = "uninstall_reinstall_after_clear_permission_denied"
+                }
                 repeat(iterations) { launch(profile, "hardened", if (it == 0) "fresh_data" else "repeated_cold_$it") }
                 fun damage(path: String, scenario: String, cacheFlag: String) {
                     shell("am force-stop $pkg")
@@ -194,6 +248,12 @@ fun main(args: Array<String>) {
             } catch (error: Throwable) {
                 failed = true; status["status"] = "failed"; status["error"] = error.message.orEmpty()
                 status["failedScenario"] = activeScenario
+                status["failureCategory"] = when {
+                    error is java.net.SocketException || error is java.net.SocketTimeoutException || error is java.io.EOFException ->
+                        "adb_transport_failure"
+                    error.message.orEmpty().startsWith("Test environment interrupted") -> "test_environment_interference"
+                    else -> "fixture_failure"
+                }
                 runCatching { captureCrash(pkg) }
             } finally {
                 if (owned) {
@@ -212,7 +272,7 @@ fun main(args: Array<String>) {
         report["status"] = if (failed) "failed" else "passed"
         report["finishedAtUtc"] = java.time.Instant.now().toString()
         // Compare only repeated cold-process samples; first-run extraction and upgrade are reported separately.
-        report["startupComparison"] = matrixProfiles.map { profile ->
+        report["startupComparison"] = selectedProfiles.map { profile ->
             val summary = linkedMapOf<String, Any>("profile" to profile.id)
             for (kind in listOf("baseline", "hardened")) {
                 val samples = results.filter { it["profile"] == profile.id && it["kind"] == kind &&

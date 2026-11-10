@@ -5,8 +5,19 @@
 #include <cstring>
 #include <climits>
 #include <initializer_list>
+#include <algorithm>
+#include <cstdio>
+#include <limits>
+#include <vector>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <cerrno>
+#if defined(__ANDROID__)
+#include "plog.h"
+#else
+#include <cstdio>
+#define LOGE(...) do { std::fprintf(stderr, __VA_ARGS__); std::fputc('\n', stderr); } while (0)
+#endif
 
 #if defined(__x86_64__)
 #include "hde/hde64.h"
@@ -54,27 +65,70 @@ void jump(uint8_t *out, uintptr_t destination) {
 #endif
 }
 
-void *allocateNear(uintptr_t target, size_t size) {
+bool buildTrampoline(const uint8_t *source, uint8_t *output, size_t &consumed);
+
+void *allocateNear(uintptr_t target, size_t size, size_t &consumed) {
+    auto attempt = [&](uintptr_t hint) -> void * {
+        void *memory = mmap(reinterpret_cast<void *>(hint), size, PROT_READ | PROT_WRITE,
+                            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if (memory == MAP_FAILED) return MAP_FAILED;
+        int32_t ignored;
+        if (relative32(target + 5, reinterpret_cast<uintptr_t>(memory) + size - 16, ignored) &&
+            buildTrampoline(reinterpret_cast<const uint8_t *>(target), static_cast<uint8_t *>(memory), consumed))
+            return memory;
+        munmap(memory, size);
+        return MAP_FAILED;
+    };
 #if defined(__x86_64__)
-    // Hints never replace existing mappings. A nearby trampoline is required for
-    // RIP-relative instructions and the five-byte jump to its detour relay.
+    // Linux can ignore occupied hints and return the same distant address each time.
+    // Find actual gaps, including single-page holes that a sparse hint scan misses.
+    // mmap remains non-fixed: a racing allocation can never be overwritten.
+    struct Candidate { uintptr_t address, distance; };
+    std::vector<Candidate> candidates;
+    const uintptr_t maxAddress = std::numeric_limits<uintptr_t>::max();
+    const uintptr_t lower = target > INT32_MAX ? target - INT32_MAX : size;
+    const uintptr_t upper = target < maxAddress - INT32_MAX ? target + INT32_MAX : maxAddress - size;
+    auto gap = [&](uintptr_t begin, uintptr_t end) {
+        if (begin >= end || end - begin < size) return;
+        uintptr_t first = begin + (size - begin % size) % size;
+        if (first > end || end - first < size) return;
+        uintptr_t last = (end - size) / size * size;
+        uintptr_t address = std::max(first, std::min(target / size * size, last));
+        candidates.push_back({address, address >= target ? address - target : target - address});
+    };
+    if (FILE *maps = std::fopen("/proc/self/maps", "r")) {
+        char line[1024];
+        uintptr_t previous = lower;
+        while (std::fgets(line, sizeof(line), maps)) {
+            unsigned long long begin, end;
+            if (std::sscanf(line, "%llx-%llx", &begin, &end) != 2 || end <= lower) continue;
+            if (begin >= upper) break;
+            gap(previous, static_cast<uintptr_t>(begin));
+            previous = std::max(previous, static_cast<uintptr_t>(end));
+        }
+        gap(previous, upper);
+        std::fclose(maps);
+    }
+    std::sort(candidates.begin(), candidates.end(), [](const Candidate &a, const Candidate &b) {
+        return a.distance < b.distance;
+    });
+    for (const auto &candidate : candidates) {
+        void *memory = attempt(candidate.address);
+        if (memory != MAP_FAILED) return memory;
+    }
+    // Retain non-fixed hints when maps cannot be read or the address space changed.
     for (uintptr_t distance = 0x10000; distance < 0x70000000; distance += 0x1000000) {
         for (int sign : {1, -1}) {
-            if (sign < 0 && target < distance) continue;
+            if ((sign < 0 && target < distance) || (sign > 0 && target > maxAddress - distance)) continue;
             uintptr_t hint = sign > 0 ? target + distance : target - distance;
             hint -= hint % size;
-            void *memory = mmap(reinterpret_cast<void *>(hint), size, PROT_READ | PROT_WRITE,
-                                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-            if (memory == MAP_FAILED) continue;
-            int32_t ignored;
-            if (relative32(target + 5, reinterpret_cast<uintptr_t>(memory) + size - 16, ignored)) return memory;
-            munmap(memory, size);
+            void *memory = attempt(hint);
+            if (memory != MAP_FAILED) return memory;
         }
     }
     return MAP_FAILED;
 #else
-    (void)target;
-    return mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    return attempt(0);
 #endif
 }
 
@@ -203,11 +257,10 @@ bool install_x86_hook(void *target, void *replacement, void **original) {
     if (!target || !replacement || !original || *original) return false;
     long pageSize = sysconf(_SC_PAGESIZE);
     if (pageSize <= 0) return false;
-    auto *trampoline = static_cast<uint8_t *>(allocateNear(reinterpret_cast<uintptr_t>(target), pageSize));
-    if (trampoline == MAP_FAILED) return false;
     size_t consumed;
-    if (!buildTrampoline(static_cast<const uint8_t *>(target), trampoline, consumed)) {
-        munmap(trampoline, pageSize);
+    auto *trampoline = static_cast<uint8_t *>(allocateNear(reinterpret_cast<uintptr_t>(target), pageSize, consumed));
+    if (trampoline == MAP_FAILED) {
+        LOGE("x86 hook: no usable trampoline in branch/relocation range target=%p", target);
         return false;
     }
     auto *relay = trampoline + pageSize - 16;
@@ -215,6 +268,7 @@ bool install_x86_hook(void *target, void *replacement, void **original) {
     int32_t displacement;
     if (!relative32(reinterpret_cast<uintptr_t>(target) + 5, reinterpret_cast<uintptr_t>(relay), displacement) ||
         mprotect(trampoline, pageSize, PROT_READ | PROT_EXEC) != 0) {
+        LOGE("x86 hook relay protection/range failed target=%p trampoline=%p errno=%d", target, trampoline, errno);
         munmap(trampoline, pageSize);
         return false;
     }
@@ -222,6 +276,7 @@ bool install_x86_hook(void *target, void *replacement, void **original) {
     uintptr_t page = start - start % pageSize;
     size_t length = start - page + consumed;
     if (mprotect(reinterpret_cast<void *>(page), length, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
+        LOGE("x86 hook target protection failed target=%p length=%zu errno=%d", target, length, errno);
         munmap(trampoline, pageSize);
         return false;
     }

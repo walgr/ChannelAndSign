@@ -53,6 +53,22 @@ int main() {
                                   0x0f, 0x94, 0xc0, 0x0f, 0xb6, 0xc0, 0xc3});
     ripImmediate[64] = 1;
     check(ripImmediate, 1);
+    // ART's address space can have small usable holes between large reservations.
+    // Sparse mmap hints miss this hole and repeatedly fall back outside rel32 range.
+    const size_t pageSize = static_cast<size_t>(sysconf(_SC_PAGESIZE));
+    const size_t span = size_t(6) * 1024 * 1024 * 1024;
+    auto *reservation = static_cast<uint8_t *>(mmap(nullptr, span, PROT_NONE,
+            MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0));
+    assert(reservation != MAP_FAILED);
+    auto *reservedCode = reservation + span / 2;
+    assert(mprotect(reservedCode, pageSize, PROT_READ | PROT_WRITE | PROT_EXEC) == 0);
+    std::memcpy(reservedCode, "\xb8\x1d\x00\x00\x00\xc3", 6);
+    auto *hole = reservedCode + 2 * 1024 * 1024 + 3 * pageSize;
+    assert(munmap(hole, pageSize) == 0);
+    std::puts("Checking sparse-hole trampoline allocation");
+    std::fflush(stdout);
+    check(reservedCode, 29);
+    assert(munmap(reservation, span) == 0);
 #else
     auto *thunk = fixture({0x53, 0xe8, 58, 0, 0, 0, 0x89, 0xd8, 0x5b, 0xc3});
     std::memcpy(thunk + 64, "\x8b\x1c\x24\xc3", 4);

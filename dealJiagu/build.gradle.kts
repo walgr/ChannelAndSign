@@ -365,6 +365,7 @@ tasks.register<JavaExec>("verifyCompatibilityMatrix") {
             ?: error("Provide -PdeviceSerial=<adb serial> to select the test device")
         val iterations = providers.gradleProperty("matrixIterations").getOrElse("20").toInt()
         require(iterations in 1..1000) { "matrixIterations must be 1..1000" }
-        setArgs(listOf(rootProject.projectDir.path, serial, iterations.toString()))
+        val profiles = providers.gradleProperty("matrixProfiles").getOrElse("code,resources,native,full")
+        setArgs(listOf(rootProject.projectDir.path, serial, iterations.toString(), profiles))
     }
 }
