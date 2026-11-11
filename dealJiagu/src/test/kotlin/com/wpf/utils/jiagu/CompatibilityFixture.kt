@@ -15,6 +15,8 @@ fun main(args: Array<String>) {
         <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33"/>
         <application android:name="com.wpf.jiagu.compat.FixtureApplication" android:debuggable="true" android:label="Jiagu regression" android:extractNativeLibs="false"
           android:icon="@drawable/bootstrap_icon" android:theme="@style/BootstrapTheme">
+          <meta-data android:name="fixture.replaceLoader" android:value="true"/>
+          <service android:name="com.wpf.jiagu.compat.FixtureService" android:exported="false"/>
           <activity android:name="com.wpf.jiagu.compat.FixtureActivity" android:exported="true"/>
           <provider android:name="com.wpf.jiagu.compat.FixtureProvider" android:authorities="com.wpf.jiagu.compat.main" android:exported="false"/>
           <provider android:name="com.wpf.jiagu.compat.RemoteFixtureProvider" android:authorities="com.wpf.jiagu.compat.remote" android:process=":probe" android:exported="true"/>

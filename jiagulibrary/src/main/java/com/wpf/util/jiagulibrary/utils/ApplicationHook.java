@@ -48,6 +48,9 @@ public class ApplicationHook {
             Method attach = Application.class.getDeclaredMethod("attach", Context.class);
             attach.setAccessible(true);
             attach.invoke(delegate, contextImpl);
+            // Plugin frameworks may replace LoadedApk.mClassLoader during attach.
+            // Component creation must retain their dispatch loader (e.g. RePlugin).
+            sShellClassLoader = application.getClassLoader();
             sDelegateApplication = delegate;
         } catch (Exception e) {
             throw new IllegalStateException("Cannot attach original Application: " + delegateApplicationName, e);
@@ -69,6 +72,13 @@ public class ApplicationHook {
             // 先获取到ContextImpl对象
             Context contextImpl = application.getBaseContext();
 
+            // Providers/attach may already have registered callbacks with the shell
+            // as ContextImpl's outer context. Keep their dispatcher identity valid
+            // when the same base context starts returning the delegate instead.
+            Object loadedApk = Reflect.getFieldValue(contextImpl.getClass(), contextImpl,
+                    "mPackageInfo");
+            migrateRegistrations(loadedApk, application, sDelegateApplication);
+
             // 替换ContextImpl的代理Application
             Reflect.invokeMethod(contextImpl.getClass(), contextImpl, "setOuterContext",
                     new Object[]{sDelegateApplication}, Context.class);
@@ -86,8 +96,6 @@ public class ApplicationHook {
             mAllApplications.remove(application);
 
             // 替换LoadedApk的代理Application
-            Object loadedApk = Reflect.getFieldValue(contextImpl.getClass(), contextImpl,
-                    "mPackageInfo");
             Reflect.setFieldValue("android.app.LoadedApk", loadedApk, "mApplication",
                     sDelegateApplication);
 
@@ -108,6 +116,36 @@ public class ApplicationHook {
             e.printStackTrace();
         }
     }
+
+    @SuppressWarnings("unchecked")
+    private static void migrateRegistrations(Object loadedApk, Context previous, Context replacement) {
+        Object[] maps = callbackMaps(loadedApk);
+        for (int pair = 0; pair < 4; pair += 2) {
+            Map<Object, Object> active = (Map<Object, Object>) maps[pair];
+            synchronized (active) {
+                for (int index = pair; index < pair + 2; index++) {
+                    Map<Object, Object> contexts = (Map<Object, Object>) maps[index];
+                    Map<Object, Object> callbacks = (Map<Object, Object>) contexts.get(previous);
+                    if (callbacks == null) continue;
+                    Map<Object, Object> target = (Map<Object, Object>) contexts.get(replacement);
+                    if (target != null) {
+                        for (Object key : callbacks.keySet()) {
+                            if (target.containsKey(key)) throw new IllegalStateException("Duplicate early callback registration");
+                        }
+                    }
+                    for (Object dispatcher : callbacks.values()) {
+                        setDispatcherContext(dispatcher, replacement, pair == 0);
+                    }
+                    if (target == null) contexts.put(replacement, callbacks);
+                    else target.putAll(callbacks);
+                    contexts.remove(previous);
+                }
+            }
+        }
+    }
+
+    private static native Object[] callbackMaps(Object loadedApk);
+    private static native void setDispatcherContext(Object dispatcher, Context context, boolean service);
 
     /**
      * 修改已经存在ContentProvider中application

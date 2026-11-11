@@ -26,6 +26,7 @@ fun main(args: Array<String>) {
         it.add(BytesSource(ByteArray(32), "assets/skipped-video.mp4", 0))
         it.add(BytesSource(byteArrayOf(1), "classes.dex", 0))
         it.add(BytesSource(byteArrayOf(2), "assets/libjiagu_x86_64.so", 0))
+        it.add(BytesSource(ByteArray(12) { it.toByte() }, "assets/jiagu-payload.bin", 0))
     }
     val originals = ZipFile(apk).use { zip -> zip.entries().asSequence().filter { !it.isDirectory }.associate { entry ->
         entry.name to zip.getInputStream(entry).use { it.readBytes() }
@@ -46,7 +47,7 @@ fun main(args: Array<String>) {
     val version = requireNotNull(IntegrityVerifier.resourceVersion())
     ZipFile(apk).use { zip ->
         result.encryptedFiles.forEach { check(zip.getEntry(it) == null) }
-        (result.bootstrapFiles + "resources.arsc" + "AndroidManifest.xml" + "assets/libjiagu_x86_64.so").forEach {
+        (result.bootstrapFiles + "resources.arsc" + "AndroidManifest.xml" + "assets/libjiagu_x86_64.so" + "assets/jiagu-payload.bin").forEach {
             check(zip.getInputStream(zip.getEntry(it)).readBytes().contentEquals(originals.getValue(it)))
         }
         result.skippedFiles.keys.forEach { check(zip.getInputStream(zip.getEntry(it)).readBytes().contentEquals(originals.getValue(it))) }

@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <array>
 
 namespace method_restore {
 
@@ -29,6 +30,18 @@ struct Dex {
     uint32_t classDefsCount = 0;
     std::map<uint32_t, std::vector<uint8_t>> instructions;
     std::map<uint32_t, std::vector<uint32_t>> classes;
+    std::array<uint8_t, 112> header{};
+    std::map<uint32_t, std::array<uint8_t, 32>> definitions;
+
+    // Reopening ART's live mapping must not carry partially restored code with
+    // the protected header checksum. Recreate the producer's zeroed code spans
+    // in a separate buffer; never zero instructions that ART is executing.
+    bool protectedCopy(const uint8_t *current, size_t currentSize, uint8_t *output) const {
+        if (currentSize != size || std::memcmp(current, header.data(), header.size()) != 0) return false;
+        std::memcpy(output, current, size);
+        for (const auto &entry : instructions) std::memset(output + entry.first, 0, entry.second.size());
+        return true;
+    }
 
     bool uleb(size_t &cursor, uint32_t &value) const {
         value = 0;
@@ -48,12 +61,14 @@ struct Dex {
         size = dexSize;
         instructions.clear();
         classes.clear();
+        definitions.clear();
         if (size < 112 || std::memcmp(source, "dex\n", 4) != 0 ||
             le32(source + 32) != size || le32(source + 40) != 0x12345678) return false;
         classDefsCount = le32(source + 96);
         classDefsOffset = le32(source + 100);
         if (classDefsCount > size / 32 ||
             !range(classDefsOffset, size_t(classDefsCount) * 32, size)) return false;
+        std::memcpy(header.data(), source, header.size());
         for (size_t cursor = 0; cursor < dataSize;) {
             if (!range(cursor, 8, dataSize)) return false;
             uint32_t offset = be32(data + cursor), length = be32(data + cursor + 4);
@@ -64,6 +79,7 @@ struct Dex {
             instructions[offset] = std::vector<uint8_t>(data + cursor, data + cursor + length);
             cursor += length;
         }
+        if (instructions.empty()) return true;
         std::set<uint32_t> matched;
         for (uint32_t i = 0; i < classDefsCount; ++i) {
             const uint32_t defOffset = classDefsOffset + i * 32;
@@ -85,6 +101,7 @@ struct Dex {
                 const uint32_t offset = code + 16;
                 if (instructions.count(offset)) {
                     classes[defOffset].push_back(offset);
+                    std::memcpy(definitions[defOffset].data(), source + defOffset, 32);
                     matched.insert(offset);
                 }
             }

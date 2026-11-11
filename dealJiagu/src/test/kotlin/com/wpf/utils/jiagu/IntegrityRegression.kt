@@ -19,6 +19,15 @@ fun main(args: Array<String>) {
     }
     val apk = File(work, "sealed.apk"); write(apk, entries); IntegritySeal.seal(apk, key)
     IntegrityVerifier.verify(apk, publicKey)
+    fun consumeDex(file: File) = com.wpf.util.jiagulibrary.utils.DexSource(file.path, IntegrityVerifier.dexDigest()).use { source ->
+        val buffer = ByteArray(1024)
+        while (source.read(buffer) != -1) { /* Complete authentication before loading. */ }
+    }
+    IntegrityVerifier.prepareStreamingDex(apk, publicKey)
+    consumeDex(apk)
+    check(runCatching {
+        com.wpf.util.jiagulibrary.utils.DexSource(apk.path, IntegrityVerifier.dexDigest()).close()
+    }.isFailure)
     val extracted = File(work, "lib.so").apply { writeBytes(entries.getValue("assets/libjiagu_x86_64.so")) }
     check(IntegrityVerifier.matchesShell(extracted, "libjiagu_x86_64.so"))
     extracted.appendBytes(byteArrayOf(0))
@@ -26,6 +35,10 @@ fun main(args: Array<String>) {
     val original = ZipFile(apk).use { zip -> zip.entries().asSequence().associate { entry ->
         entry.name to zip.getInputStream(entry).readBytes()
     } }
+    val badDex = File(work, "streaming-dex-tampered.apk")
+    write(badDex, original + ("classes.dex" to "changed payload".toByteArray()))
+    IntegrityVerifier.prepareStreamingDex(badDex, publicKey)
+    check(runCatching { consumeDex(badDex) }.isFailure)
     fun reject(contents: Map<String, ByteArray>, trustedKey: String = publicKey) {
         val bad = File(work, "tampered.apk"); write(bad, contents)
         check(runCatching { IntegrityVerifier.verify(bad, trustedKey) }.isFailure)

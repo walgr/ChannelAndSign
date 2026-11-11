@@ -17,6 +17,12 @@ XAPK 的 `baseProtection` 描述主 APK 的处理结果；外层大小和 SHA-25
 
 `elapsedMs` 从壳 attachBaseContext 开始计时，不包含创建进程之前的系统工作，也不表示 Activity 首帧。指标会受完整性检查、业务初始化、设备负载和缓存状态影响。
 
+v3_13 起，受签名保护的载荷索引 `assets/jiagu-payload.bin` 定位合并 DEX 中的业务载荷。DEX 按流读取，并在 EOF 校验其完整 SHA-256；校验通过前不会把业务 DEX 交给 ART。其余受保护条目仍先行验证，减少大型 APK 的重复解压。因此 DEX 内容校验耗时计入 `native_attach_ms`，不再计入 `integrity_ms`，跨版本比较时需要合并两个阶段。
+
+API 29+ 按 DEX 创建属于实际应用 ClassLoader 的内存元素；仅当 ART cookie 确认已复制到其他映射时释放输入，保留 ART 映射及独立的方法恢复记录。原 Application.attach 更换 ClassLoader 后，组件创建使用更新后的加载器。较旧 API 的加载路径仍需分别做设备回归。
+
+v3_15 起，更换 ClassLoader 时逐个复制 DEX，并把抽离指令区域重置为原保护文件的零值，保持原校验和；不会修改 ART 正在使用的映射。Application 上下文替换同时迁移此前注册的 ServiceConnection 和 BroadcastReceiver 及其调度器上下文，避免 Provider 初始化时注册、Application.onCreate 后解绑失败。全保护设备夹具包含这两类启动边界回归。
+
 ## 主机自动回归
 
 在项目根目录执行：

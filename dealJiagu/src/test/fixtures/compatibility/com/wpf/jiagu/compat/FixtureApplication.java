@@ -7,10 +7,21 @@ public class FixtureApplication extends android.app.Application {
             android.os.Bundle metadata = getPackageManager().getApplicationInfo(getPackageName(), android.content.pm.PackageManager.GET_META_DATA).metaData;
             FixtureChecks.expectHardened = metadata == null || metadata.getBoolean("fixture.hardened", true);
             if (metadata == null || metadata.getBoolean("fixture.native", true)) NativeChecks.requireValid();
+            if (metadata != null && metadata.getBoolean("fixture.replaceLoader", false)) {
+                try {
+                    java.lang.reflect.Field info = context.getClass().getDeclaredField("mPackageInfo");
+                    info.setAccessible(true);
+                    Object loaded = info.get(context);
+                    java.lang.reflect.Field loader = loaded.getClass().getDeclaredField("mClassLoader");
+                    loader.setAccessible(true);
+                    loader.set(loaded, new dalvik.system.PathClassLoader("", context.getClassLoader()));
+                } catch (ReflectiveOperationException error) { throw new AssertionError(error); }
+            }
         } catch (android.content.pm.PackageManager.NameNotFoundException error) { throw new AssertionError(error); }
     }
     @Override public void onCreate() {
         super.onCreate(); FixtureChecks.requireValid();
+        FixtureProvider.checkEarlyCallbacks(this);
         checkResources();
         android.util.Log.i("JIAGU_COMPAT", "COMPAT_APPLICATION_PASSED pid=" + android.os.Process.myPid());
     }

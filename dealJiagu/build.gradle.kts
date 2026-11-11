@@ -31,7 +31,7 @@ kotlin {
 // Exercise the exact Android verifier source on the JVM, without an Android framework stub.
 sourceSets.named("main") {
     java.srcDir("../jiagulibrary/src/main/java")
-    java.include("**/*.kt", "**/ResourceArchive.java", "**/NativeArchive.java", "**/ShellAbi.java")
+    java.include("**/*.kt", "**/ResourceArchive.java", "**/NativeArchive.java", "**/ShellAbi.java", "**/DexSource.java")
 }
 sourceSets.named("test") {
     java.srcDir("../jiagulibrary/src/main/java")
@@ -116,6 +116,14 @@ tasks.register<JavaExec>("verifyAesPayload") {
     dependsOn("testClasses")
     classpath = sourceSets["test"].runtimeClasspath
     mainClass.set("com.wpf.utils.jiagu.utils.AES128HelperRegressionKt")
+}
+
+tasks.register<JavaExec>("verifyDexSource") {
+    group = "verification"
+    dependsOn("testClasses")
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.wpf.utils.jiagu.DexSourceRegressionKt")
+    maxHeapSize = "32m"
 }
 
 tasks.register<JavaExec>("verifyXapk") {
@@ -282,7 +290,7 @@ tasks.register<JavaExec>("verifyNativeProtection") {
     doFirst { setArgs(listOf(rootProject.projectDir.path, fixtureSdk().path)) }
 }
 
-val compatibilityChecks = listOf("verifyD2c", "verifyAesPayload", "verifyHybridPayload", "verifyShellIntegrity", "verifyShellGradle", "verifyResourceProtection", "verifyResourceEncryption", "verifyNativeProtection", "verifyXapk")
+val compatibilityChecks = listOf("verifyD2c", "verifyAesPayload", "verifyDexSource", "verifyHybridPayload", "verifyShellIntegrity", "verifyShellGradle", "verifyResourceProtection", "verifyResourceEncryption", "verifyNativeProtection", "verifyXapk")
 val compatibilityReport = tasks.register("writeCompatibilityReport") {
     group = "verification"
     mustRunAfter(compatibilityChecks)

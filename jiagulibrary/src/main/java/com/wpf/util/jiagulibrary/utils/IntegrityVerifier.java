@@ -16,6 +16,25 @@ public final class IntegrityVerifier {
     public static void verify(File apk) { verify(apk, PUBLIC_KEY_HEX); }
 
     public static synchronized void verify(File apk, String publicKeyHex) {
+        verify(apk, publicKeyHex, false);
+    }
+
+    /** DEX bytes are authenticated by DexSource before ART receives business code. */
+    public static synchronized void prepareStreamingDex(File apk) {
+        prepareStreamingDex(apk, PUBLIC_KEY_HEX);
+    }
+
+    public static synchronized void prepareStreamingDex(File apk, String publicKeyHex) {
+        verify(apk, publicKeyHex, true);
+    }
+
+    public static byte[] dexDigest() {
+        byte[] value = verified.get("classes.dex");
+        if (value == null) throw new IllegalStateException("Missing signed DEX digest");
+        return value.clone();
+    }
+
+    private static void verify(File apk, String publicKeyHex, boolean streamingDex) {
         verified = Collections.emptyMap();
         try (ZipFile zip = new ZipFile(apk)) {
             Set<String> names = new HashSet<>();
@@ -40,8 +59,10 @@ public final class IntegrityVerifier {
                     byte[] expected = new byte[32]; in.readFully(expected);
                     ZipEntry entry = zip.getEntry(name);
                     if (entry == null) throw new IOException("Missing protected entry: " + name);
-                    try (InputStream stream = zip.getInputStream(entry)) {
-                        if (!MessageDigest.isEqual(expected, digest(stream))) throw new GeneralSecurityException("APK integrity mismatch: " + name);
+                    if (!streamingDex || !"classes.dex".equals(name)) {
+                        try (InputStream stream = zip.getInputStream(entry)) {
+                            if (!MessageDigest.isEqual(expected, digest(stream))) throw new GeneralSecurityException("APK integrity mismatch: " + name);
+                        }
                     }
                     hashes.put(name, expected);
                 }

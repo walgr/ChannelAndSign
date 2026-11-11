@@ -5,6 +5,9 @@
 #include <jni.h>
 #include <string>
 #include <vector>
+#include <new>
+#include <thread>
+#include <algorithm>
 #include<sys/mman.h>
 #include<sys/types.h>
 #include<fcntl.h>
@@ -111,21 +114,109 @@ static void init(JNIEnv *env, jobject application) {
     }
 }
 
-static jbyteArray getDex(JNIEnv *env, jobject application) {
+static void restore_error(JNIEnv *env, const char *message);
+
+static jobject getDex(JNIEnv *env, jobject application) {
     //获取apk安装路径
     jobject appInfo = CallObjectMethod(application, "getApplicationInfo", "()Landroid/content/pm/ApplicationInfo;").l;
     jstring sourceDir = static_cast<jstring>(GetField(appInfo, "sourceDir",
                                                       "Ljava/lang/String;").l);
     // 获取dex数据
-    jbyteArray dexArray = static_cast<jbyteArray>(CallObjectMethod(application, "invoke1",
-                                                                   "(Ljava/lang/String;)[B",
-                                                                   sourceDir).l);
-
+    jobject source = CallObjectMethod(application, "invoke1",
+            "(Ljava/lang/String;)Lcom/wpf/util/jiagulibrary/utils/DexSource;", sourceDir).l;
     env->DeleteLocalRef(appInfo);
     env->DeleteLocalRef(sourceDir);
-
-    return dexArray;
+    return source;
 }
+
+class PayloadReader {
+    JNIEnv *env;
+    jobject source;
+    jclass type = nullptr;
+    jbyteArray chunk = nullptr;
+    jmethodID readMethod = nullptr, closeMethod = nullptr;
+    size_t chunkOffset = 0, chunkSize = 0, prefixOffset = 0;
+    char prefix[528];
+    uint32_t shellSize = 0;
+    bool raw(void *destination, size_t length) {
+        auto *out = static_cast<jbyte *>(destination);
+        while (length) {
+            if (chunkOffset == chunkSize) {
+                jint count = env->CallIntMethod(source, readMethod, chunk);
+                if (env->ExceptionCheck()) return false;
+                if (count <= 0) { restore_error(env, "Truncated protected DEX stream"); return false; }
+                chunkOffset = 0; chunkSize = static_cast<size_t>(count);
+            }
+            size_t count = std::min(length, chunkSize - chunkOffset);
+            env->GetByteArrayRegion(chunk, chunkOffset, count, out);
+            if (env->ExceptionCheck()) return false;
+            out += count; length -= count; chunkOffset += count;
+        }
+        return true;
+    }
+public:
+    size_t remaining = 0;
+    PayloadReader(JNIEnv *jni, jobject input) : env(jni), source(input) {}
+    bool init() {
+        type = env->GetObjectClass(source);
+        closeMethod = env->GetMethodID(type, "close", "()V");
+        if (!closeMethod) return false;
+        readMethod = env->GetMethodID(type, "read", "([B)I");
+        if (!readMethod) return false;
+        jmethodID start = env->GetMethodID(type, "startPayload", "()J");
+        if (!start) return false;
+        jlong payload = env->CallLongMethod(source, start);
+        if (env->ExceptionCheck()) return false;
+        jfieldID lengthField = env->GetFieldID(type, "length", "J");
+        if (!lengthField) return false;
+        jlong total = env->GetLongField(source, lengthField);
+        if (payload < 528 || payload > total - 4) { restore_error(env, "Invalid payload size"); return false; }
+        shellSize = static_cast<uint32_t>(total - payload - 4);
+        chunk = env->NewByteArray(65536);
+        if (!chunk || !raw(prefix, sizeof(prefix))) return false;
+        int size = 0;
+        if (!tiny_aes_decrypt_cbc(prefix, sizeof(prefix), &size) || size != 512) {
+            restore_error(env, "Cannot decrypt DEX payload"); return false;
+        }
+        remaining = static_cast<size_t>(payload) - 16;
+        return true;
+    }
+    bool read(void *destination, size_t length) {
+        if (length == 0) return true;
+        if (length > remaining) { restore_error(env, "Invalid protected DEX record length"); return false; }
+        auto *out = static_cast<uint8_t *>(destination);
+        size_t first = std::min(length, size_t(512) - prefixOffset);
+        memcpy(out, prefix + prefixOffset, first);
+        prefixOffset += first;
+        if (!raw(out + first, length - first)) return false;
+        remaining -= length;
+        return true;
+    }
+    bool word(uint32_t &value) {
+        uint8_t bytes[4];
+        if (!read(bytes, sizeof(bytes))) return false;
+        value = method_restore::be32(bytes); return true;
+    }
+    bool finish() {
+        uint8_t footer[4];
+        if (remaining || !raw(footer, 4) || method_restore::be32(footer) != shellSize || chunkOffset != chunkSize) {
+            restore_error(env, "Invalid protected DEX footer"); return false;
+        }
+        jint count = env->CallIntMethod(source, readMethod, chunk);
+        if (env->ExceptionCheck()) return false;
+        if (count != -1) { restore_error(env, "Trailing protected DEX bytes"); return false; }
+        return true;
+    }
+    ~PayloadReader() {
+        jthrowable error = env->ExceptionOccurred();
+        if (error) env->ExceptionClear();
+        if (closeMethod) env->CallVoidMethod(source, closeMethod);
+        if (error) { env->ExceptionClear(); env->Throw(error); env->DeleteLocalRef(error); }
+        if (chunk) env->DeleteLocalRef(chunk);
+        if (type) env->DeleteLocalRef(type);
+        env->DeleteLocalRef(source);
+    }
+};
 
 static jobject openmemory_load_dex(JNIEnv *env, void *art_handle, char *base, int dex_size) {
     // The encrypted payload backing this buffer lives until process exit. Do not write
@@ -259,7 +350,6 @@ static void restore_error(JNIEnv *env, const char *message) {
 }
 
 // DirectByteBuffer and the DefineClass hook outlive attachBaseContext.
-static std::vector<std::vector<uint8_t>> dexPayloads;
 
 /**
  * Dex加密格式
@@ -267,56 +357,106 @@ static std::vector<std::vector<uint8_t>> dexPayloads;
  * 小括号的数据前512字节进行AES加密
  * 中括号的数据的dex头(也就是前112位进行异或)
  */
-static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
+// ART associates a DexFile with its defining loader. Creating a temporary
+// InMemoryDexClassLoader and transplanting its elements violates that ownership.
+static jobjectArray memory_elements(JNIEnv *env, jobject owner, const std::vector<jobject> &buffers) {
+    jclass bufferType = env->FindClass("java/nio/ByteBuffer");
+    jobjectArray array = env->NewObjectArray(buffers.size(), bufferType, nullptr);
+    if (!array) return nullptr;
+    for (size_t i = 0; i < buffers.size(); ++i) env->SetObjectArrayElement(array, i, buffers[i]);
+    jclass type = env->FindClass("dalvik/system/DexPathList");
+    jmethodID constructor = nullptr, init = nullptr;
+    jthrowable lookupError = nullptr;
+    JavaVM *vm = nullptr;
+    env->GetJavaVM(&vm);
+    // Resolve platform internals on an attached native thread, without an app
+    // Java frame being mistaken for the defining platform caller. No VM-wide
+    // hidden-API exemptions or device settings are changed.
+    std::thread lookup([&] {
+        JNIEnv *worker = nullptr;
+        if (vm->AttachCurrentThread(&worker, nullptr) != JNI_OK) return;
+        jclass paths = worker->FindClass("dalvik/system/DexPathList");
+        if (paths) constructor = worker->GetMethodID(paths, "<init>", "(Ljava/lang/ClassLoader;Ljava/lang/String;)V");
+        if (constructor && !worker->ExceptionCheck()) init = worker->GetMethodID(paths, "initByteBufferDexPath", "([Ljava/nio/ByteBuffer;)V");
+        if (worker->ExceptionCheck()) {
+            jthrowable error = worker->ExceptionOccurred();
+            worker->ExceptionClear();
+            lookupError = static_cast<jthrowable>(worker->NewGlobalRef(error));
+        }
+        vm->DetachCurrentThread();
+    });
+    lookup.join();
+    if (lookupError) {
+        env->Throw(lookupError);
+        env->DeleteGlobalRef(lookupError);
+        return nullptr;
+    }
+    if (!constructor || !init) return nullptr;
+    jobject paths = env->NewObject(type, constructor, owner, nullptr);
+    if (!paths || env->ExceptionCheck()) return nullptr;
+    env->CallVoidMethod(paths, init, array);
+    if (env->ExceptionCheck()) return nullptr;
+    jobjectArray elements = static_cast<jobjectArray>(GetField(paths, "dexElements", "[Ldalvik/system/DexPathList$Element;").l);
+    if (elements && env->GetArrayLength(elements) == 0) {
+        jobjectArray failures = static_cast<jobjectArray>(GetField(paths, "dexElementsSuppressedExceptions", "[Ljava/io/IOException;").l);
+        if (failures && env->GetArrayLength(failures)) env->Throw(static_cast<jthrowable>(env->GetObjectArrayElement(failures, 0)));
+        else restore_error(env, "No in-memory DEX elements for application loader");
+        elements = nullptr;
+    }
+    env->DeleteLocalRef(paths);
+    env->DeleteLocalRef(type);
+    env->DeleteLocalRef(array);
+    env->DeleteLocalRef(bufferType);
+    return elements;
+}
 
-    if (!dexArray || env->ExceptionCheck()) return;
-    jint dexlen = env->GetArrayLength(dexArray);
-    if (dexlen < 4) {
-        restore_error(env, "Truncated shell DEX");
-        return;
+// Return ART's copied backing only when the cookie proves input is not retained.
+static jobject copied_dex_buffer(JNIEnv *env, jobjectArray elements, const void *input, uint32_t length) {
+    const uint8_t *copy = nullptr;
+    bool inputUsed = false;
+    jclass longs = env->FindClass("[J");
+    for (jsize i = 0; i < env->GetArrayLength(elements); ++i) {
+        jobject element = env->GetObjectArrayElement(elements, i);
+        jobject file = GetField(element, "dexFile", "Ldalvik/system/DexFile;").l;
+        jobject cookie = file ? GetField(file, "mCookie", "Ljava/lang/Object;").l : nullptr;
+        if (cookie && env->IsInstanceOf(cookie, longs)) {
+            auto values = static_cast<jlongArray>(cookie);
+            for (jsize n = 1; n < env->GetArrayLength(values); ++n) {
+                jlong pointer = 0;
+                env->GetLongArrayRegion(values, n, 1, &pointer);
+                if (!pointer) continue;
+                const uint8_t *begin = nullptr;
+                std::memcpy(&begin, reinterpret_cast<const uint8_t *>(static_cast<uintptr_t>(pointer)) + sizeof(void *), sizeof(begin));
+                inputUsed |= begin == input;
+                if (begin && std::memcmp(begin, input, 112) == 0) copy = begin;
+            }
+        }
+        if (cookie) env->DeleteLocalRef(cookie);
+        if (file) env->DeleteLocalRef(file);
+        env->DeleteLocalRef(element);
+        if (env->ExceptionCheck()) break;
     }
-    jbyte *dexData = env->GetByteArrayElements(dexArray, nullptr);
-    if (!dexData) return;
-    uint32_t shell_len = method_restore::be32(reinterpret_cast<uint8_t *>(dexData) + dexlen - 4);
-    if (shell_len > uint32_t(dexlen - 4) || uint32_t(dexlen - 4) - shell_len < 528) {
-        env->ReleaseByteArrayElements(dexArray, dexData, JNI_ABORT);
-        restore_error(env, "Invalid encrypted DEX payload length");
-        return;
-    }
-    int tmp = 0;
-    char encrypted[528];
-    memcpy(encrypted, dexData + shell_len, sizeof(encrypted));
-    char *temp = tiny_aes_decrypt_cbc(encrypted, sizeof(encrypted), &tmp);
-    if (!temp || tmp != 512) {
-        env->ReleaseByteArrayElements(dexArray, dexData, JNI_ABORT);
-        restore_error(env, "Cannot decrypt DEX payload");
-        return;
-    }
-    const size_t decryptdex_len = dexlen - 4 - shell_len - 16;
-    dexPayloads.emplace_back(decryptdex_len);
-    char *decryptdex = reinterpret_cast<char *>(dexPayloads.back().data());
-    memcpy(decryptdex, temp, tmp);
-    memcpy(decryptdex + tmp, dexData + shell_len + 528, decryptdex_len - tmp);
-    env->ReleaseByteArrayElements(dexArray, dexData, JNI_ABORT);
+    env->DeleteLocalRef(longs);
+    if (env->ExceptionCheck() || inputUsed || !copy) return nullptr;
+    return env->NewDirectByteBuffer(const_cast<uint8_t *>(copy), length);
+}
 
-    const size_t app_len = static_cast<uint8_t>(decryptdex[0]);
-    if (!method_restore::range(1, app_len, decryptdex_len)) {
-        restore_error(env, "Invalid application name length");
-        return;
-    }
-    std::string app_name(decryptdex + 1, app_len);
+static void loadDex(JNIEnv *env, jobject application, jobject source) {
+
+    if (!source || env->ExceptionCheck()) return;
+    PayloadReader reader(env, source);
+    if (!reader.init()) return;
+    uint8_t appLength;
+    if (!reader.read(&appLength, 1) || appLength == 0) { restore_error(env, "Invalid application name length"); return; }
+    std::string app_name(appLength, '\0');
+    if (!reader.read(&app_name[0], appLength)) return;
 
     struct DexSlice { char *data; uint32_t length; };
     std::vector<DexSlice> slices;
-    size_t index = 1 + app_len;
-    while (index < decryptdex_len) {
-        if (!method_restore::range(index, 4, decryptdex_len)) {
-            restore_error(env, "Truncated DEX length");
-            return;
-        }
-        uint32_t length = method_restore::be32(reinterpret_cast<uint8_t *>(decryptdex + index));
-        index += 4;
-        if (length < 112 || !method_restore::range(index, length, decryptdex_len)) {
+    while (reader.remaining) {
+        uint32_t length;
+        if (!reader.word(length)) return;
+        if (length < 112 || length > reader.remaining) {
             restore_error(env, "Invalid DEX length");
             return;
         }
@@ -329,36 +469,25 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
             restore_error(env, "Cannot allocate aligned DEX memory");
             return;
         }
-        memcpy(begin, decryptdex + index, length);
+        if (!reader.read(begin, length)) { munmap(begin, length); return; }
         if (!slices.empty()) {
             for (int i = 0; i < 112; ++i) begin[i] ^= 0x66;
         }
-          // Older producers left the checksum from before method extraction.
-          // ART verifies the still-extracted bytes before DefineClass can run.
-          uint32_t a = 1, b = 0;
-          for (size_t p = 12; p < length; ++p) {
-              a = (a + static_cast<uint8_t>(begin[p])) % 65521;
-              b = (b + a) % 65521;
-          }
-          uint32_t checksum = (b << 16) | a;
-          for (unsigned p = 0; p < 4; ++p) begin[8 + p] = checksum >> (8 * p);
-        index += length;
-        if (!method_restore::range(index, 4, decryptdex_len)) {
-            restore_error(env, "Truncated extracted method length");
-            return;
-        }
-        uint32_t methodsLength = method_restore::be32(reinterpret_cast<uint8_t *>(decryptdex + index));
-        index += 4;
-        if (!method_restore::range(index, methodsLength, decryptdex_len) ||
-            !register_method_dex(reinterpret_cast<uint8_t *>(begin), length,
-                                 reinterpret_cast<uint8_t *>(decryptdex + index), methodsLength)) {
+        // The producer fixes checksums after extraction. The signed APK covers
+        // these bytes; recalculating every DEX checksum here delays large-app startup.
+        uint32_t methodsLength;
+        if (!reader.word(methodsLength)) return;
+        if (methodsLength > reader.remaining) { restore_error(env, "Invalid extracted method length"); return; }
+        std::vector<uint8_t> methods(methodsLength);
+        if (!reader.read(methods.data(), methods.size())) return;
+        if (!register_method_dex(reinterpret_cast<uint8_t *>(begin), length, methods.data(), methods.size())) {
             restore_error(env, "Invalid extracted method records");
             return;
         }
         slices.push_back({begin, length});
-        index += methodsLength;
     }
-    // All DEX records must be registered before ART can define any business class.
+    if (!reader.finish()) return;
+      // All DEX records must be registered before ART can define any business class.
     if (slices.empty() || !install_class_restore(env, g_sdk_int)) {
         restore_error(env, "Class-based method restoration requires ARM/Intel ART API 21+ and a supported DefineClass hook");
         return;
@@ -400,6 +529,23 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
     jstring appname = env->NewStringUTF(app_name.c_str());
     if (g_sdk_int < 26) {
         ndk_dlclose(art_handle);
+    } else if (g_sdk_int >= 29) {
+        size_t released = 0;
+        for (size_t n = 0; n < slices.size(); ++n) {
+            jobjectArray elements = memory_elements(env, classLoader, {dexBuffers[n]});
+            if (!elements || env->ExceptionCheck()) return;
+            jobject buffer = copied_dex_buffer(env, elements, slices[n].data, slices[n].length);
+            if (env->ExceptionCheck()) return;
+            for (jsize i = 0; i < env->GetArrayLength(elements); ++i)
+                dexobjs.push_back(env->GetObjectArrayElement(elements, i));
+            env->DeleteLocalRef(elements);
+            if (buffer) {
+                env->DeleteLocalRef(dexBuffers[n]);
+                dexBuffers[n] = buffer;
+                if (munmap(slices[n].data, slices[n].length) == 0) released += slices[n].length;
+            }
+        }
+        LOGD("Released copied DEX input bytes:%zu", released);
     } else {
         jclass ElementClass = env->FindClass("java/nio/ByteBuffer");
         jobjectArray dexBufferArr = env->NewObjectArray(dexBuffers.size(), ElementClass, NULL);
@@ -458,9 +604,36 @@ static void loadDex(JNIEnv *env, jobject application, jbyteArray dexArray) {
     }
     jobject currentLoader = CallObjectMethod(g_context, "getClassLoader", "()Ljava/lang/ClassLoader;").l;
     if (!currentLoader || env->ExceptionCheck()) return;
-    if (!env->IsSameObject(currentLoader, classLoader) && !make_dex_elements(env, currentLoader, dexobjs)) {
-        restore_error(env, "Cannot inject business DEX into replaced ClassLoader");
-        return;
+    if (!env->IsSameObject(currentLoader, classLoader)) {
+        std::vector<jobject> replacement;
+        if (g_sdk_int >= 29) {
+              for (jobject live : dexBuffers) {
+                  const size_t length = static_cast<size_t>(env->GetDirectBufferCapacity(live));
+                  auto *begin = static_cast<uint8_t *>(env->GetDirectBufferAddress(live));
+                  auto *snapshot = static_cast<uint8_t *>(mmap(nullptr, length, PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+                  if (snapshot == MAP_FAILED || !copy_protected_dex(begin, length, snapshot)) {
+                      if (snapshot != MAP_FAILED) munmap(snapshot, length);
+                      restore_error(env, "Cannot recreate protected DEX for replacement ClassLoader");
+                      return;
+                  }
+                  jobject buffer = env->NewDirectByteBuffer(snapshot, length);
+                  jobjectArray elements = memory_elements(env, currentLoader, {buffer});
+                  env->DeleteLocalRef(buffer);
+                  if (!elements || env->ExceptionCheck()) { munmap(snapshot, length); return; }
+                  jobject copied = copied_dex_buffer(env, elements, reinterpret_cast<char *>(snapshot), length);
+                  if (copied) { munmap(snapshot, length); env->DeleteLocalRef(copied); }
+                  for (int i = 0; i < env->GetArrayLength(elements); ++i)
+                      replacement.push_back(env->GetObjectArrayElement(elements, i));
+                  env->DeleteLocalRef(elements);
+              }
+        }
+        const bool injected = make_dex_elements(env, currentLoader, g_sdk_int >= 29 ? replacement : dexobjs);
+        for (jobject element : replacement) env->DeleteLocalRef(element);
+        if (!injected) {
+            restore_error(env, "Cannot inject business DEX into replaced ClassLoader");
+            return;
+        }
     }
     env->DeleteLocalRef(currentLoader);
 
@@ -478,17 +651,72 @@ void uninit(JNIEnv *env) {
     env->DeleteGlobalRef(g_context);
 }
 
+static jfieldID serviceDispatcherContext = nullptr;
+static jfieldID receiverDispatcherContext = nullptr;
+
+extern "C" JNIEXPORT jobjectArray JNICALL
+Java_com_wpf_util_jiagulibrary_utils_ApplicationHook_callbackMaps(JNIEnv *env, jclass, jobject loadedApk) {
+    JavaVM *vm = nullptr;
+    env->GetJavaVM(&vm);
+    jfieldID fields[4] = {};
+    jthrowable failure = nullptr;
+    // Resolve framework-only field IDs without an application frame. This does
+    // not change the VM's hidden-API policy for the app or its other libraries.
+    std::thread resolve([&] {
+        JNIEnv *worker = nullptr;
+        if (vm->AttachCurrentThread(&worker, nullptr) != JNI_OK) return;
+        jclass loaded = worker->FindClass("android/app/LoadedApk");
+        const char *names[] = {"mServices", "mUnboundServices", "mReceivers", "mUnregisteredReceivers"};
+        for (int i = 0; loaded && i < 4 && !worker->ExceptionCheck(); i++)
+            fields[i] = worker->GetFieldID(loaded, names[i], "Landroid/util/ArrayMap;");
+        if (!worker->ExceptionCheck()) {
+            jclass service = worker->FindClass("android/app/LoadedApk$ServiceDispatcher");
+            if (service) serviceDispatcherContext = worker->GetFieldID(service, "mContext", "Landroid/content/Context;");
+        }
+        if (!worker->ExceptionCheck()) {
+            jclass receiver = worker->FindClass("android/app/LoadedApk$ReceiverDispatcher");
+            if (receiver) receiverDispatcherContext = worker->GetFieldID(receiver, "mContext", "Landroid/content/Context;");
+        }
+        if (worker->ExceptionCheck()) {
+            jthrowable error = worker->ExceptionOccurred();
+            worker->ExceptionClear();
+            failure = static_cast<jthrowable>(worker->NewGlobalRef(error));
+        }
+        vm->DetachCurrentThread();
+    });
+    resolve.join();
+    if (failure) { env->Throw(failure); env->DeleteGlobalRef(failure); return nullptr; }
+    if (!fields[3] || !serviceDispatcherContext || !receiverDispatcherContext) {
+        restore_error(env, "Cannot resolve early callback dispatchers"); return nullptr;
+    }
+    jclass object = env->FindClass("java/lang/Object");
+    jobjectArray maps = env->NewObjectArray(4, object, nullptr);
+    for (int i = 0; maps && i < 4 && !env->ExceptionCheck(); i++) {
+        jobject map = env->GetObjectField(loadedApk, fields[i]);
+        env->SetObjectArrayElement(maps, i, map);
+        env->DeleteLocalRef(map);
+    }
+    env->DeleteLocalRef(object);
+    return maps;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_wpf_util_jiagulibrary_utils_ApplicationHook_setDispatcherContext(
+        JNIEnv *env, jclass, jobject dispatcher, jobject context, jboolean service) {
+    env->SetObjectField(dispatcher, service ? serviceDispatcherContext : receiverDispatcherContext, context);
+}
+
 
 void native_attach(JNIEnv *env, jclass clazz, jobject application) {
     init(env, application);
 
     // 从/data/app/xxx/base.apk获取dex
     LOGD("[-]getDex");
-    jbyteArray dexArray = getDex(env, application);
+    jobject dexData = getDex(env, application);
 
     // 内存加载dex
     LOGD("[-]loadDex");
-    loadDex(env, application, dexArray);
+    loadDex(env, application, dexData);
 
     uninit(env);
 }

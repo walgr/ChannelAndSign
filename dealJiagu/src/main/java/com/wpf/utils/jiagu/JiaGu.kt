@@ -252,8 +252,8 @@ object JiaGu {
     //                            println("原始AppBuild配置：\n${srcText}")
     //                        }
                             val desText = srcText.replace(
-                                "implementation(\"androidx.annotation:annotation:1.7.0\")",
-                                "implementation(\"com.android.support:support-annotations:28.0.0\")"
+                                "compileOnly(\"androidx.annotation:annotation:1.7.0\")",
+                                "compileOnly(\"com.android.support:support-annotations:28.0.0\")"
                             )
     //                        if (showLog) {
     //                            println("修改后AppBuild配置：\n${desText}")
@@ -493,6 +493,9 @@ object JiaGu {
                     mergeDex, mainDexName, Deflater.BEST_COMPRESSION
                 )
             )
+            val payloadIndex = java.nio.ByteBuffer.allocate(12)
+                .putInt(0x4a475031).putInt(keDexByteArray.size).putInt(mergeDex.size).array()
+            jiaguApkZipArchive.add(BytesSource(payloadIndex, "assets/jiagu-payload.bin", Deflater.BEST_COMPRESSION))
 
             val stubAppName = "com.wpf.util.jiagulibrary.StubApp"
             if (showLog) {

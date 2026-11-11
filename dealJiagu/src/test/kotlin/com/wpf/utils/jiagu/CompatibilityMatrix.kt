@@ -62,6 +62,7 @@ fun main(args: Array<String>) {
                               android:extractNativeLibs="false" android:icon="@drawable/bootstrap_icon" android:theme="@style/BootstrapTheme">
                             <meta-data android:name="fixture.hardened" android:value="$hardened"/>
                             <meta-data android:name="fixture.native" android:value="${profile.native}"/>
+                            <service android:name="com.wpf.jiagu.compat.FixtureService" android:exported="false"/>
                             <activity android:name="com.wpf.jiagu.compat.FixtureActivity" android:exported="true">
                               <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
                             </activity>

@@ -1,6 +1,7 @@
 #include "method_restore.h"
 #include <cassert>
 #include <cstdio>
+#include <algorithm>
 
 using method_restore::Dex;
 using Bytes = std::vector<uint8_t>;
@@ -44,12 +45,28 @@ int main() {
     assert(parsed.classes.at(112) == std::vector<uint32_t>{224});
     assert(parsed.classes.at(144) == std::vector<uint32_t>{256});
     assert(dex[224] == 0 && dex[256] == 0); // Parsing must never restore eagerly.
+    assert(std::memcmp(parsed.header.data(), dex.data(), 112) == 0);
+    assert(std::memcmp(parsed.definitions.at(112).data(), dex.data() + 112, 32) == 0);
     auto actual = dex; // ART can copy the source buffer.
+    auto released = parsed;
+    released.source = nullptr;
+    std::fill(dex.begin(), dex.end(), 0);
+    assert(std::memcmp(released.header.data(), actual.data(), 112) == 0);
+    assert(std::memcmp(released.definitions.at(144).data(), actual.data() + 144, 32) == 0);
+    dex = actual;
     for (uint32_t offset : parsed.classes.at(112)) {
         auto &code = parsed.instructions.at(offset);
         std::memcpy(actual.data() + offset, code.data(), code.size());
     }
     assert(actual[224] == 0x12 && actual[256] == 0 && dex[224] == 0);
+    Bytes reopened(actual.size());
+    assert(released.protectedCopy(actual.data(), actual.size(), reopened.data()));
+    assert(reopened == dex); // Original protected bytes and checksum, despite partial restoration.
+    assert(actual[224] == 0x12); // Never modify ART's executing buffer.
+    assert(!released.protectedCopy(actual.data(), actual.size() - 1, reopened.data()));
+    actual[12] ^= 1;
+    assert(!released.protectedCopy(actual.data(), actual.size(), reopened.data()));
+    actual[12] ^= 1;
     // Identical offsets in another DEX retain distinct method data.
     Bytes otherRecords;
     record(otherRecords, 224, {0x13, 0x00, 0x0e, 0x00});
@@ -72,6 +89,6 @@ int main() {
     // Malformed and truncated ULEB128 must not read past the DEX.
     le(dex, 112 + 24, 287);
     dex[287] = 0x80;
-    assert(!parsed.parse(dex.data(), dex.size(), nullptr, 0));
+    assert(!parsed.parse(dex.data(), dex.size(), records.data(), records.size()));
     std::puts("method_restore tests passed");
 }

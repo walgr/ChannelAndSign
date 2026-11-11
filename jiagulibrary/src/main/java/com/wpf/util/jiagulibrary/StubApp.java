@@ -3,7 +3,7 @@ package com.wpf.util.jiagulibrary;
 import android.app.Application;
 import android.content.Context;
 import com.wpf.util.jiagulibrary.utils.ApplicationHook;
-import com.wpf.util.jiagulibrary.utils.IO;
+import com.wpf.util.jiagulibrary.utils.DexSource;
 import com.wpf.util.jiagulibrary.utils.IntegrityVerifier;
 import com.wpf.util.jiagulibrary.utils.StartupMetrics;
 import com.wpf.util.jiagulibrary.utils.ResourceRuntime;
@@ -15,7 +15,7 @@ public class StubApp extends Application {
     /**
      * so的版本，格式为: v + 数字
      */
-    public static final String VERSION = "v3_9";
+    public static final String VERSION = "v3_15";
 
     @Override
     protected void attachBaseContext(Context context) {
@@ -23,7 +23,7 @@ public class StubApp extends Application {
         try {
             super.attachBaseContext(context);
             long phase = System.nanoTime();
-            IntegrityVerifier.verify(new java.io.File(context.getApplicationInfo().sourceDir));
+            IntegrityVerifier.prepareStreamingDex(new java.io.File(context.getApplicationInfo().sourceDir));
             StartupMetrics.phase("integrity_ms", phase);
             phase = System.nanoTime();
             ResourceRuntime.install(context);
@@ -62,8 +62,8 @@ public class StubApp extends Application {
         }
     }
 
-    public byte[] invoke1(String s) {
-        return IO.getDexData(s);
+    public DexSource invoke1(String s) throws java.io.IOException {
+        return new DexSource(s, IntegrityVerifier.dexDigest());
     }
 
     public void invoke2(Application application, String s) {

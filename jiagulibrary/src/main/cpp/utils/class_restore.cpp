@@ -41,10 +41,12 @@ bool restoreClass(const void *dexFile, const void *classDef) {
             (offset - dex->classDefsOffset) / 32 >= dex->classDefsCount) continue;
         // ART may copy the ByteBuffer. Match the DEX signature and class definition,
         // then patch ART's begin_, never the now unrelated input buffer.
-        if (std::memcmp(begin, dex->source, 112) != 0 ||
-            std::memcmp(classDef, dex->source + offset, 32) != 0) continue;
+        if (std::memcmp(begin, dex->header.data(), dex->header.size()) != 0) continue;
         const auto entry = dex->classes.find(static_cast<uint32_t>(offset));
         if (entry == dex->classes.end()) return true;
+        const auto definition = dex->definitions.find(static_cast<uint32_t>(offset));
+        if (definition == dex->definitions.end() ||
+            std::memcmp(classDef, definition->second.data(), 32) != 0) continue;
         const long pageSize = sysconf(_SC_PAGESIZE);
         if (pageSize <= 0) return false;
         for (uint32_t insns : entry->second) {
@@ -57,7 +59,6 @@ bool restoreClass(const void *dexFile, const void *classDef) {
             if (mprotect(reinterpret_cast<void *>(page), length, PROT_READ | PROT_WRITE) != 0) return false;
             std::memcpy(reinterpret_cast<void *>(start), bytes.data(), bytes.size());
         }
-        LOGD("Restored %zu extracted methods at class_def=%zu", entry->second.size(), offset);
         return true;
     }
     return true; // Framework and shell classes have no extracted instructions.
@@ -104,9 +105,19 @@ void *defineClass21(void *linker, const char *descriptor, void *loader,
 bool register_method_dex(const uint8_t *dex, size_t size, const uint8_t *data, size_t dataSize) {
     std::unique_ptr<method_restore::Dex> parsed(new method_restore::Dex());
     if (!parsed->parse(dex, size, data, dataSize)) return false;
+    // Restoration only needs the signed header, selected definitions and records.
+    parsed->source = nullptr;
     std::lock_guard<std::mutex> lock(restoreMutex);
     dexFiles.push_back(std::move(parsed));
     return true;
+}
+
+bool copy_protected_dex(const uint8_t *current, size_t size, uint8_t *output) {
+    std::lock_guard<std::mutex> lock(restoreMutex);
+    for (const auto &dex : dexFiles) {
+        if (dex->protectedCopy(current, size, output)) return true;
+    }
+    return false;
 }
 
 bool install_class_restore(JNIEnv *env, int sdk) {

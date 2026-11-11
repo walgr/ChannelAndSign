@@ -25,6 +25,7 @@ object ResourceEncryption {
                 val kept = ResourceBootstrap.keep(zip)
                 val resources = zip.entries().asSequence().filter { !it.isDirectory &&
                     (it.name.startsWith("res/") || (it.name.startsWith("assets/") &&
+                        it.name != "assets/jiagu-payload.bin" &&
                         !it.name.matches(Regex("assets/libjiagu_(v8a|v7a|x86|x86_64)\\.so")))) }.toList()
                 val skipped = linkedMapOf<String, String>(); var used = 0L
                 val encrypted = resources.filter { it.name !in kept.files }.sortedWith(
