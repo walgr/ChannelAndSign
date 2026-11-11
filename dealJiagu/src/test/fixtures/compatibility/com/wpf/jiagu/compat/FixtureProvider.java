@@ -5,6 +5,8 @@ public class FixtureProvider extends android.content.ContentProvider {
     private static android.content.ServiceConnection earlyConnection;
 
     @Override public boolean onCreate() {
+        if (android.os.Build.VERSION.SDK_INT >= 28 && !FixtureComponentFactory.providerDispatched)
+            throw new AssertionError("Host provider factory skipped");
         FixtureChecks.requireValid();
         android.content.Context app = getContext().getApplicationContext();
         earlyReceiver = new android.content.BroadcastReceiver() {

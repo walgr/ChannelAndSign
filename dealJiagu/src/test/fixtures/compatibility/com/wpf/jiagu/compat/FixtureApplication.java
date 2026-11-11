@@ -3,6 +3,8 @@ package com.wpf.jiagu.compat;
 public class FixtureApplication extends android.app.Application {
     @Override protected void attachBaseContext(android.content.Context context) {
         super.attachBaseContext(context);
+        if (android.os.Build.VERSION.SDK_INT >= 28 && !FixtureComponentFactory.applicationCreated)
+            throw new AssertionError("Host component factory skipped before Application.attach");
         try {
             android.os.Bundle metadata = getPackageManager().getApplicationInfo(getPackageName(), android.content.pm.PackageManager.GET_META_DATA).metaData;
             FixtureChecks.expectHardened = metadata == null || metadata.getBoolean("fixture.hardened", true);

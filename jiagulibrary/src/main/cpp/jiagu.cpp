@@ -654,6 +654,36 @@ void uninit(JNIEnv *env) {
 static jfieldID serviceDispatcherContext = nullptr;
 static jfieldID receiverDispatcherContext = nullptr;
 
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_wpf_util_jiagulibrary_utils_ApplicationHook_componentFactory(
+        JNIEnv *env, jclass, jobject loadedApk, jobject replacement) {
+    JavaVM *vm = nullptr;
+    env->GetJavaVM(&vm);
+    jfieldID field = nullptr;
+    jthrowable failure = nullptr;
+    // Same bounded framework-field lookup as early callback migration. Do not
+    // alter the application's hidden-API policy to restore its host factory.
+    std::thread resolve([&] {
+        JNIEnv *worker = nullptr;
+        if (vm->AttachCurrentThread(&worker, nullptr) != JNI_OK) return;
+        jclass loaded = worker->FindClass("android/app/LoadedApk");
+        if (loaded) field = worker->GetFieldID(loaded, "mAppComponentFactory",
+                "Landroid/app/AppComponentFactory;");
+        if (worker->ExceptionCheck()) {
+            jthrowable error = worker->ExceptionOccurred();
+            worker->ExceptionClear();
+            failure = static_cast<jthrowable>(worker->NewGlobalRef(error));
+        }
+        vm->DetachCurrentThread();
+    });
+    resolve.join();
+    if (failure) { env->Throw(failure); env->DeleteGlobalRef(failure); return nullptr; }
+    if (!field) { restore_error(env, "Cannot resolve host component factory"); return nullptr; }
+    jobject previous = env->GetObjectField(loadedApk, field);
+    if (replacement && !env->ExceptionCheck()) env->SetObjectField(loadedApk, field, replacement);
+    return previous;
+}
+
 extern "C" JNIEXPORT jobjectArray JNICALL
 Java_com_wpf_util_jiagulibrary_utils_ApplicationHook_callbackMaps(JNIEnv *env, jclass, jobject loadedApk) {
     JavaVM *vm = nullptr;

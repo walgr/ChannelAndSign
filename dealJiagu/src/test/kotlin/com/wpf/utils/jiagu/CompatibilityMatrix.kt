@@ -59,7 +59,8 @@ fun main(args: Array<String>) {
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="$pkg" android:versionCode="$version" android:versionName="$version.0">
                           <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33"/>
                           <application android:name="com.wpf.jiagu.compat.FixtureApplication" android:debuggable="true" android:label="Jiagu ${profile.id} $kind v$version"
-                              android:extractNativeLibs="false" android:icon="@drawable/bootstrap_icon" android:theme="@style/BootstrapTheme">
+                              android:extractNativeLibs="false" android:icon="@drawable/bootstrap_icon" android:theme="@style/BootstrapTheme"
+                              android:appComponentFactory="com.wpf.jiagu.compat.FixtureComponentFactory">
                             <meta-data android:name="fixture.hardened" android:value="$hardened"/>
                             <meta-data android:name="fixture.native" android:value="${profile.native}"/>
                             <service android:name="com.wpf.jiagu.compat.FixtureService" android:exported="false"/>

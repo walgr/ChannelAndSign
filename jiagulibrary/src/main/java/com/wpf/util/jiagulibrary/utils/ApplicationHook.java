@@ -41,8 +41,12 @@ public class ApplicationHook {
             Context contextImpl = application.getBaseContext();
             // 创建插件中真实的Application且，执行生命周期
             ClassLoader classLoader = application.getClassLoader();
-            Class<?> applicationClass = classLoader.loadClass(delegateApplicationName);
-            Application delegate = (Application) applicationClass.newInstance();
+            Application delegate;
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                delegate = Api28.createApplication(application, classLoader, delegateApplicationName);
+            } else {
+                delegate = (Application) classLoader.loadClass(delegateApplicationName).newInstance();
+            }
 
             // 走DelegateApplication的生命周期
             Method attach = Application.class.getDeclaredMethod("attach", Context.class);
@@ -56,6 +60,35 @@ public class ApplicationHook {
             throw new IllegalStateException("Cannot attach original Application: " + delegateApplicationName, e);
         }
     }
+
+    /** Kept separate so API 21-27 never resolve AppComponentFactory. */
+    private static class Api28 {
+        static Application createApplication(Application shell, ClassLoader loader, String name)
+                throws Exception {
+            String factoryName = shell.getApplicationInfo().appComponentFactory;
+            if (TextUtils.isEmpty(factoryName)) {
+                return (Application) loader.loadClass(name).newInstance();
+            }
+            // LoadedApk could not load the host factory before business DEX was
+            // decrypted and fell back to the platform factory. Restore it before
+            // Application.attach: hosts may register provider delegates there.
+            if (factoryName.startsWith(".")) factoryName = shell.getPackageName() + factoryName;
+            else if (factoryName.indexOf('.') < 0) factoryName = shell.getPackageName() + "." + factoryName;
+            Context context = shell.getBaseContext();
+            Object loadedApk = Reflect.getFieldValue(context.getClass(), context, "mPackageInfo");
+            Object current = componentFactory(loadedApk, null);
+            android.app.AppComponentFactory factory;
+            if (current != null && current.getClass().getName().equals(factoryName)) {
+                factory = (android.app.AppComponentFactory) current;
+            } else {
+                factory = (android.app.AppComponentFactory) loader.loadClass(factoryName).newInstance();
+                componentFactory(loadedApk, factory);
+            }
+            return factory.instantiateApplication(loader, name);
+        }
+    }
+
+    private static native Object componentFactory(Object loadedApk, Object replacement);
 
     /**
      * hook 替换ApplicationContext

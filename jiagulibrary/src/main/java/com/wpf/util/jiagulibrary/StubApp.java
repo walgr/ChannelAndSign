@@ -15,7 +15,7 @@ public class StubApp extends Application {
     /**
      * so的版本，格式为: v + 数字
      */
-    public static final String VERSION = "v3_15";
+    public static final String VERSION = "v3_16";
 
     @Override
     protected void attachBaseContext(Context context) {

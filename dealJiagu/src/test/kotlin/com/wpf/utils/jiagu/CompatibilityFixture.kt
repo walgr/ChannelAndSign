@@ -14,7 +14,8 @@ fun main(args: Array<String>) {
     manifest.writeText("""<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.wpf.jiagu.compat" android:versionCode="1">
         <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33"/>
         <application android:name="com.wpf.jiagu.compat.FixtureApplication" android:debuggable="true" android:label="Jiagu regression" android:extractNativeLibs="false"
-          android:icon="@drawable/bootstrap_icon" android:theme="@style/BootstrapTheme">
+          android:icon="@drawable/bootstrap_icon" android:theme="@style/BootstrapTheme"
+          android:appComponentFactory="com.wpf.jiagu.compat.FixtureComponentFactory">
           <meta-data android:name="fixture.replaceLoader" android:value="true"/>
           <service android:name="com.wpf.jiagu.compat.FixtureService" android:exported="false"/>
           <activity android:name="com.wpf.jiagu.compat.FixtureActivity" android:exported="true"/>
