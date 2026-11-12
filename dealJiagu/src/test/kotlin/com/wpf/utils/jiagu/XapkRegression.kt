@@ -15,6 +15,11 @@ fun main(args: Array<String>) {
     ResourceManager.cachePath = File(root, "desktop").path
     ResourceManager.tempFolderPath = File(work, "tools").apply { mkdirs() }.path + File.separator
     val embeddedDex = "SDK asset DEX must stay byte-identical".toByteArray()
+    // Android ZIP writers may store UTF-8 path bytes without the UTF-8 flag.
+    // Rewriting only the central directory through a different ZIP reader used
+    // to change these names and invalidate untouched local file headers.
+    val unicodeAsset = "assets/images/L\u00c3\u00a4ngslinie-\u4e2d\u6587.png"
+    val unicodeContent = "Unicode asset must retain its exact path and content".toByteArray()
     val selectionFixture = File(work, "dex-selection.apk")
     ZipOutputStream(selectionFixture.outputStream()).use { out ->
         listOf("classes10.dex", "assets/audience_network/", "assets/audience_network/classes.dex",
@@ -69,6 +74,9 @@ fun main(args: Array<String>) {
                 }
             }
             XapkArchive.publish(replacement, result)
+            com.android.zipflinger.ZipArchive(result.toPath()).use { zip ->
+                zip.add(com.android.zipflinger.BytesSource(unicodeContent, unicodeAsset, 0))
+            }
         } else {
             val replacement = File(dir, "with-native.apk")
             ZipOutputStream(replacement.outputStream()).use { out ->
@@ -183,6 +191,7 @@ fun main(args: Array<String>) {
                     requireNotNull(com.wpf.util.jiagulibrary.utils.IntegrityVerifier.resourceVersion()), ResourceEncryption.key("0123456789abcdef"))
                 ZipFile(restored.file).use { archive ->
                     check(archive.getInputStream(archive.getEntry("assets/audience_network/classes.dex")).readBytes().contentEquals(embeddedDex))
+                    check(archive.getInputStream(archive.getEntry(unicodeAsset)).readBytes().contentEquals(unicodeContent))
                 }
                 check(zip.getEntry("assets/libjiagu_x86.so") != null)
                 check(zip.getEntry("assets/libjiagu_v7a.so") != null)
@@ -196,6 +205,6 @@ fun main(args: Array<String>) {
                 }
             } }
         }
-        println("XAPK_HARDENING_PASSED: main payload/manifest/Intel SO, preserved split content, all signatures")
+        println("XAPK_HARDENING_PASSED: main payload/manifest/Intel SO, Unicode asset paths/content, preserved split content, all signatures")
     }
 }

@@ -18,7 +18,6 @@ import com.wpf.utils.jiagu.utils.formatTime
 import com.wpf.utils.jiagu.d2c.D2cCompiler
 import com.wpf.utils.jiagu.d2c.D2cRules
 import com.wpf.utils.tools.LogStreamThread
-import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.util.zip.Deflater
 
@@ -187,7 +186,7 @@ object JiaGu {
             val jiaguApkFile =
                 File(srcApkFile.parent + File.separator + srcApkFile.nameWithoutExtension + "_jiagu." + srcApkFile.extension)
             srcApkFile.copyTo(jiaguApkFile, true)
-            var jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
+            val jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
             val jiaguCachePath =
                 ResourceManager.cachePath + File.separator + "cache/jiagu/".replace("/", File.separator)
             val jiaguCacheHashPath = jiaguCachePath + File.separator + jiaGuHashKey.hashCode() +
@@ -483,11 +482,10 @@ object JiaGu {
             srcDexList.forEach {
                 it.second.close()
             }
-            jiaguApkZipArchive.close()
-            var jiaguApkZip = ZipFile(jiaguApkFile)
-            jiaguApkZip.removeFiles(srcDexNameList)
-            jiaguApkZip.close()
-            jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
+            // Keep the same ZIP writer: Android APKs can have UTF-8 path bytes
+            // without the language-encoding flag. Another reader may reinterpret
+            // those names and rewrite the directory without matching local headers.
+            srcDexNameList.forEach { jiaguApkZipArchive.delete(it) }
             jiaguApkZipArchive.add(
                 BytesSource(
                     mergeDex, mainDexName, Deflater.BEST_COMPRESSION
@@ -508,11 +506,7 @@ object JiaGu {
                 jiaguApkZipArchive.getInputStream(androidManifest),
                 stubAppName
             )
-            jiaguApkZipArchive.close()
-            jiaguApkZip = ZipFile(jiaguApkFile)
-            jiaguApkZip.removeFile(androidManifest)
-            jiaguApkZip.close()
-            jiaguApkZipArchive = ZipArchive(jiaguApkFile.toPath())
+            jiaguApkZipArchive.delete(androidManifest)
             jiaguApkZipArchive.add(
                 BytesSource(
                     fixManifestFile.toPath(), androidManifest, Deflater.BEST_COMPRESSION

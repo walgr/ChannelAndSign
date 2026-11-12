@@ -1,6 +1,7 @@
 package com.wpf.jiagu.compat;
 
 public class FixtureApplication extends android.app.Application {
+    static boolean onCreateCalled;
     @Override protected void attachBaseContext(android.content.Context context) {
         super.attachBaseContext(context);
         if (android.os.Build.VERSION.SDK_INT >= 28 && !FixtureComponentFactory.applicationCreated)
@@ -22,6 +23,8 @@ public class FixtureApplication extends android.app.Application {
         } catch (android.content.pm.PackageManager.NameNotFoundException error) { throw new AssertionError(error); }
     }
     @Override public void onCreate() {
+        if (onCreateCalled) throw new AssertionError("Application.onCreate called twice");
+        onCreateCalled = true;
         super.onCreate(); FixtureChecks.requireValid();
         FixtureProvider.checkEarlyCallbacks(this);
         checkResources();

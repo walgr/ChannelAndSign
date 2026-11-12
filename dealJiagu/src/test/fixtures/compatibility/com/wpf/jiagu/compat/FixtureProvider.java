@@ -9,6 +9,14 @@ public class FixtureProvider extends android.content.ContentProvider {
             throw new AssertionError("Host provider factory skipped");
         FixtureChecks.requireValid();
         android.content.Context app = getContext().getApplicationContext();
+        if (!(app instanceof FixtureApplication) || app.getApplicationContext() != app)
+            throw new AssertionError("Provider application context must be the original Application");
+        if (FixtureApplication.onCreateCalled)
+            throw new AssertionError("Application.onCreate ran before provider initialization");
+        android.content.Context configured = getContext().createConfigurationContext(
+                new android.content.res.Configuration(getContext().getResources().getConfiguration()));
+        if (configured.getApplicationContext() != app)
+            throw new AssertionError("Provider configuration context returned a different Application");
         earlyReceiver = new android.content.BroadcastReceiver() {
             @Override public void onReceive(android.content.Context context, android.content.Intent intent) { }
         };

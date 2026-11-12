@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class ApplicationHook {
 
-    private static Application sDelegateApplication;
+    private static volatile Application sDelegateApplication;
     private static volatile ClassLoader sShellClassLoader;
 
     /** Framework component creation must use the loader containing business DEX. */
@@ -90,6 +90,42 @@ public class ApplicationHook {
 
     private static native Object componentFactory(Object loadedApk, Object replacement);
 
+    /** Providers run before Application.onCreate and may cast the application context. */
+    public static Context applicationContext(Application shell, Context fallback) {
+        Application delegate = sDelegateApplication;
+        if (delegate == null || delegate == shell) return fallback;
+        try {
+            Context context = shell.getBaseContext();
+            Object loadedApk = Reflect.getFieldValue(context.getClass(), context, "mPackageInfo");
+            // LoadedApk assigns the shell after attach returns. Publish only once
+            // that assignment exists, so later provider/configuration contexts
+            // resolve the same delegate without invoking onCreate prematurely.
+            if (Reflect.getFieldValue("android.app.LoadedApk", loadedApk, "mApplication") == shell) {
+                publishApplicationContext(shell, context, loadedApk);
+            }
+            return delegate;
+        } catch (Exception error) {
+            throw new IllegalStateException("Cannot expose original Application context", error);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void publishApplicationContext(Application shell, Context context, Object loadedApk) {
+        migrateRegistrations(loadedApk, shell, sDelegateApplication);
+        Reflect.invokeMethod(context.getClass(), context, "setOuterContext",
+                new Object[]{sDelegateApplication}, Context.class);
+        Object thread = Reflect.getFieldValue(context.getClass(), context, "mMainThread");
+        Reflect.setFieldValue("android.app.ActivityThread", thread, "mInitialApplication", sDelegateApplication);
+        ArrayList<Application> applications = (ArrayList<Application>) Reflect.getFieldValue(
+                "android.app.ActivityThread", thread, "mAllApplications");
+        if (!applications.contains(sDelegateApplication)) applications.add(sDelegateApplication);
+        applications.remove(shell);
+        Reflect.setFieldValue("android.app.LoadedApk", loadedApk, "mApplication", sDelegateApplication);
+        ApplicationInfo info = (ApplicationInfo) Reflect.getFieldValue(
+                "android.app.LoadedApk", loadedApk, "mApplicationInfo");
+        info.className = sDelegateApplication.getClass().getName();
+    }
+
     /**
      * hook 替换ApplicationContext
      *
@@ -110,34 +146,7 @@ public class ApplicationHook {
             // when the same base context starts returning the delegate instead.
             Object loadedApk = Reflect.getFieldValue(contextImpl.getClass(), contextImpl,
                     "mPackageInfo");
-            migrateRegistrations(loadedApk, application, sDelegateApplication);
-
-            // 替换ContextImpl的代理Application
-            Reflect.invokeMethod(contextImpl.getClass(), contextImpl, "setOuterContext",
-                    new Object[]{sDelegateApplication}, Context.class);
-
-            // 替换ActivityThread的代理Application
-            Object mMainThread = Reflect.getFieldValue(contextImpl.getClass(), contextImpl,
-                    "mMainThread");
-            Reflect.setFieldValue("android.app.ActivityThread", mMainThread, "mInitialApplication",
-                    sDelegateApplication);
-            // 替换ActivityThread的mAllApplications
-            ArrayList<Application> mAllApplications =
-                    (ArrayList<Application>) Reflect.getFieldValue("android.app.ActivityThread",
-                            mMainThread, "mAllApplications");
-            mAllApplications.add(sDelegateApplication);
-            mAllApplications.remove(application);
-
-            // 替换LoadedApk的代理Application
-            Reflect.setFieldValue("android.app.LoadedApk", loadedApk, "mApplication",
-                    sDelegateApplication);
-
-            // 替换LoadedApk中的mApplicationInfo中name
-            ApplicationInfo applicationInfo =
-                    (ApplicationInfo) Reflect.getFieldValue("android.app.LoadedApk",
-                            loadedApk
-                            , "mApplicationInfo");
-            applicationInfo.className = sDelegateApplication.getClass().getName();
+            publishApplicationContext(application, contextImpl, loadedApk);
 
 
             long started = System.nanoTime();
